@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>نقطة الاستلام - La Aura</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3665/3665980.png" />
+
+  <style>
+    body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
+    .wrap{max-width:1100px;margin:auto;padding:16px}
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    .card{background:#fff;border:1px solid #e7e7e7;border-radius:14px;padding:12px}
+    .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+    .btn{border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .btn.primary{background:#111;color:#fff;border-color:#111}
+    .muted{color:#666;font-size:13px}
+    input{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
+    .pill{display:inline-block;padding:4px 8px;border:1px solid #e7e7e7;border-radius:999px;font-size:12px;color:#444}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .brand b{font-size:20px}
+    .menuBtn{border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .sidebarOverlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:50}
+    .sidebar{
+      position:fixed;top:0;right:0;height:100vh;width:min(280px,82vw);
+      background:#fff;border-left:1px solid #eee;z-index:60;
+      transform:translateX(100%);transition:transform .2s ease;
+      display:flex;flex-direction:column;padding:14px;box-sizing:border-box
+    }
+    .sidebar.open{transform:translateX(0)}
+    .sidebarOverlay.open{display:block}
+    .sidebarHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
+    .sidebarHeader b{font-size:16px}
+    .sidebar a,.sidebar button{
+      width:100%;text-align:right;border:1px solid #e7e7e7;background:#fff;
+      padding:10px 12px;border-radius:10px;cursor:pointer;margin-top:8px;font-family:inherit;
+      box-sizing:border-box
+    }
+    .sidebar a{color:#111;text-decoration:none;display:block}
+    .sidebar .danger{border-color:#f2c2c2;color:#b00020}
+
+    .orderItem{border:1px solid #e7e7e7;border-radius:12px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+    .orderItem.active{border-color:#111}
+    .orderItem small{color:#666}
+    .orderGroupMeta{display:flex;gap:8px;align-items:center}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
+    th{color:#666;font-size:13px}
+    .chk{width:18px;height:18px}
+    .highlight{background:#fff8d6}
+    .searchBox{width:100%;max-width:420px}
+    .searchResults{margin-top:8px;border:1px solid #eee;border-radius:12px;overflow:hidden}
+    .searchResults button{
+      width:100%;text-align:right;background:#fff;border:none;padding:10px;cursor:pointer;border-bottom:1px solid #eee
+    }
+    .searchResults button:last-child{border-bottom:none}
+    .searchResults button:hover{background:#fafafa}
+  </style>
+</head>
+<body>
+
+<div class="sidebarOverlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebarHeader">
+    <b>القائمة</b>
+    <button class="menuBtn" id="closeSidebarBtn" type="button">✕</button>
+  </div>
+  <div id="sidebarContent"></div>
+</aside>
+
+<div class="wrap">
+  <div class="topbar">
+    <div class="brand">
+      <b>نقطة الاستلام - La Aura</b>
+    </div>
+    <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
+  </div>
+
+  <div class="row" style="margin-bottom:12px">
+    <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
+    <span class="pill" id="searchCount" style="display:none"></span>
+  </div>
+  <div id="searchResults" class="searchResults" style="display:none"></div>
+
+  <div class="grid">
+    <aside class="card">
+      <div class="row" style="justify-content:space-between">
+        <b>الطلبيات</b>
+        <span class="pill" id="ordersCount">0</span>
+      </div>
+      <div id="ordersList" style="margin-top:10px"></div>
+      <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
+    </aside>
+
+    <main class="card">
+      <div id="empty" class="muted">اختاري طلبية من القائمة</div>
+
+      <div id="main" style="display:none">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div>
+            <b id="orderTitle"></b>
+          </div>
+          <div class="row">
+            <span class="pill" id="purchaseCount">0</span>
+            <span class="pill" id="pickedTotal">مجموع المستلم: 0 ₪</span>
+            <button class="btn" id="collectBtn" style="display:none">تم استلام تحصيل المستلمين</button>
+          </div>
+        </div>
+
+        <hr>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>الزبون</th>
+              <th>السعر</th>
+              <th>حجم الكيس</th>
+              <th>تم الاستلام</th>
+              <th id="pickedAtHeader" style="display:none">تاريخ الاستلام</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL="https://maucjvxhrnkdeybltjco.supabase.co";
+const SUPABASE_ANON_KEY="sb_publishable_0N65DXPMsk_3WVcLQ9wavQ_p9HgB_Bo";
+const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+
+const PICKUP_VALUE = "من نقطة الاستلام";
+const NTFY_TOPIC = "she-store-rahaf-2001-2014";
+
+/* ========= Auth + Role Gate =========
+   Allowed here: Rahaf + Reem + Laaura
+*/
+async function requireAuth(){
+  const { data } = await sb.auth.getSession();
+  if(!data.session){
+    window.location.href="./login.html?next=pickuppoint.html";
+    return false;
+  }
+  return true;
+}
+
+async function getMyRole(){
+  const { data: u } = await sb.auth.getUser();
+  const email = (u?.user?.email || "").toLowerCase();
+  const userId = u?.user?.id || "";
+
+  if(!userId) return { email, role:"viewer" };
+
+  const { data: r, error } = await sb
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if(error){
+    console.error("ROLE READ ERROR:", error);
+    return { email, role:"viewer" }; // safe default
+  }
+  return { email, role: (r?.role || "viewer") };
+}
+
+let myEmail = "";
+async function guardPickupPage(){
+  const ok = await requireAuth();
+  if(!ok) return;
+
+  const { email } = await getMyRole();
+  const normalized = (email || "").toLowerCase();
+  myEmail = normalized;
+  const allowed = [
+    "rahaf@she-store.com",
+    "reem@she-store.com",
+    "laaura@she-store.com"
+  ];
+
+  if(!allowed.includes(normalized)){
+    window.location.replace("./login.html");
+  }
+}
+/* =================================== */
+/* ===== Sidebar ===== */
+const sidebar = document.getElementById("sidebar");
+const overlay = document.getElementById("sidebarOverlay");
+const openBtn = document.getElementById("openSidebarBtn");
+const closeBtn = document.getElementById("closeSidebarBtn");
+const sidebarContent = document.getElementById("sidebarContent");
+
+function openSidebar(){
+  sidebar.classList.add("open");
+  overlay.classList.add("open");
+}
+function closeSidebar(){
+  sidebar.classList.remove("open");
+  overlay.classList.remove("open");
+}
+openBtn.onclick = openSidebar;
+closeBtn.onclick = closeSidebar;
+overlay.onclick = closeSidebar;
+document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSidebar(); });
+
+function renderSidebar(){
+  sidebarContent.innerHTML = "";
+
+  const link = (text, href)=>{
+    const a = document.createElement("a");
+    a.href = href;
+    a.textContent = text;
+    a.onclick = ()=> closeSidebar();
+    sidebarContent.appendChild(a);
+  };
+  const btn = (text, cls, onClick)=>{
+    const b = document.createElement("button");
+    b.type="button";
+    b.className = cls || "";
+    b.textContent = text;
+    b.onclick = async ()=>{
+      await onClick();
+      closeSidebar();
+    };
+    sidebarContent.appendChild(b);
+  };
+
+  if(myEmail === "rahaf@she-store.com"){
+    link("إضافة طلبية", "./index.html");
+    link("عرض الطلبيات", "./view.html");
+    link("مستلمو البيت", "./homepickup.html");
+    link("العملاء", "./customers.html");
+    link("تحصيل المبالغ", "./collections.html");
+  }
+
+  if(myEmail === "reem@she-store.com"){
+    link("عرض الطلبيات", "./view.html");
+    link("مستلمو البيت", "./homepickup.html");
+  }
+
+  btn("تسجيل خروج", "danger", async ()=>{
+    await sb.auth.signOut();
+    window.location.href="./login.html";
+  });
+}
+
+const ordersListEl = document.getElementById("ordersList");
+const ordersEmptyEl = document.getElementById("ordersEmpty");
+const ordersCountEl = document.getElementById("ordersCount");
+
+const emptyEl = document.getElementById("empty");
+const mainEl = document.getElementById("main");
+const orderTitleEl = document.getElementById("orderTitle");
+const purchaseCountEl = document.getElementById("purchaseCount");
+const pickedTotalEl = document.getElementById("pickedTotal");
+const tbody = document.getElementById("tbody");
+const collectBtn = document.getElementById("collectBtn");
+
+const searchInput = document.getElementById("searchInput");
+const searchResultsEl = document.getElementById("searchResults");
+const searchCount = document.getElementById("searchCount");
+const pickedAtHeader = document.getElementById("pickedAtHeader");
+
+let userEmail = "";
+let isRahaf = false;
+let isLaaura = false;
+
+let orders = [];
+let activeOrder = null;
+let purchasesByOrder = new Map();
+let highlightPurchaseId = null;
+
+function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function parsePrice(v){
+  if(v === null || v === undefined) return 0;
+  if(typeof v === "number") return isFinite(v) ? v : 0;
+  const s = String(v).replace(/[, ]/g, "").replace(/[₪]/g, "");
+  const m = s.match(/-?\d+(?:\.\d+)?/);
+  return m ? Number(m[0]) : 0;
+}
+
+function formatILS(n){
+  const x = Number(n || 0);
+  if(!isFinite(x)) return "0";
+  const fixed = x.toFixed(2);
+  return fixed.endsWith(".00") ? String(Math.round(x)) : fixed;
+}
+
+async function sendNtfy(message){
+  try{
+    await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
+      method: "POST",
+      body: message
+    });
+  } catch (err){
+    console.error("NTFY ERROR:", err);
+  }
+}
+
+function buildPickupMessage({ picked, customerName, price, orderName, pickupLabel, pickedAt }){
+  const priceText = formatILS(price);
+  if(pickupLabel === "من نقطة الاستلام"){
+    return [
+      "🔔 مرحبا حبيبتي💖",
+      "طلبك جاهز بنقطة الاستلام",
+      "📍كافيه la aura سوق الذهب",
+      "⏰ بفتحوا من ال٨ صباحاً لل١٠ مساءً",
+      `📦 حسابك: ${priceText} شيكل`
+    ].join("\n");
+  }
+  if(pickupLabel === "من البيت"){
+    return [
+      "🔔 مرحبا حبيبتي💖",
+      "طلبك جاهز عندي بالبيت",
+      "خبريني قبل بوقت وينتا رح تستلمي💌",
+      `📦 حسابك: ${priceText} شيكل`
+    ].join("\n");
+  }
+  return [
+    "🔔 مرحبا حبيبتي💖",
+    `طلبك جاهز للاستلام (${pickupLabel})`,
+    `📦 حسابك: ${priceText} شيكل`
+  ].join("\n");
+}
+
+function updatePickedTotal(list){
+  const pickedTotal = list
+    .filter(item=>item.picked_up)
+    .reduce((sum,item)=> sum + parsePrice(item.price), 0);
+  pickedTotalEl.textContent = `مجموع المستلم: ${formatILS(pickedTotal)} ₪`;
+}
+
+async function loadUser(){
+  const { data } = await sb.auth.getUser();
+  userEmail = (data?.user?.email || "").toLowerCase();
+  isRahaf = userEmail === "rahaf@she-store.com";
+  isLaaura = userEmail === "laaura@she-store.com";
+  pickedAtHeader.style.display = isRahaf ? "" : "none";
+}
+
+function showMain(on){
+  mainEl.style.display = on ? "" : "none";
+  emptyEl.style.display = on ? "none" : "";
+}
+
+function formatDMY(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+}
+function formatOrderLabel(order){
+  if(order?.isGroup || order?.orderIds){
+    return order.label || "طلبية";
+  }
+  if(userEmail === "laaura@she-store.com"){
+    const dateLabel = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+    return `طلبية ${dateLabel || ""}`.trim();
+  }
+  return order.order_name || "طلبية";
+}
+
+function buildOrderGroups(list){
+  const groups = [];
+  const map = new Map();
+
+  list.forEach(order=>{
+    const dateKey = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+    const label = `طلبية ${dateKey || ""}`.trim();
+    if(!map.has(dateKey)){
+      const group = {
+        id: `group-${dateKey || "unknown"}`,
+        label,
+        order_name: label,
+        orderIds: []
+      };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orderIds.push(order.id);
+  });
+
+  return groups;
+}
+
+function findGroupForOrder(order){
+  const dateKey = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+  return {
+    id: `group-${dateKey || "unknown"}`,
+    label: `طلبية ${dateKey || ""}`.trim(),
+    order_name: `طلبية ${dateKey || ""}`.trim(),
+    orderIds: orders.filter(o=>{
+      const oKey = formatDMY(o.order_date || o.placed_at_pickup_at || o.created_at);
+      return oKey === dateKey;
+    }).map(o=>o.id)
+  };
+}
+
+function formatDateTime(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  const date = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+  const time = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return `${date} ${time}`;
+}
+
+async function loadPickupOrders(){
+  const { data, error } = await sb
+    .from("orders")
+    .select("id, order_name, order_date, placed_at_pickup_at, created_at, purchases!inner(pickup_point)")
+    .eq("arrived", true)
+    .eq("placed_at_pickup", true)
+    .eq("purchases.pickup_point", PICKUP_VALUE)
+    .order("created_at",{ascending:false});
+
+  if(error){ console.error(error); return; }
+
+  orders = data || [];
+  const listItems = isLaaura ? buildOrderGroups(orders) : orders;
+  ordersCountEl.textContent = listItems.length;
+
+  ordersListEl.innerHTML = "";
+  ordersEmptyEl.style.display = listItems.length ? "none" : "";
+
+  listItems.forEach(o=>{
+    const div = document.createElement("div");
+    const label = formatOrderLabel(o);
+    div.className = "orderItem" + (activeOrder?.id === o.id ? " active" : "");
+    div.innerHTML = `
+      <div><b>${escapeHtml(label)}</b></div>
+      <div class="orderGroupMeta">
+        ${o.orderIds ? `<span class="pill">${o.orderIds.length}</span>` : ""}
+        <span class="pill">فتح</span>
+      </div>
+    `;
+    div.onclick = ()=>selectOrder(o);
+    ordersListEl.appendChild(div);
+  });
+}
+
+async function loadPurchasesForOrder(orderId){
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, order_id, customer_name, price, bag_size, picked_up, picked_up_at, created_at, pickup_point, collected")
+    .eq("order_id", orderId)
+    .eq("pickup_point", PICKUP_VALUE)
+    .order("created_at",{ascending:true});
+
+  if(error){ console.error(error); return []; }
+  return data || [];
+}
+
+async function loadPurchasesForOrders(orderIds){
+  if(!orderIds.length) return [];
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, order_id, customer_name, price, bag_size, picked_up, picked_up_at, created_at, pickup_point, collected")
+    .in("order_id", orderIds)
+    .eq("pickup_point", PICKUP_VALUE)
+    .order("created_at",{ascending:true});
+
+  if(error){ console.error(error); return []; }
+  return data || [];
+}
+
+async function selectOrder(o){
+  activeOrder = o;
+  await loadPickupOrders();
+
+  const list = o.orderIds ? await loadPurchasesForOrders(o.orderIds) : await loadPurchasesForOrder(o.id);
+  purchasesByOrder.set(o.id, list);
+
+  const visibleList = list.filter(item=>!item.collected);
+  orderTitleEl.textContent = formatOrderLabel(o);
+  purchaseCountEl.textContent = `عدد المشتريات: ${visibleList.length}`;
+  updatePickedTotal(visibleList);
+
+  if(collectBtn){
+    collectBtn.style.display = isRahaf ? "" : "none";
+  }
+
+  renderTable(visibleList);
+  showMain(true);
+}
+
+if(collectBtn){
+  collectBtn.onclick = async ()=>{
+    if(!activeOrder || !isRahaf) return;
+
+    collectBtn.disabled = true;
+    const { error } = await sb
+      .from("purchases")
+      .update({ collected: true, collected_at: new Date().toISOString() })
+      .eq("order_id", activeOrder.id)
+      .eq("pickup_point", PICKUP_VALUE)
+      .eq("picked_up", true);
+
+    if(error){
+      console.error(error);
+      collectBtn.disabled = false;
+      return;
+    }
+
+    const list = await loadPurchasesForOrder(activeOrder.id);
+    purchasesByOrder.set(activeOrder.id, list);
+    const visibleList = list.filter(item=>!item.collected);
+    renderTable(visibleList);
+    updatePickedTotal(visibleList);
+    collectBtn.disabled = false;
+  };
+}
+
+function fmtDate(iso){
+  try{
+    if(!iso) return "—";
+    const d = new Date(iso);
+    return d.toLocaleString("ar", { year:"numeric", month:"2-digit", day:"2-digit", hour:"2-digit", minute:"2-digit" });
+  } catch { return "—"; }
+}
+
+function renderTable(list){
+  tbody.innerHTML = "";
+
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="${isRahaf?6:5}" class="muted">لا يوجد مشتريات</td></tr>`;
+    return;
+  }
+
+  list.forEach((p, i)=>{
+    const tr = document.createElement("tr");
+    if(highlightPurchaseId && highlightPurchaseId === p.id) tr.classList.add("highlight");
+
+    const checked = p.picked_up ? "checked" : "";
+    const pickedAt = fmtDate(p.picked_up_at);
+
+    tr.innerHTML = `
+      <td>${i+1}</td>
+      <td>${escapeHtml(p.customer_name || "")}</td>
+      <td>${escapeHtml(p.price ?? "")}</td>
+      <td>${escapeHtml(p.bag_size || "—")}</td>
+      <td><input class="chk" type="checkbox" data-id="${p.id}" ${checked}></td>
+      ${isRahaf ? `<td>${escapeHtml(pickedAt)}</td>` : ``}
+    `;
+    tbody.appendChild(tr);
+  });
+
+  tbody.querySelectorAll('input[type="checkbox"][data-id]').forEach(chk=>{
+    chk.onchange = async ()=>{
+      const id = chk.dataset.id;
+      const val = chk.checked;
+      const pickedAt = val ? new Date().toISOString() : null;
+
+      const list = purchasesByOrder.get(activeOrder.id) || [];
+      const item = list.find(x=>String(x.id)===String(id));
+      if(item){
+        item.picked_up = val;
+        item.picked_up_at = pickedAt;
+      }
+
+      const { error } = await sb
+        .from("purchases")
+        .update({ picked_up: val, picked_up_at: pickedAt })
+        .eq("id", id);
+
+      if(error){
+        console.error(error);
+        alert(error.message || "فشل تحديث الاستلام");
+        chk.checked = !val;
+        if(item){
+          item.picked_up = !val;
+          item.picked_up_at = item.picked_up ? item.picked_up_at : null;
+        }
+        return;
+      }
+
+      if(item){
+        await sendNtfy(buildPickupMessage({
+          picked: val,
+          customerName: item.customer_name,
+          price: item.price,
+          orderName: activeOrder?.order_name,
+          pickupLabel: PICKUP_VALUE,
+          pickedAt: pickedAt || new Date().toISOString()
+        }));
+      }
+
+      if(isRahaf){
+        const list = purchasesByOrder.get(activeOrder.id) || [];
+        const visibleList = list.filter(entry=>!entry.collected);
+        renderTable(visibleList);
+        updatePickedTotal(visibleList);
+      }
+    };
+  });
+}
+
+/* ===== Search ===== */
+let searchTimer = null;
+
+searchInput.addEventListener("input", ()=>{
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, 250);
+});
+
+async function runSearch(){
+  const q = (searchInput.value || "").trim();
+  if(q.length < 2){
+    searchResultsEl.style.display = "none";
+    searchCount.style.display = "none";
+    searchResultsEl.innerHTML = "";
+    return;
+  }
+
+  const orderIds = orders.map(o=>o.id);
+  if(!orderIds.length){
+    searchResultsEl.style.display = "none";
+    searchCount.style.display = "none";
+    return;
+  }
+
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, order_id, customer_name, price, created_at")
+    .in("order_id", orderIds)
+    .eq("pickup_point", PICKUP_VALUE)
+    .ilike("customer_name", `%${q}%`)
+    .order("created_at",{ascending:false})
+    .limit(50);
+
+  if(error){ console.error(error); return; }
+
+  const results = data || [];
+  searchCount.textContent = `${results.length} نتيجة`;
+  searchCount.style.display = "";
+  searchResultsEl.style.display = "";
+  searchResultsEl.innerHTML = "";
+
+  results.forEach(r=>{
+    const ord = orders.find(o=>o.id === r.order_id);
+    const label = ord ? formatOrderLabel(ord) : "طلبية";
+
+    const btn = document.createElement("button");
+    btn.innerHTML = `
+      <b>${escapeHtml(r.customer_name || "")}</b>
+      <div class="muted">${escapeHtml(label)} — السعر: ${escapeHtml(r.price ?? "")}</div>
+    `;
+    btn.onclick = async ()=>{
+      highlightPurchaseId = r.id;
+      searchResultsEl.style.display = "none";
+      if(ord){
+        const target = isLaaura ? findGroupForOrder(ord) : ord;
+        await selectOrder(target);
+      }
+      setTimeout(()=>{ highlightPurchaseId = null; }, 2500);
+    };
+    searchResultsEl.appendChild(btn);
+  });
+}
+
+/* ===== Init ===== */
+(async function init(){
+  await guardPickupPage();
+  renderSidebar();
+  await loadUser();
+  await loadPickupOrders();
+  if(orders.length && !isLaaura) selectOrder(orders[0]);
+})();
+</script>
+</body>
+</html>
