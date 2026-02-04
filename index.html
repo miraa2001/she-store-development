@@ -907,11 +907,11 @@ async function fetchPurchases(orderId){
 }
 
 async function addPurchasePage(pdfDoc, purchase, order){
-  const { rgb, PageSizes } = PDFLib;
-  const page = pdfDoc.addPage(PageSizes.A4);
+  const { rgb, PageSizes, StandardFonts } = PDFLib;
+  const page = pdfDoc.addPage(PageSizes?.A4 || [595.28, 841.89]);
   const { width, height } = page.getSize();
-  const regular = pdfFonts?.regular;
-  const bold = pdfFonts?.bold;
+  const regular = pdfFonts?.regular || await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const bold = pdfFonts?.bold || await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   const title = purchase.customer_name || order.order_name || "Purchase";
   const qtyText = `Quantity: ${purchase.qty ?? ""}`;
@@ -1070,7 +1070,8 @@ async function exportOrderPdf(orderId, btn){
     downloadPdf(bytes, `${safeName || "Order"}-Purchases.pdf`);
   } catch (err){
     console.error(err);
-    alert("فشل تصدير PDF");
+    const msg = err?.message || "فشل تصدير PDF";
+    alert(msg);
   } finally {
     if(btn){
       btn.disabled = false;
