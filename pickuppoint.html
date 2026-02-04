@@ -354,6 +354,12 @@ function updatePickedTotal(list){
 
 async function updateAllOrdersTotal(){
   if(!allOrdersTotalEl || !allOrdersTotalWrap) return;
+  const isRahafUser = isRahaf || myEmail === "rahaf@she-store.com" || userEmail === "rahaf@she-store.com";
+  allOrdersTotalWrap.style.display = isRahafUser ? "" : "none";
+  if(collectAllBtn){
+    collectAllBtn.style.display = isRahafUser ? "" : "none";
+  }
+  if(!isRahafUser) return;
   const { data, error } = await sb
     .from("purchases")
     .select("paid_price, price, picked_up, collected")
@@ -363,15 +369,13 @@ async function updateAllOrdersTotal(){
 
   if(error){
     console.error(error);
+    allOrdersTotalEl.textContent = "إجمالي التحصيل المطلوب: —";
+    if(collectAllBtn) collectAllBtn.disabled = true;
     return;
   }
   const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
   allOrdersTotalEl.textContent = `إجمالي التحصيل المطلوب: ${formatILS(total)} ₪`;
-  allOrdersTotalWrap.style.display = "";
-  if(collectAllBtn){
-    collectAllBtn.style.display = isRahaf ? "" : "none";
-    collectAllBtn.disabled = total <= 0;
-  }
+  if(collectAllBtn) collectAllBtn.disabled = total <= 0;
 }
 
 async function loadUser(){
