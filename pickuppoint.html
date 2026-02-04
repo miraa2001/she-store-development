@@ -114,6 +114,7 @@
 
       <div id="allOrdersTotalWrap" class="row" style="margin-bottom:10px;display:none">
         <span class="pill" id="allOrdersTotal">إجمالي التحصيل المطلوب: 0 ₪</span>
+        <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
       </div>
 
       <div id="main" style="display:none">
@@ -284,6 +285,7 @@ const tbody = document.getElementById("tbody");
 const collectBtn = document.getElementById("collectBtn");
 const allOrdersTotalWrap = document.getElementById("allOrdersTotalWrap");
 const allOrdersTotalEl = document.getElementById("allOrdersTotal");
+const collectAllBtn = document.getElementById("collectAllBtn");
 
 const searchInput = document.getElementById("searchInput");
 const searchResultsEl = document.getElementById("searchResults");
@@ -366,6 +368,10 @@ async function updateAllOrdersTotal(){
   const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
   allOrdersTotalEl.textContent = `إجمالي التحصيل المطلوب: ${formatILS(total)} ₪`;
   allOrdersTotalWrap.style.display = "";
+  if(collectAllBtn){
+    collectAllBtn.style.display = isRahaf ? "" : "none";
+    collectAllBtn.disabled = total <= 0;
+  }
 }
 
 async function loadUser(){
@@ -560,6 +566,62 @@ if(collectBtn){
     updatePickedTotal(visibleList);
     await updateAllOrdersTotal();
     collectBtn.disabled = false;
+  };
+}
+
+if(collectAllBtn){
+  collectAllBtn.onclick = async ()=>{
+    if(!isRahaf) return;
+
+    const { data, error } = await sb
+      .from("purchases")
+      .select("paid_price, price")
+      .eq("pickup_point", PICKUP_VALUE)
+      .eq("picked_up", true)
+      .eq("collected", false);
+
+    if(error){
+      console.error(error);
+      return;
+    }
+
+    const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+    if(total <= 0){
+      return;
+    }
+
+    collectAllBtn.disabled = true;
+    const { error: upErr } = await sb
+      .from("purchases")
+      .update({ collected: true, collected_at: new Date().toISOString() })
+      .eq("pickup_point", PICKUP_VALUE)
+      .eq("picked_up", true)
+      .eq("collected", false);
+
+    if(upErr){
+      console.error(upErr);
+      collectAllBtn.disabled = false;
+      return;
+    }
+
+    await sendNtfy([
+      "تم استلام تحصيل النقود ✅",
+      "المكان: نقطة الاستلام (La Aura)",
+      `المبلغ: ${formatILS(total)}`
+    ].join("\n"));
+
+    await loadPickupOrders();
+    if(activeOrder){
+      const list = activeOrder.orderIds
+        ? await loadPurchasesForOrders(activeOrder.orderIds)
+        : await loadPurchasesForOrder(activeOrder.id);
+      purchasesByOrder.set(activeOrder.id, list);
+      const visibleList = list.filter(item=>!item.collected);
+      renderTable(visibleList);
+      updatePickedTotal(visibleList);
+    }
+    await updateAllOrdersTotal();
+    collectAllBtn.disabled = false;
   };
 }
 
