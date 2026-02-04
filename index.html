@@ -63,8 +63,9 @@
     input, select, textarea{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
     input[readonly]{background:#f4f4f4;color:#666}
     textarea{width:100%;min-height:84px;resize:vertical}
-    table{width:100%;border-collapse:collapse;table-layout:fixed}
-    th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top;word-break:break-word;overflow-wrap:anywhere}
+    .tableWrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;min-width:860px}
+    th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
     td a{word-break:break-all;overflow-wrap:anywhere}
     th{color:#666;font-size:13px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
@@ -287,6 +288,7 @@
 
         <hr>
 
+        <div class="tableWrap">
         <table>
           <thead>
             <tr>
@@ -304,6 +306,7 @@
           </thead>
           <tbody id="tbody"></tbody>
         </table>
+        </div>
       </div>
     </main>
   </div>
