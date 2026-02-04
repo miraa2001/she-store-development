@@ -45,6 +45,7 @@
     .sidebar .danger{border-color:#f2c2c2;color:#b00020}
     .orderItem{border:1px solid #e7e7e7;border-radius:12px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
     .orderItem.active{border-color:#111}
+    .ordersMeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
     .sectionTitle{font-weight:700;margin:10px 0 6px}
     table{width:100%;border-collapse:collapse}
     th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
@@ -79,7 +80,7 @@
     <aside class="card">
       <div class="row" style="justify-content:space-between">
         <b>الطلبيات</b>
-        <div class="row">
+        <div class="ordersMeta">
           <span class="pill" id="ordersCount">0</span>
           <span class="pill" id="ordersCollectedTotal">إجمالي التحصيل: 0 ₪</span>
         </div>
