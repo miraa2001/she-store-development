@@ -555,7 +555,7 @@ async function fetchFinanceData(){
   orderStatsById = new Map();
 
   (purchasesRes.data || []).forEach(p=>{
-    const amount = parsePrice(p.paid_price ?? p.price);
+    const amount = parsePrice(p.paid_price);
     if(!orderStatsById.has(p.order_id)){
       orderStatsById.set(p.order_id, {
         collected: 0,

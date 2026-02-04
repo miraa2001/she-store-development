@@ -447,7 +447,7 @@ function renderPurchases(){
       ? `
         <td data-paid-cell="${p.id}">
           <span>${escapeHtml(p.paid_price ?? "—")}</span>
-          ${p.picked_up ? `<button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>` : ""}
+          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
         </td>
       `
       : ``;
@@ -469,10 +469,9 @@ function renderPurchases(){
       const id = chk.dataset.pick;
       const checked = chk.checked;
       const entry = purchases.find(p=>String(p.id) === String(id));
-      const paidPrice = checked ? parsePrice(entry?.price) : null;
       const payload = checked
-        ? { picked_up: true, picked_up_at: new Date().toISOString(), paid_price: paidPrice }
-        : { picked_up: false, picked_up_at: null, paid_price: null };
+        ? { picked_up: true, picked_up_at: new Date().toISOString() }
+        : { picked_up: false, picked_up_at: null };
 
       const { error: upErr } = await sb.from("purchases").update(payload).eq("id", id);
       if(upErr){
@@ -484,7 +483,6 @@ function renderPurchases(){
       if(entry){
         entry.picked_up = payload.picked_up;
         entry.picked_up_at = payload.picked_up_at;
-        entry.paid_price = payload.paid_price;
       }
 
       const cell = tbody.querySelector(`[data-picked-at="${id}"]`);
@@ -508,7 +506,7 @@ function renderPurchases(){
       e.stopPropagation();
       const id = btn.dataset.editPaid;
       const entry = purchases.find(p=>String(p.id) === String(id));
-      if(!entry || !entry.picked_up || myEmail !== EMAIL_RAHAF) return;
+      if(!entry || myEmail !== EMAIL_RAHAF) return;
 
       const cell = btn.closest("td");
       const currentVal = entry.paid_price ?? "";

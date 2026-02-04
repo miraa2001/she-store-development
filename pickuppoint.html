@@ -546,7 +546,7 @@ function renderTable(list){
       ? `
         <td data-paid-cell="${p.id}">
           <span>${escapeHtml(p.paid_price ?? "—")}</span>
-          ${p.picked_up ? `<button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>` : ""}
+          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
         </td>
       `
       : ``;
@@ -571,16 +571,14 @@ function renderTable(list){
 
       const list = purchasesByOrder.get(activeOrder.id) || [];
       const item = list.find(x=>String(x.id)===String(id));
-      const paidPrice = val ? parsePrice(item?.price) : null;
       if(item){
         item.picked_up = val;
         item.picked_up_at = pickedAt;
-        item.paid_price = paidPrice;
       }
 
       const { error } = await sb
         .from("purchases")
-        .update({ picked_up: val, picked_up_at: pickedAt, paid_price: paidPrice })
+        .update({ picked_up: val, picked_up_at: pickedAt })
         .eq("id", id);
 
       if(error){
@@ -620,7 +618,7 @@ function renderTable(list){
       const id = btn.dataset.editPaid;
       const listAll = purchasesByOrder.get(activeOrder.id) || [];
       const item = listAll.find(x=>String(x.id)===String(id));
-      if(!item || !item.picked_up) return;
+      if(!item) return;
 
       const cell = btn.closest("td");
       const currentVal = item.paid_price ?? "";

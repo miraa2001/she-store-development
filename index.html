@@ -1641,6 +1641,32 @@ function toggleEditRow(purchaseId){
   const willOpen = row.style.display === "none";
   row.style.display = willOpen ? "" : "none";
   activeEditPasteTarget = willOpen ? purchaseId : null;
+  if(willOpen){
+    const paidInput = row.querySelector(`[data-f="paid"]`);
+    if(paidInput) paidInput.dataset.manual = "";
+    setupPaidPriceSync(purchaseId);
+  }
+}
+
+function setupPaidPriceSync(purchaseId){
+  const row = tbody.querySelector(`tr[data-edit-row="${purchaseId}"]`);
+  if(!row || row.dataset.paidSync === "1") return;
+  const priceInput = row.querySelector(`[data-f="price"]`);
+  const paidInput = row.querySelector(`[data-f="paid"]`);
+  if(!priceInput || !paidInput) return;
+
+  paidInput.addEventListener("input", ()=>{
+    paidInput.dataset.manual = "1";
+  });
+  priceInput.addEventListener("input", ()=>{
+    if(paidInput.dataset.manual === "1") return;
+    paidInput.value = priceInput.value;
+  });
+
+  if(!paidInput.value && priceInput.value){
+    paidInput.value = priceInput.value;
+  }
+  row.dataset.paidSync = "1";
 }
 
 function closeEditRow(purchaseId){
@@ -1662,7 +1688,7 @@ async function saveInlineEdit(purchaseId){
   const qtyVal = Number(row.querySelector(`[data-f="qty"]`).value);
   const priceVal = Number(row.querySelector(`[data-f="price"]`).value);
   const paidRaw = row.querySelector(`[data-f="paid"]`).value.trim();
-  const paidVal = paidRaw === "" ? null : Number(paidRaw);
+  const paidVal = paidRaw === "" ? priceVal : Number(paidRaw);
   const bagVal = row.querySelector(`[data-f="bag"]`).value;
   const pickupVal = row.querySelector(`[data-f="pickup"]`).value;
   const noteVal = row.querySelector(`[data-f="note"]`).value.trim();
@@ -1671,7 +1697,7 @@ async function saveInlineEdit(purchaseId){
   if(!name){ msgEl.textContent="اسم الزبون مطلوب."; return; }
   if(!Number.isFinite(qtyVal) || qtyVal<1){ msgEl.textContent="العدد غير صحيح."; return; }
   if(!Number.isFinite(priceVal) || priceVal<0){ msgEl.textContent="السعر غير صحيح."; return; }
-  if(paidRaw !== "" && (!Number.isFinite(paidVal) || paidVal<0)){ msgEl.textContent="السعر المدفوع غير صحيح."; return; }
+  if(!Number.isFinite(paidVal) || paidVal<0){ msgEl.textContent="السعر المدفوع غير صحيح."; return; }
 
   const links=[];
   for(let i=1;i<=5;i++){
@@ -1837,7 +1863,7 @@ async function loadPurchases(){
 
             <div class="row" style="align-items:center; gap:8px">
               <span class="muted" style="min-width:90px">المدفوع</span>
-              <input data-f="paid" type="number" step="0.01" min="0" placeholder="المدفوع" value="${escapeAttr(p.paid_price ?? "")}" style="flex:1">
+              <input data-f="paid" type="number" step="0.01" min="0" placeholder="المدفوع" value="${escapeAttr(p.paid_price ?? p.price ?? "")}" style="flex:1">
             </div>
           </div>
 
@@ -2034,6 +2060,7 @@ addBtn.onclick = async ()=>{
       customer_name: customer.value,
       qty: Number(qty.value),
       price: Number(price.value),
+      paid_price: Number(price.value),
       bag_size: bagSize.value,
       pickup_point: pickupPoint.value,
       note: note.value.trim()
