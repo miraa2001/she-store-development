@@ -139,21 +139,14 @@ const HOME_PICKUP_VALUE = "من البيت";
 const PICKUP_VALUE = "من نقطة الاستلام";
 const EMAIL_RAHAF = "rahaf@she-store.com";
 
-async function requireAuth(){
-  const { data } = await sb.auth.getSession();
-  if(!data.session){
-    window.location.href="./login.html?next=collections.html";
-    return false;
-  }
-  return true;
-}
-
 async function guardCollectionsAccess(){
-  const ok = await requireAuth();
-  if(!ok) return;
-
-  const { data: u } = await sb.auth.getUser();
-  const email = (u?.user?.email || "").toLowerCase();
+  const { data } = await sb.auth.getSession();
+  const session = data?.session;
+  if(!session){
+    window.location.href="./login.html?next=collections.html";
+    return;
+  }
+  const email = (session?.user?.email || "").toLowerCase();
   if(email !== EMAIL_RAHAF){
     window.location.replace("./login.html");
   }
