@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Cart Total Tester</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --border:#e6e8ef;
+      --text:#111;
+      --muted:#6b7280;
+      --accent:#2b6cb0;
+      --accent-2:#2563eb;
+      --danger:#c2410c;
+      --success:#059669;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background:var(--bg);
+      color:var(--text);
+      line-height:1.4;
+    }
+    header{
+      padding:20px 16px 10px;
+      text-align:center;
+      font-weight:700;
+      font-size:22px;
+    }
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 16px 40px;
+      display:grid;
+      gap:16px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:14px;
+    }
+    .dropzone{
+      border:2px dashed #cbd5e1;
+      border-radius:14px;
+      padding:18px;
+      text-align:center;
+      background:#f9fafb;
+    }
+    .dropzone.dragover{border-color:var(--accent); background:#eef3ff}
+    .muted{color:var(--muted)}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .thumb{
+      width:90px;height:90px;border:1px solid var(--border);border-radius:10px;
+      background:#fff;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+    }
+    .thumb img{max-width:100%;max-height:100%;display:block}
+    .thumb button{
+      position:absolute;top:4px;right:4px;border:none;background:#000000a6;color:#fff;
+      width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;
+    }
+    button{
+      border:1px solid var(--border);background:#fff;padding:9px 12px;border-radius:10px;cursor:pointer;
+    }
+    button.primary{background:var(--accent-2);color:#fff;border-color:var(--accent-2)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    .progressWrap{width:100%;background:#f1f5f9;border-radius:999px;height:10px;overflow:hidden}
+    .progressBar{height:100%;background:var(--accent);width:0%}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px;vertical-align:top}
+    th{color:#555;font-weight:600}
+    .small{font-size:12px}
+    .statusLine{min-height:20px}
+    .total{font-weight:700;font-size:20px}
+    .pill{
+      display:inline-block;border:1px solid var(--border);border-radius:999px;padding:4px 8px;font-size:12px;
+      background:#f8fafc;color:#374151;
+    }
+    .warn{color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;padding:6px 10px;border-radius:8px}
+    .resultsHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .snippet{color:#6b7280}
+    .conf{color:#0f766e}
+    .ignored{color:#9ca3af;text-decoration:line-through}
+    .err{color:#b91c1c}
+    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .space{height:6px}
+    .inline{display:inline-flex;align-items:center;gap:6px}
+    input[type="checkbox"]{transform:scale(1.1)}
+  </style>
+</head>
+<body>
+  <header>AI Cart Total Tester</header>
+  <div class="wrap">
+    <section class="card">
+      <div id="dropzone" class="dropzone">
+        <div>Paste images (Ctrl+V), drag &amp; drop, or choose files</div>
+        <div class="space"></div>
+        <label class="pill" style="cursor:pointer">
+          Choose Files
+          <input id="fileInput" type="file" accept="image/*" multiple style="display:none">
+        </label>
+        <div class="space"></div>
+        <div class="muted">Images: <span id="imageCount">0</span></div>
+        <div id="thumbs" class="thumbs"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="controls">
+        <button id="calcBtn" class="primary">Calculate Total</button>
+        <button id="clearBtn">Clear</button>
+        <label class="inline">
+          <input id="preprocessToggle" type="checkbox">
+          Use preprocessing (OpenCV threshold)
+        </label>
+      </div>
+      <div class="space"></div>
+      <div class="statusLine muted" id="statusText"></div>
+      <div class="progressWrap"><div id="progressBar" class="progressBar"></div></div>
+      <div class="space"></div>
+      <div class="muted small" id="opencvStatus"></div>
+    </section>
+
+    <section class="card">
+      <div class="resultsHeader">
+        <div class="total">Total: <span id="totalValue">0.00</span> ILS</div>
+        <div class="row">
+          <button id="copyBtn">Copy total</button>
+          <span class="warn small">OCR is imperfect — verify.</span>
+        </div>
+      </div>
+      <div class="space"></div>
+      <div id="resultsWrap"></div>
+    </section>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://docs.opencv.org/4.x/opencv.js" async></script>
+  <script>
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("fileInput");
+    const thumbs = document.getElementById("thumbs");
+    const imageCount = document.getElementById("imageCount");
+    const calcBtn = document.getElementById("calcBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const preprocessToggle = document.getElementById("preprocessToggle");
+    const statusText = document.getElementById("statusText");
+    const progressBar = document.getElementById("progressBar");
+    const resultsWrap = document.getElementById("resultsWrap");
+    const totalValue = document.getElementById("totalValue");
+    const copyBtn = document.getElementById("copyBtn");
+    const opencvStatus = document.getElementById("opencvStatus");
+
+    let images = [];
+    let worker = null;
+    let ocrRunning = false;
+    let opencvReady = false;
+
+    function updateOpenCVStatus(){
+      if(opencvReady){
+        opencvStatus.textContent = "OpenCV loaded. Preprocessing is available.";
+        preprocessToggle.checked = true;
+      }else{
+        opencvStatus.textContent = "OpenCV not ready. Preprocessing will be disabled.";
+        preprocessToggle.checked = false;
+      }
+      preprocessToggle.disabled = !opencvReady;
+    }
+
+    if(window.cv){
+      opencvReady = true;
+      updateOpenCVStatus();
+    }else{
+      window.Module = {
+        onRuntimeInitialized() {
+          opencvReady = true;
+          updateOpenCVStatus();
+        }
+      };
+      updateOpenCVStatus();
+    }
+
+    function addImagesFromFiles(fileList){
+      const files = Array.from(fileList || []).filter(f => f.type.startsWith("image/"));
+      files.forEach(file => {
+        const url = URL.createObjectURL(file);
+        images.push({ file, url });
+      });
+      renderThumbnails();
+    }
+
+    function addImagesFromClipboard(e){
+      const items = Array.from(e.clipboardData?.items || []);
+      const files = items
+        .filter(it => it.type.startsWith("image/"))
+        .map(it => it.getAsFile())
+        .filter(Boolean);
+      if(files.length){
+        e.preventDefault();
+        addImagesFromFiles(files);
+      }
+    }
+
+    function renderThumbnails(){
+      thumbs.innerHTML = "";
+      images.forEach((img, idx) => {
+        const div = document.createElement("div");
+        div.className = "thumb";
+        const image = document.createElement("img");
+        image.src = img.url;
+        const btn = document.createElement("button");
+        btn.textContent = "×";
+        btn.onclick = () => {
+          URL.revokeObjectURL(img.url);
+          images = images.filter((_, i) => i !== idx);
+          renderThumbnails();
+        };
+        div.appendChild(image);
+        div.appendChild(btn);
+        thumbs.appendChild(div);
+      });
+      imageCount.textContent = images.length;
+    }
+
+    function resetUI(){
+      statusText.textContent = "";
+      progressBar.style.width = "0%";
+      resultsWrap.innerHTML = "";
+      totalValue.textContent = "0.00";
+    }
+
+    async function ensureWorker(){
+      if(worker) return worker;
+      worker = await Tesseract.createWorker("eng");
+      return worker;
+    }
+
+    async function preprocessCanvasOpenCV(canvas){
+      if(!opencvReady) return canvas;
+      try{
+        const src = cv.imread(canvas);
+        const gray = new cv.Mat();
+        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+        const dst = new cv.Mat();
+        cv.threshold(gray, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
+        const out = document.createElement("canvas");
+        out.width = canvas.width;
+        out.height = canvas.height;
+        cv.imshow(out, dst);
+        src.delete(); gray.delete(); dst.delete();
+        return out;
+      }catch(err){
+        console.error(err);
+        return canvas;
+      }
+    }
+
+    async function ocrCanvas(canvas){
+      const w = await ensureWorker();
+      const { data } = await w.recognize(canvas);
+      return data.text || "";
+    }
+
+    function normalizePriceToken(token){
+      let s = token.replace(/[,]/g, ".").replace(/[^\d.]/g, "");
+      if(!s) return null;
+      if(s.split(".").length > 2) return null;
+      const num = Number(s);
+      if(!isFinite(num)) return null;
+      return num;
+    }
+
+    function looksLikeDate(str){
+      return /\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/.test(str);
+    }
+
+    function extractPricesFromText(text, imageIndex){
+      const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+      const results = [];
+      const seen = new Set();
+
+      lines.forEach(line => {
+        if(looksLikeDate(line)) return;
+        if(/\d+%/.test(line)) return;
+
+        const tokens = line.split(/[\s|]+/).filter(Boolean);
+        const candidates = [];
+
+        tokens.forEach(tok => {
+          const hasCurrency = /₪|ILS/i.test(tok);
+          const rawNum = tok.replace(/[₪]|ILS/gi, "");
+          const val = normalizePriceToken(rawNum);
+          if(val === null) return;
+          if(String(Math.round(val)).length >= 5 && !hasCurrency) return;
+          candidates.push({ value: val, raw: tok, hasCurrency });
+        });
+
+        if(!candidates.length) return;
+
+        const min = Math.min(...candidates.map(c => c.value));
+        const ignored = candidates.filter(c => c.value !== min).map(c => c.value);
+        const key = `${imageIndex}:${min.toFixed(2)}`;
+        if(seen.has(key)) return;
+        seen.add(key);
+
+        results.push({
+          value: min,
+          currency: "ILS",
+          imageIndex,
+          raw: line,
+          confidence: Math.min(1, 0.4 + (candidates.length * 0.15)),
+          ignoredOldPrices: ignored.length ? ignored : undefined
+        });
+      });
+
+      return results;
+    }
+
+    function buildResultsUI(items){
+      if(!items.length){
+        resultsWrap.innerHTML = "<div class='muted'>No prices detected.</div>";
+        return;
+      }
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Include</th>
+            <th>Value</th>
+            <th>Currency</th>
+            <th>Image</th>
+            <th>Snippet</th>
+            <th>Confidence</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+      const tbody = table.querySelector("tbody");
+
+      items.forEach((item, idx) => {
+        const tr = document.createElement("tr");
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.checked = true;
+        cb.dataset.index = idx;
+        cb.addEventListener("change", computeTotal);
+
+        const ignoredText = item.ignoredOldPrices?.length
+          ? `<div class="small ignored">ignored: ${item.ignoredOldPrices.join(", ")}</div>`
+          : "";
+
+        tr.innerHTML = `
+          <td></td>
+          <td>${item.value.toFixed(2)}</td>
+          <td>${item.currency}</td>
+          <td>#${item.imageIndex + 1}</td>
+          <td class="snippet">${item.raw}${ignoredText}</td>
+          <td class="conf">${Math.round(item.confidence * 100)}%</td>
+        `;
+        tr.children[0].appendChild(cb);
+        tbody.appendChild(tr);
+      });
+
+      resultsWrap.innerHTML = "";
+      resultsWrap.appendChild(table);
+      computeTotal();
+    }
+
+    function computeTotal(){
+      const checks = resultsWrap.querySelectorAll("input[type='checkbox']");
+      let sum = 0;
+      checks.forEach(cb => {
+        if(cb.checked){
+          const row = cb.closest("tr");
+          const val = Number(row.children[1].textContent);
+          if(isFinite(val)) sum += val;
+        }
+      });
+      totalValue.textContent = sum.toFixed(2);
+      return sum;
+    }
+
+    async function processImages(){
+      if(ocrRunning) return;
+      if(!images.length){
+        resultsWrap.innerHTML = "<div class='muted'>Add images first.</div>";
+        return;
+      }
+      ocrRunning = true;
+      calcBtn.disabled = true;
+      resetUI();
+
+      const allResults = [];
+      for(let i=0; i<images.length; i++){
+        statusText.textContent = `Processing image ${i+1}/${images.length}...`;
+        progressBar.style.width = `${Math.round((i / images.length) * 100)}%`;
+
+        const img = images[i];
+        const bitmap = await createImageBitmap(img.file);
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(bitmap, 0, 0);
+
+        let inputCanvas = canvas;
+        if(preprocessToggle.checked && opencvReady){
+          inputCanvas = await preprocessCanvasOpenCV(canvas);
+        }
+        try{
+          const text = await ocrCanvas(inputCanvas);
+          const prices = extractPricesFromText(text, i);
+          allResults.push(...prices);
+        }catch(err){
+          console.error(err);
+          resultsWrap.innerHTML += `<div class="err small">OCR failed for image ${i+1}.</div>`;
+        }
+      }
+      progressBar.style.width = "100%";
+      statusText.textContent = "Done.";
+      buildResultsUI(allResults);
+      calcBtn.disabled = false;
+      ocrRunning = false;
+    }
+
+    function clearAll(){
+      images.forEach(i => URL.revokeObjectURL(i.url));
+      images = [];
+      renderThumbnails();
+      resetUI();
+    }
+
+    copyBtn.onclick = async () => {
+      const val = totalValue.textContent;
+      try{
+        await navigator.clipboard.writeText(val);
+        statusText.textContent = "Total copied.";
+      }catch(err){
+        statusText.textContent = "Copy failed.";
+      }
+    };
+
+    calcBtn.onclick = processImages;
+    clearBtn.onclick = clearAll;
+
+    fileInput.addEventListener("change", (e) => addImagesFromFiles(e.target.files));
+
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      addImagesFromFiles(e.dataTransfer.files);
+    });
+
+    document.addEventListener("paste", addImagesFromClipboard);
+  </script>
+</body>
+</html>
