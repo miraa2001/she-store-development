@@ -316,6 +316,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
 <script>
 const SUPABASE_URL = "https://maucjvxhrnkdeybltjco.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0N65DXPMsk_3WVcLQ9wavQ_p9HgB_Bo";
@@ -882,6 +883,202 @@ document.addEventListener("paste",(e)=>{
 });
 
 /* ===== Orders ===== */
+let pdfFonts = null;
+
+async function fetchOrder(orderId){
+  const { data, error } = await sb
+    .from("orders")
+    .select("*")
+    .eq("id", orderId)
+    .maybeSingle();
+  if(error){ console.error(error); throw error; }
+  if(!data) throw new Error("Order not found");
+  return data;
+}
+
+async function fetchPurchases(orderId){
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, customer_name, qty, price, paid_price, purchase_links(url), purchase_images(storage_path)")
+    .eq("order_id", orderId)
+    .order("created_at", { ascending: true });
+  if(error){ console.error(error); throw error; }
+  return data || [];
+}
+
+async function addPurchasePage(pdfDoc, purchase, order){
+  const { rgb, PageSizes } = PDFLib;
+  const page = pdfDoc.addPage(PageSizes.A4);
+  const { width, height } = page.getSize();
+  const regular = pdfFonts?.regular;
+  const bold = pdfFonts?.bold;
+
+  const title = purchase.customer_name || order.order_name || "Purchase";
+  const qtyText = `Quantity: ${purchase.qty ?? ""}`;
+  const unitPrice = purchase.price === null || purchase.price === undefined ? "—" : formatILS(purchase.price);
+  const paidPrice = purchase.paid_price === null || purchase.paid_price === undefined ? "—" : formatILS(purchase.paid_price);
+  const priceText = `Unit price: ${unitPrice}${unitPrice === "—" ? "" : " ₪"}`;
+  const paidText = `Paid price: ${paidPrice}${paidPrice === "—" ? "" : " ₪"}`;
+
+  const links = (purchase.purchase_links || []).map(l=>l.url).filter(Boolean);
+  const linkLines = links.length ? links : ["—"];
+
+  const imageUrls = (purchase.purchase_images || []).map(img=>{
+    const res = sb.storage.from(BUCKET).getPublicUrl(img.storage_path);
+    return res?.data?.publicUrl || "";
+  }).filter(Boolean);
+
+  const thumbItems = [];
+  for(const url of imageUrls){
+    try{
+      const res = await fetch(url);
+      if(!res.ok) throw new Error("Image fetch failed");
+      const bytes = await res.arrayBuffer();
+      const contentType = (res.headers.get("content-type") || "").toLowerCase();
+      let image;
+      if(contentType.includes("png") || url.toLowerCase().endsWith(".png")){
+        image = await pdfDoc.embedPng(bytes);
+      } else {
+        image = await pdfDoc.embedJpg(bytes);
+      }
+      const maxW = 160;
+      const maxH = 120;
+      const scale = Math.min(maxW / image.width, maxH / image.height, 1);
+      const dims = image.scale(scale);
+      thumbItems.push({ type:"image", image, width:dims.width, height:dims.height });
+    } catch (err){
+      console.error("Image embed failed:", err);
+      thumbItems.push({ type:"error", width:140, height:18 });
+    }
+  }
+  if(!thumbItems.length){
+    thumbItems.push({ type:"error", width:140, height:18 });
+  }
+
+  const lines = [
+    { text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14 },
+    { text: qtyText, size: 14, font: regular, color: rgb(0,0,0), gap: 8 },
+    { text: priceText, size: 14, font: regular, color: rgb(0,0,0), gap: 8 },
+    { text: paidText, size: 14, font: regular, color: rgb(0,0,0), gap: 14 },
+    { text: "Product URL:", size: 12, font: bold, color: rgb(0,0,0), gap: 6 }
+  ];
+
+  linkLines.forEach((url)=> lines.push({
+    text: url,
+    size: 11,
+    font: regular,
+    color: url === "—" ? rgb(0,0,0) : rgb(0.1,0.4,0.9),
+    link: url === "—" ? null : url,
+    gap: 6
+  }));
+
+  lines.push({ text: "Images:", size: 12, font: bold, color: rgb(0,0,0), gap: 8 });
+
+  const thumbsGap = 12;
+  const rowHeight = Math.max(...thumbItems.map(t=>t.height));
+  const rowWidth = thumbItems.reduce((sum,t)=> sum + t.width, 0) + thumbsGap * (thumbItems.length - 1);
+
+  const contentHeight = lines.reduce((sum,l)=> sum + l.size + l.gap, 0) + rowHeight;
+  let y = (height + contentHeight) / 2;
+
+  const drawCenteredText = (text, size, font, color, link)=>{
+    const safeText = String(text ?? "");
+    const textWidth = font.widthOfTextAtSize(safeText, size);
+    const x = Math.max(40, (width - textWidth) / 2);
+    const opts = { x, y, size, font, color, maxWidth: width - 80 };
+    if(link) opts.link = link;
+    page.drawText(safeText, opts);
+  };
+
+  for(const line of lines){
+    y -= line.size;
+    drawCenteredText(line.text, line.size, line.font, line.color, line.link);
+    y -= line.gap;
+  }
+
+  const rowX = Math.max(40, (width - rowWidth) / 2);
+  const rowY = y - rowHeight;
+  let x = rowX;
+  thumbItems.forEach((item)=>{
+    if(item.type === "image"){
+      page.drawImage(item.image, { x, y: rowY, width: item.width, height: item.height });
+    } else {
+      page.drawText("Image unavailable", {
+        x,
+        y: rowY + Math.max(0, (rowHeight - item.height) / 2),
+        size: 10,
+        font: regular,
+        color: rgb(0.4,0.4,0.4),
+        maxWidth: item.width
+      });
+    }
+    x += item.width + thumbsGap;
+  });
+}
+
+async function buildPdf(order, purchases){
+  const { PDFDocument, StandardFonts } = PDFLib;
+  const pdfDoc = await PDFDocument.create();
+  pdfFonts = {
+    regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
+    bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold)
+  };
+
+  if(!purchases.length){
+    const page = pdfDoc.addPage(PDFLib.PageSizes.A4);
+    page.drawText("No purchases", { x: 50, y: page.getHeight()/2, size: 16, font: pdfFonts.bold });
+  } else {
+    for(const p of purchases){
+      await addPurchasePage(pdfDoc, p, order);
+    }
+  }
+
+  return await pdfDoc.save();
+}
+
+function downloadPdf(bytes, filename){
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>{
+    URL.revokeObjectURL(url);
+    a.remove();
+  }, 0);
+}
+
+async function exportOrderPdf(orderId, btn){
+  if(!window.PDFLib){
+    alert("تعذر تحميل مكتبة PDF");
+    return;
+  }
+  const originalText = btn?.textContent;
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = "جاري التصدير...";
+  }
+  try{
+    const order = await fetchOrder(orderId);
+    const purchases = await fetchPurchases(orderId);
+    const bytes = await buildPdf(order, purchases);
+    const safeName = (order.order_name || "Order").trim()
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "-");
+    downloadPdf(bytes, `${safeName || "Order"}-Purchases.pdf`);
+  } catch (err){
+    console.error(err);
+    alert("فشل تصدير PDF");
+  } finally {
+    if(btn){
+      btn.disabled = false;
+      btn.textContent = originalText || "تصدير PDF";
+    }
+  }
+}
+
 async function loadOrders(){
   const { data, error } = await sb.from("orders").select("*").order("created_at",{ascending:false});
   if(error){ console.error(error); return; }
@@ -891,8 +1088,32 @@ async function loadOrders(){
   orders.forEach(o=>{
     const div=document.createElement("div");
     div.className="orderItem"+(activeOrder?.id===o.id?" active":"");
-    div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">فتح</span>`;
-    div.onclick=()=>selectOrder(o);
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = o.order_name || "";
+
+    const meta = document.createElement("div");
+    meta.className = "row";
+    meta.style.gap = "6px";
+
+    const pill = document.createElement("span");
+    pill.className = "pill";
+    pill.textContent = "فتح";
+
+    const exportBtn = document.createElement("button");
+    exportBtn.type = "button";
+    exportBtn.className = "btn";
+    exportBtn.textContent = "تصدير PDF";
+    exportBtn.onclick = (e)=>{
+      e.stopPropagation();
+      exportOrderPdf(o.id, exportBtn);
+    };
+
+    meta.appendChild(pill);
+    meta.appendChild(exportBtn);
+
+    div.appendChild(nameSpan);
+    div.appendChild(meta);
+    div.onclick = ()=>selectOrder(o);
     ordersList.appendChild(div);
   });
 }
