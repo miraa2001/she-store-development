@@ -59,6 +59,10 @@
       background:#fff;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
     }
     .thumb img{max-width:100%;max-height:100%;display:block}
+    .roiPreview{
+      position:absolute;left:4px;bottom:4px;width:42px;height:42px;border-radius:6px;
+      border:1px solid var(--border);object-fit:cover;background:#fff;
+    }
     .thumb button{
       position:absolute;top:4px;right:4px;border:none;background:#000000a6;color:#fff;
       width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;
@@ -184,16 +188,66 @@
       updateOpenCVStatus();
     }
 
-    function addImagesFromFiles(fileList){
+    async function buildRoiCanvasFromFile(file){
+      const bitmap = await createImageBitmap(file);
+      const baseCanvas = document.createElement("canvas");
+      baseCanvas.width = bitmap.width;
+      baseCanvas.height = bitmap.height;
+      const baseCtx = baseCanvas.getContext("2d");
+      baseCtx.drawImage(bitmap, 0, 0);
+
+      const cropTop = Math.round(bitmap.height * 0.14);
+      const cropBottom = Math.round(bitmap.height * 0.14);
+      const cropLeft = Math.round(bitmap.width * 0.00);
+      const cropRight = Math.round(bitmap.width * 0.22);
+      const roiWidth = Math.max(1, bitmap.width - cropLeft - cropRight);
+      const roiHeight = Math.max(1, bitmap.height - cropTop - cropBottom);
+
+      const roiCanvas = document.createElement("canvas");
+      roiCanvas.width = roiWidth;
+      roiCanvas.height = roiHeight;
+      const roiCtx = roiCanvas.getContext("2d");
+      roiCtx.drawImage(
+        baseCanvas,
+        cropLeft,
+        cropTop,
+        roiWidth,
+        roiHeight,
+        0,
+        0,
+        roiWidth,
+        roiHeight
+      );
+
+      if(typeof bitmap.close === "function"){
+        bitmap.close();
+      }
+
+      return {
+        roiCanvas,
+        roiUrl: roiCanvas.toDataURL("image/png")
+      };
+    }
+
+    async function addImagesFromFiles(fileList){
       const files = Array.from(fileList || []).filter(f => f.type.startsWith("image/"));
-      files.forEach(file => {
+      for(const file of files){
         const url = URL.createObjectURL(file);
-        images.push({ file, url });
-      });
+        let roiCanvas = null;
+        let roiUrl = null;
+        try{
+          const roi = await buildRoiCanvasFromFile(file);
+          roiCanvas = roi.roiCanvas;
+          roiUrl = roi.roiUrl;
+        }catch(err){
+          console.error("ROI build failed", err);
+        }
+        images.push({ file, url, roiCanvas, roiUrl });
+      }
       renderThumbnails();
     }
 
-    function addImagesFromClipboard(e){
+    async function addImagesFromClipboard(e){
       const items = Array.from(e.clipboardData?.items || []);
       const files = items
         .filter(it => it.type.startsWith("image/"))
@@ -201,7 +255,7 @@
         .filter(Boolean);
       if(files.length){
         e.preventDefault();
-        addImagesFromFiles(files);
+        await addImagesFromFiles(files);
       }
     }
 
@@ -212,6 +266,14 @@
         div.className = "thumb";
         const image = document.createElement("img");
         image.src = img.url;
+        div.appendChild(image);
+        if(img.roiUrl){
+          const roiPreview = document.createElement("img");
+          roiPreview.className = "roiPreview";
+          roiPreview.src = img.roiUrl;
+          roiPreview.title = "OCR ROI preview";
+          div.appendChild(roiPreview);
+        }
         const btn = document.createElement("button");
         btn.textContent = "×";
         btn.onclick = () => {
@@ -219,7 +281,6 @@
           images = images.filter((_, i) => i !== idx);
           renderThumbnails();
         };
-        div.appendChild(image);
         div.appendChild(btn);
         thumbs.appendChild(div);
       });
@@ -274,46 +335,48 @@
       return num;
     }
 
-    function looksLikeDate(str){
-      return /\b\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}\b/.test(str);
-    }
-
     function extractPricesFromText(text, imageIndex){
       const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
       const results = [];
       const seen = new Set();
 
+      const currencyLine = /₪|ILS/i;
+      const patterns = [
+        /₪\s*([0-9]+[.,][0-9]{1,2})/g,
+        /([0-9]+[.,][0-9]{1,2})\s*₪/g,
+        /\bILS\s*([0-9]+[.,][0-9]{1,2})/gi,
+        /([0-9]+[.,][0-9]{1,2})\s*ILS\b/gi
+      ];
+
       lines.forEach(line => {
-        if(looksLikeDate(line)) return;
-        if(/\d+%/.test(line)) return;
+        if(!currencyLine.test(line)) return;
+        if(/%/.test(line)) return;
+        if(/:/.test(line)) return;
 
-        const tokens = line.split(/[\s|]+/).filter(Boolean);
-        const candidates = [];
-
-        tokens.forEach(tok => {
-          const hasCurrency = /₪|ILS/i.test(tok);
-          const rawNum = tok.replace(/[₪]|ILS/gi, "");
-          const val = normalizePriceToken(rawNum);
-          if(val === null) return;
-          if(String(Math.round(val)).length >= 5 && !hasCurrency) return;
-          candidates.push({ value: val, raw: tok, hasCurrency });
+        const matches = [];
+        patterns.forEach((re) => {
+          re.lastIndex = 0;
+          let match;
+          while((match = re.exec(line)) !== null){
+            const val = normalizePriceToken(match[1]);
+            if(val === null) continue;
+            matches.push({ value: val, raw: match[0] });
+          }
         });
 
-        if(!candidates.length) return;
+        if(!matches.length) return;
 
-        const min = Math.min(...candidates.map(c => c.value));
-        const ignored = candidates.filter(c => c.value !== min).map(c => c.value);
-        const key = `${imageIndex}:${min.toFixed(2)}`;
-        if(seen.has(key)) return;
-        seen.add(key);
-
-        results.push({
-          value: min,
-          currency: "ILS",
-          imageIndex,
-          raw: line,
-          confidence: Math.min(1, 0.4 + (candidates.length * 0.15)),
-          ignoredOldPrices: ignored.length ? ignored : undefined
+        matches.forEach(match => {
+          const key = `${imageIndex}:${match.value.toFixed(2)}:${line}`;
+          if(seen.has(key)) return;
+          seen.add(key);
+          results.push({
+            value: match.value,
+            currency: "ILS",
+            imageIndex,
+            raw: line,
+            confidence: 0.65
+          });
         });
       });
 
@@ -400,16 +463,34 @@
         progressBar.style.width = `${Math.round((i / images.length) * 100)}%`;
 
         const img = images[i];
-        const bitmap = await createImageBitmap(img.file);
-        const canvas = document.createElement("canvas");
-        canvas.width = bitmap.width;
-        canvas.height = bitmap.height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(bitmap, 0, 0);
+        let inputCanvas = img.roiCanvas;
+        if(!inputCanvas){
+          try{
+            const roi = await buildRoiCanvasFromFile(img.file);
+            inputCanvas = roi.roiCanvas;
+            if(!img.roiUrl){
+              img.roiUrl = roi.roiUrl;
+              renderThumbnails();
+            }
+          }catch(err){
+            console.error("ROI build failed", err);
+          }
+        }
+        if(!inputCanvas){
+          const bitmap = await createImageBitmap(img.file);
+          const fallback = document.createElement("canvas");
+          fallback.width = bitmap.width;
+          fallback.height = bitmap.height;
+          const ctx = fallback.getContext("2d");
+          ctx.drawImage(bitmap, 0, 0);
+          inputCanvas = fallback;
+          if(typeof bitmap.close === "function"){
+            bitmap.close();
+          }
+        }
 
-        let inputCanvas = canvas;
         if(preprocessToggle.checked && opencvReady){
-          inputCanvas = await preprocessCanvasOpenCV(canvas);
+          inputCanvas = await preprocessCanvasOpenCV(inputCanvas);
         }
         try{
           const text = await ocrCanvas(inputCanvas);
