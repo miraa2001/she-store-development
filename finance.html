@@ -18,6 +18,14 @@
     .muted{color:#666;font-size:13px}
     .pill{display:inline-block;padding:4px 8px;border:1px solid #e7e7e7;border-radius:999px;font-size:12px;color:#444}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .tabs{
+      display:flex;gap:6px;background:#111;padding:6px;border-radius:12px;margin-bottom:12px
+    }
+    .tabBtn{
+      border:none;background:#222;color:#eaeaea;padding:10px 16px;border-radius:10px;
+      cursor:pointer;font-weight:600;font-family:inherit
+    }
+    .tabBtn.active{background:#fff;color:#111}
     .brand b{font-size:20px}
     .menuBtn{border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer}
     .sidebarOverlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:50}
@@ -125,26 +133,32 @@
     <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
   </div>
 
-  <div class="grid">
-    <aside class="card">
-      <div class="row" style="justify-content:space-between">
-        <b>الطلبيات</b>
-        <span class="pill" id="ordersCount">0</span>
-      </div>
-      <div id="ordersList" style="margin-top:10px"></div>
-      <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
-    </aside>
+  <div class="tabs">
+    <button class="tabBtn active" id="tabOrders" type="button">تمويل الطلبات</button>
+    <button class="tabBtn" id="tabMonths" type="button">التمويل الشهري</button>
+  </div>
 
-    <main class="card">
-      <div id="empty" class="muted">اختاري طلبية من القائمة</div>
-
-      <div id="main" style="display:none">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div>
-            <b id="orderTitle"></b>
-          </div>
-          <span class="pill" id="orderStatus">قيد التحصيل</span>
+  <div id="ordersPanel" class="tabPanel">
+    <div class="grid">
+      <aside class="card">
+        <div class="row" style="justify-content:space-between">
+          <b>الطلبيات</b>
+          <span class="pill" id="ordersCount">0</span>
         </div>
+        <div id="ordersList" style="margin-top:10px"></div>
+        <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
+      </aside>
+
+      <main class="card">
+        <div id="empty" class="muted">اختاري طلبية من القائمة</div>
+
+        <div id="main" style="display:none">
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <div>
+              <b id="orderTitle"></b>
+            </div>
+            <span class="pill" id="orderStatus">قيد التحصيل</span>
+          </div>
 
         <div class="kpiGrid">
           <div class="kpi t1">
@@ -191,89 +205,91 @@
           <button class="btn primary" id="saveSpentBtn">حفظ المصروف</button>
           <span class="muted" id="spentMsg"></span>
         </div>
+      </div>
+    </main>
+  </div>
 
-        <hr>
-
-        <div class="row monthHeaderRow" style="justify-content:center;align-items:center">
-          <div class="sectionTitle" style="margin:0">ملخص شهري</div>
-          <button class="btn monthPickerBtn" id="monthPickerToggle" type="button">اختيار الشهر</button>
+  <div id="monthsPanel" class="tabPanel" style="display:none">
+    <main class="card">
+      <div class="row monthHeaderRow" style="justify-content:center;align-items:center">
+        <div class="sectionTitle" style="margin:0">ملخص شهري</div>
+        <button class="btn monthPickerBtn" id="monthPickerToggle" type="button">اختيار الشهر</button>
+      </div>
+      <div class="monthPicker" id="monthPicker" style="display:none">
+        <div class="monthPickerHeader">
+          <button class="monthNav" id="prevYearBtn" type="button">‹</button>
+          <b id="yearLabel">—</b>
+          <button class="monthNav" id="nextYearBtn" type="button">›</button>
         </div>
-        <div class="monthPicker" id="monthPicker" style="display:none">
-          <div class="monthPickerHeader">
-            <button class="monthNav" id="prevYearBtn" type="button">‹</button>
-            <b id="yearLabel">—</b>
-            <button class="monthNav" id="nextYearBtn" type="button">›</button>
-          </div>
-          <div class="monthGrid" id="monthGrid"></div>
+        <div class="monthGrid" id="monthGrid"></div>
+      </div>
+
+      <div class="monthCharts" id="monthCharts" style="display:none">
+        <div class="monthHeader">
+          <b id="monthLabel">—</b>
+          <span class="pill" id="monthStatus">قيد التحصيل</span>
         </div>
 
-        <div class="monthCharts" id="monthCharts" style="display:none">
-          <div class="monthHeader">
-            <b id="monthLabel">—</b>
-            <span class="pill" id="monthStatus">قيد التحصيل</span>
+        <div class="kpiGrid">
+          <div class="kpi t1">
+            <div class="label">المحصل</div>
+            <div class="value" id="monthCollected">0</div>
           </div>
-
-          <div class="kpiGrid">
-            <div class="kpi t1">
-              <div class="label">المحصل</div>
-              <div class="value" id="monthCollected">0</div>
-            </div>
-            <div class="kpi t2">
-              <div class="label">قيد التحصيل</div>
-              <div class="value" id="monthPending">0</div>
-            </div>
-            <div class="kpi t2">
-              <div class="label">اجمالي التحصيل المتوقع</div>
-              <div class="value" id="monthExpected">0</div>
-            </div>
+          <div class="kpi t2">
+            <div class="label">قيد التحصيل</div>
+            <div class="value" id="monthPending">0</div>
           </div>
-
-          <div class="progressBlock" id="monthProgressBlock">
-            <div class="progressText">
-              <div class="muted" id="monthProgressText">0 من 0 تم تحصيلها</div>
-              <div class="muted" id="monthProgressLabel">0% مكتمل</div>
-            </div>
-            <div class="progress"><span id="monthProgressBar" style="width:0%"></span></div>
+          <div class="kpi t2">
+            <div class="label">اجمالي التحصيل المتوقع</div>
+            <div class="value" id="monthExpected">0</div>
           </div>
-          <div class="muted" id="monthProgressEmpty" style="display:none;margin-top:6px">لا يوجد تحصيل بعد</div>
+        </div>
 
-          <div class="kpiRow">
-            <div class="kpi t3" id="monthRealizedKpi">
-              <div class="label" id="monthRealizedLabel">الربح المحقق</div>
-              <div class="value" id="monthRealized">0</div>
-            </div>
-            <div class="kpi t3">
-              <div class="label" id="monthProjectedLabel">الربح المتوقع</div>
-              <div class="value" id="monthProjected">0</div>
-            </div>
-            <div class="kpi t3">
-              <div class="label">المصروف</div>
-              <div class="value" id="monthSpent">0</div>
-            </div>
+        <div class="progressBlock" id="monthProgressBlock">
+          <div class="progressText">
+            <div class="muted" id="monthProgressText">0 من 0 تم تحصيلها</div>
+            <div class="muted" id="monthProgressLabel">0% مكتمل</div>
           </div>
+          <div class="progress"><span id="monthProgressBar" style="width:0%"></span></div>
+        </div>
+        <div class="muted" id="monthProgressEmpty" style="display:none;margin-top:6px">لا يوجد تحصيل بعد</div>
 
-          <div class="row" style="margin-top:10px;justify-content:flex-start">
-            <div class="segmented" id="chartModeSeg">
-              <button class="active" id="chartModeStatus" type="button">حالة التحصيل</button>
-              <button id="chartModeProfit" type="button">الأرباح</button>
-            </div>
+        <div class="kpiRow">
+          <div class="kpi t3" id="monthRealizedKpi">
+            <div class="label" id="monthRealizedLabel">الربح المحقق</div>
+            <div class="value" id="monthRealized">0</div>
           </div>
+          <div class="kpi t3">
+            <div class="label" id="monthProjectedLabel">الربح المتوقع</div>
+            <div class="value" id="monthProjected">0</div>
+          </div>
+          <div class="kpi t3">
+            <div class="label">المصروف</div>
+            <div class="value" id="monthSpent">0</div>
+          </div>
+        </div>
 
-          <div class="chartRow" style="margin-top:12px">
-            <div class="chartBox">
-              <div class="chartEmpty" id="donutEmpty" style="display:none">
-                <div class="title">لا يوجد تحصيل بعد</div>
-                <div class="sub">سيظهر الرسم عند بدء التحصيل</div>
-              </div>
-              <canvas id="monthPie"></canvas>
+        <div class="row" style="margin-top:10px;justify-content:flex-start">
+          <div class="segmented" id="chartModeSeg">
+            <button class="active" id="chartModeStatus" type="button">حالة التحصيل</button>
+            <button id="chartModeProfit" type="button">الأرباح</button>
+          </div>
+        </div>
+
+        <div class="chartRow" style="margin-top:12px">
+          <div class="chartBox">
+            <div class="chartEmpty" id="donutEmpty" style="display:none">
+              <div class="title">لا يوجد تحصيل بعد</div>
+              <div class="sub">سيظهر الرسم عند بدء التحصيل</div>
             </div>
-            <div class="chartBox">
-              <div class="chartEmpty" id="lineEmpty" style="display:none">
-                <div class="title">لا يوجد تحصيل خلال هذا الشهر بعد</div>
-                <div class="sub">سيظهر الرسم عند بدء التحصيل</div>
-              </div>
-              <canvas id="monthLine"></canvas>
+            <canvas id="monthPie"></canvas>
+          </div>
+          <div class="chartBox">
+            <div class="chartEmpty" id="lineEmpty" style="display:none">
+              <div class="title">لا يوجد تحصيل خلال هذا الشهر بعد</div>
+              <div class="sub">سيظهر الرسم عند بدء التحصيل</div>
             </div>
+            <canvas id="monthLine"></canvas>
           </div>
         </div>
       </div>
@@ -440,6 +456,10 @@ const chartModeStatus = document.getElementById("chartModeStatus");
 const chartModeProfit = document.getElementById("chartModeProfit");
 const donutEmpty = document.getElementById("donutEmpty");
 const lineEmpty = document.getElementById("lineEmpty");
+const tabOrders = document.getElementById("tabOrders");
+const tabMonths = document.getElementById("tabMonths");
+const ordersPanel = document.getElementById("ordersPanel");
+const monthsPanel = document.getElementById("monthsPanel");
 
 let orders = [];
 let orderStatsById = new Map();
@@ -450,6 +470,17 @@ let yearList = [];
 let selectedYear = null;
 let selectedMonth = null;
 let chartMode = "status";
+
+function showTab(tab){
+  const isOrders = tab === "orders";
+  if(ordersPanel) ordersPanel.style.display = isOrders ? "" : "none";
+  if(monthsPanel) monthsPanel.style.display = isOrders ? "none" : "";
+  if(tabOrders) tabOrders.classList.toggle("active", isOrders);
+  if(tabMonths) tabMonths.classList.toggle("active", !isOrders);
+}
+
+if(tabOrders) tabOrders.onclick = ()=> showTab("orders");
+if(tabMonths) tabMonths.onclick = ()=> showTab("months");
 
 if(prevYearBtn){
   prevYearBtn.onclick = ()=>{
@@ -941,6 +972,7 @@ function renderMonthlyCharts(){
   renderOrders();
   renderMonthlyCharts();
   if(orders.length) selectOrder(orders[0]);
+  showTab("orders");
 })();
 </script>
 </body>
