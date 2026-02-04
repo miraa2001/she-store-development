@@ -40,6 +40,8 @@
     .sidebar .danger{border-color:#f2c2c2;color:#b00020}
     .orderItem{border:1px solid #e7e7e7;border-radius:12px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
     .orderItem.active{border-color:#111}
+    .orderGroup{margin-top:10px}
+    .groupTitle{font-weight:700;color:#333;margin:10px 0 6px}
     input{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
     input[type="number"]{max-width:220px}
     .sectionTitle{font-weight:700;margin:12px 0 6px}
@@ -348,12 +350,35 @@ function renderOrders(){
   ordersListEl.innerHTML = "";
   ordersEmptyEl.style.display = orders.length ? "none" : "";
 
+  const groups = new Map();
   orders.forEach(o=>{
-    const div = document.createElement("div");
-    div.className = "orderItem" + (activeOrder?.id === o.id ? " active" : "");
-    div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">فتح</span>`;
-    div.onclick = ()=> selectOrder(o);
-    ordersListEl.appendChild(div);
+    const date = getOrderDate(o);
+    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+    if(!groups.has(key)){
+      groups.set(key, {
+        label: date.toLocaleDateString("ar", { month:"long", year:"numeric" }),
+        items: []
+      });
+    }
+    groups.get(key).items.push(o);
+  });
+
+  const sortedKeys = [...groups.keys()].sort((a,b)=> b.localeCompare(a));
+  sortedKeys.forEach(key=>{
+    const group = groups.get(key);
+    const wrapper = document.createElement("div");
+    wrapper.className = "orderGroup";
+    wrapper.innerHTML = `<div class="groupTitle">${escapeHtml(group.label)}</div>`;
+
+    group.items.forEach(o=>{
+      const div = document.createElement("div");
+      div.className = "orderItem" + (activeOrder?.id === o.id ? " active" : "");
+      div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">فتح</span>`;
+      div.onclick = ()=> selectOrder(o);
+      wrapper.appendChild(div);
+    });
+
+    ordersListEl.appendChild(wrapper);
   });
 }
 
