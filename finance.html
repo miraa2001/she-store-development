@@ -43,13 +43,25 @@
     input{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
     input[type="number"]{max-width:220px}
     .sectionTitle{font-weight:700;margin:12px 0 6px}
-    .monthsScroll{
-      display:flex;gap:12px;overflow-x:auto;padding-bottom:6px;
-      scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch
+    .monthPicker{
+      border:1px solid #eee;border-radius:14px;padding:12px;background:#fff
     }
-    .monthCard{
-      min-width:320px;background:#fff;border:1px solid #eee;border-radius:14px;
-      padding:12px;scroll-snap-align:start
+    .monthPickerHeader{
+      display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px
+    }
+    .monthNav{
+      border:1px solid #e7e7e7;background:#fff;border-radius:10px;padding:6px 10px;cursor:pointer
+    }
+    .monthGrid{
+      display:grid;grid-template-columns:repeat(3,1fr);gap:8px
+    }
+    .monthBtn{
+      border:1px solid #e7e7e7;background:#fff;border-radius:10px;padding:10px;cursor:pointer
+    }
+    .monthBtn.active{background:#111;color:#fff;border-color:#111}
+    .monthBtn.disabled{opacity:.45;cursor:not-allowed}
+    .monthCharts{
+      margin-top:12px;background:#fff;border:1px solid #eee;border-radius:14px;padding:12px
     }
     .monthHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
     .chartRow{display:grid;grid-template-columns:1fr;gap:10px}
@@ -113,7 +125,26 @@
         <hr>
 
         <div class="sectionTitle">ملخص شهري</div>
-        <div class="monthsScroll" id="monthsScroll"></div>
+        <div class="monthPicker">
+          <div class="monthPickerHeader">
+            <button class="monthNav" id="prevYearBtn" type="button">‹</button>
+            <b id="yearLabel">—</b>
+            <button class="monthNav" id="nextYearBtn" type="button">›</button>
+          </div>
+          <div class="monthGrid" id="monthGrid"></div>
+        </div>
+
+        <div class="monthCharts" id="monthCharts" style="display:none">
+          <div class="monthHeader">
+            <b id="monthLabel">—</b>
+            <span class="pill" id="monthRevenue">الإيراد: 0</span>
+          </div>
+          <div class="muted" id="monthNote" style="margin-bottom:6px"></div>
+          <div class="chartRow">
+            <canvas id="monthPie"></canvas>
+            <canvas id="monthLine"></canvas>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -224,12 +255,48 @@ const orderRevenueEl = document.getElementById("orderRevenue");
 const spentInput = document.getElementById("spentInput");
 const saveSpentBtn = document.getElementById("saveSpentBtn");
 const spentMsg = document.getElementById("spentMsg");
-const monthsScroll = document.getElementById("monthsScroll");
+const yearLabel = document.getElementById("yearLabel");
+const monthGrid = document.getElementById("monthGrid");
+const prevYearBtn = document.getElementById("prevYearBtn");
+const nextYearBtn = document.getElementById("nextYearBtn");
+const monthCharts = document.getElementById("monthCharts");
+const monthLabel = document.getElementById("monthLabel");
+const monthRevenue = document.getElementById("monthRevenue");
+const monthNote = document.getElementById("monthNote");
+const monthPie = document.getElementById("monthPie");
+const monthLine = document.getElementById("monthLine");
 
 let orders = [];
 let collectedByOrder = new Map();
 let activeOrder = null;
 let chartInstances = [];
+let monthMap = new Map();
+let yearList = [];
+let selectedYear = null;
+let selectedMonth = null;
+
+if(prevYearBtn){
+  prevYearBtn.onclick = ()=>{
+    if(!yearList.length) return;
+    const idx = yearList.indexOf(selectedYear);
+    if(idx > 0){
+      selectedYear = yearList[idx - 1];
+      selectedMonth = null;
+      renderMonthlyCharts();
+    }
+  };
+}
+if(nextYearBtn){
+  nextYearBtn.onclick = ()=>{
+    if(!yearList.length) return;
+    const idx = yearList.indexOf(selectedYear);
+    if(idx < yearList.length - 1){
+      selectedYear = yearList[idx + 1];
+      selectedMonth = null;
+      renderMonthlyCharts();
+    }
+  };
+}
 
 function showMain(on){
   mainEl.style.display = on ? "" : "none";
@@ -326,11 +393,8 @@ function destroyCharts(){
   chartInstances = [];
 }
 
-function renderMonthlyCharts(){
-  destroyCharts();
-  monthsScroll.innerHTML = "";
-
-  const monthMap = new Map();
+function buildMonthMap(){
+  monthMap = new Map();
 
   orders.forEach(o=>{
     const date = getOrderDate(o);
@@ -359,93 +423,114 @@ function renderMonthlyCharts(){
     m.daily.set(day, (m.daily.get(day) || 0) + revenue);
   });
 
-  const months = [...monthMap.values()].sort((a,b)=>{
-    if(a.year !== b.year) return a.year - b.year;
-    return a.month - b.month;
-  });
+  yearList = [...new Set([...monthMap.values()].map(m=>m.year))].sort((a,b)=>a-b);
+  if(selectedYear === null && yearList.length){
+    selectedYear = yearList[yearList.length - 1];
+  }
+}
+
+function renderMonthPicker(){
+  monthGrid.innerHTML = "";
+  if(!yearList.length){
+    yearLabel.textContent = "—";
+    monthGrid.innerHTML = `<div class="muted">لا يوجد بيانات شهرية</div>`;
+    monthCharts.style.display = "none";
+    return;
+  }
+  yearLabel.textContent = String(selectedYear);
+
+  const monthsNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  for(let i=0;i<12;i++){
+    const key = `${selectedYear}-${String(i+1).padStart(2,"0")}`;
+    const hasData = monthMap.has(key);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "monthBtn" + (selectedMonth === key ? " active" : "") + (!hasData ? " disabled" : "");
+    btn.textContent = monthsNames[i];
+    btn.disabled = !hasData;
+    btn.onclick = ()=>{ selectedMonth = key; renderMonthPicker(); renderMonthCharts(); };
+    monthGrid.appendChild(btn);
+  }
+}
+
+function renderMonthCharts(){
+  destroyCharts();
+  const m = selectedMonth ? monthMap.get(selectedMonth) : null;
+  if(!m){
+    monthCharts.style.display = "none";
+    return;
+  }
+  monthCharts.style.display = "";
+
+  monthLabel.textContent = m.label;
+  monthRevenue.textContent = `الإيراد: ${formatILS(m.revenue)}`;
+  monthNote.textContent = m.revenue < 0 ? "خسارة هذا الشهر" : "إيراد هذا الشهر";
 
   Chart.defaults.font.family = "Tahoma, Arial, system-ui";
   Chart.defaults.color = "#333";
 
-  if(!months.length){
-    monthsScroll.innerHTML = `<div class="muted">لا يوجد بيانات شهرية</div>`;
-    return;
+  const revenuePositive = Math.max(0, m.revenue);
+  const spentPositive = Math.max(0, m.spent);
+
+  const pie = new Chart(monthPie, {
+    type: "doughnut",
+    data: {
+      labels: ["الإيراد", "المصروف"],
+      datasets: [{
+        data: [revenuePositive, spentPositive],
+        backgroundColor: ["#2e7d32", "#b00020"],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: { legend: { position: "bottom" } },
+      cutout: "55%"
+    }
+  });
+  chartInstances.push(pie);
+
+  const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
+  const labels = [];
+  const data = [];
+  for(let d=1; d<=daysInMonth; d++){
+    labels.push(String(d));
+    data.push(m.daily.get(d) || 0);
   }
 
-  months.forEach((m, idx)=>{
-    const card = document.createElement("div");
-    card.className = "monthCard";
-
-    const revenuePositive = Math.max(0, m.revenue);
-    const spentPositive = Math.max(0, m.spent);
-    const note = m.revenue < 0 ? "خسارة هذا الشهر" : "إيراد هذا الشهر";
-
-    card.innerHTML = `
-      <div class="monthHeader">
-        <b>${m.label}</b>
-        <span class="pill">الإيراد: ${formatILS(m.revenue)}</span>
-      </div>
-      <div class="muted" style="margin-bottom:6px">${note}</div>
-      <div class="chartRow">
-        <canvas data-kind="pie-${idx}"></canvas>
-        <canvas data-kind="line-${idx}"></canvas>
-      </div>
-    `;
-
-    monthsScroll.appendChild(card);
-
-    const pieCanvas = card.querySelector(`canvas[data-kind="pie-${idx}"]`);
-    const lineCanvas = card.querySelector(`canvas[data-kind="line-${idx}"]`);
-
-    const pie = new Chart(pieCanvas, {
-      type: "doughnut",
-      data: {
-        labels: ["الإيراد", "المصروف"],
-        datasets: [{
-          data: [revenuePositive, spentPositive],
-          backgroundColor: ["#2e7d32", "#b00020"],
-          borderWidth: 0
-        }]
-      },
-      options: {
-        plugins: { legend: { position: "bottom" } },
-        cutout: "55%"
+  const line = new Chart(monthLine, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "الإيراد اليومي",
+        data,
+        borderColor: "#2e7d32",
+        backgroundColor: "rgba(46,125,50,0.15)",
+        tension: 0.25,
+        fill: true,
+        pointRadius: 2
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { ticks: { precision: 0 } }
       }
-    });
-    chartInstances.push(pie);
-
-    const daysInMonth = new Date(m.year, m.month + 1, 0).getDate();
-    const labels = [];
-    const data = [];
-    for(let d=1; d<=daysInMonth; d++){
-      labels.push(String(d));
-      data.push(m.daily.get(d) || 0);
     }
-
-    const line = new Chart(lineCanvas, {
-      type: "line",
-      data: {
-        labels,
-        datasets: [{
-          label: "الإيراد اليومي",
-          data,
-          borderColor: "#2e7d32",
-          backgroundColor: "rgba(46,125,50,0.15)",
-          tension: 0.25,
-          fill: true,
-          pointRadius: 2
-        }]
-      },
-      options: {
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { grid: { display: false } },
-          y: { ticks: { precision: 0 } }
-        }
-      }
-    });
-    chartInstances.push(line);
   });
+  chartInstances.push(line);
+}
+
+function renderMonthlyCharts(){
+  buildMonthMap();
+  renderMonthPicker();
+  if(!selectedMonth && yearList.length){
+    const latest = [...monthMap.keys()].sort().pop();
+    selectedMonth = latest || null;
+  }
+  renderMonthPicker();
+  renderMonthCharts();
 }
 
 (async function init(){
