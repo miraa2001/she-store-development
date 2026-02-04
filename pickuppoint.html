@@ -68,6 +68,7 @@
       display:inline-flex;align-items:center;justify-content:center;
       padding:6px 10px;line-height:1;height:32px
     }
+    .mainCol{display:flex;flex-direction:column;gap:12px}
     .globalSummary{
       background:#f4f7ff;
       border:1px solid #dfe6ff;
@@ -106,13 +107,6 @@
   </div>
   <div id="searchResults" class="searchResults" style="display:none"></div>
 
-  <div class="globalSummary" style="display:none" id="allOrdersTotalWrap">
-    <div class="row">
-      <span class="pill" id="allOrdersTotal">إجمالي التحصيل المطلوب: 0 ₪</span>
-      <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
-    </div>
-  </div>
-
   <div class="grid">
     <aside class="card">
       <div class="row" style="justify-content:space-between">
@@ -123,7 +117,15 @@
       <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
     </aside>
 
-    <main class="card">
+    <div class="mainCol">
+      <div class="globalSummary" style="display:none" id="allOrdersTotalWrap">
+        <div class="row">
+          <span class="pill" id="allOrdersTotal">إجمالي التحصيل المطلوب: 0 ₪</span>
+          <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
+        </div>
+      </div>
+
+      <main class="card">
       <div id="empty" class="muted">اختاري طلبية من القائمة</div>
 
       <div id="main" style="display:none">
@@ -157,6 +159,7 @@
         </table>
       </div>
     </main>
+    </div>
   </div>
 </div>
 
