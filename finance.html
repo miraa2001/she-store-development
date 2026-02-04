@@ -134,8 +134,8 @@
   </div>
 
   <div class="tabs">
-    <button class="tabBtn active" id="tabOrders" type="button">تمويل الطلبات</button>
-    <button class="tabBtn" id="tabMonths" type="button">التمويل الشهري</button>
+    <button class="tabBtn active" id="tabOrders" type="button">احصاء الطلبات</button>
+    <button class="tabBtn" id="tabMonths" type="button">احصاء شهري</button>
   </div>
 
   <div id="ordersPanel" class="tabPanel">
@@ -477,6 +477,9 @@ function showTab(tab){
   if(monthsPanel) monthsPanel.style.display = isOrders ? "none" : "";
   if(tabOrders) tabOrders.classList.toggle("active", isOrders);
   if(tabMonths) tabMonths.classList.toggle("active", !isOrders);
+  if(!isOrders){
+    requestAnimationFrame(()=>{ renderMonthCharts(); });
+  }
 }
 
 if(tabOrders) tabOrders.onclick = ()=> showTab("orders");
