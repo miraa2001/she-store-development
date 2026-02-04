@@ -20,6 +20,14 @@
     .menuBtn{
       border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer
     }
+    .tabs{
+      display:flex;gap:6px;background:#111;padding:6px;border-radius:12px;margin:8px 0 14px
+    }
+    .tabLink{
+      border:none;background:#222;color:#eaeaea;padding:10px 16px;border-radius:10px;
+      cursor:pointer;font-weight:600;font-family:inherit;text-decoration:none;display:inline-block
+    }
+    .tabLink.active{background:#fff;color:#111}
     .sidebarOverlay{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
       display:none;z-index:50;pointer-events:none
@@ -181,6 +189,12 @@
       <div class="muted">إضافة / حذف / تعديل</div>
     </div>
     <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
+  </div>
+
+  <div class="tabs" id="navTabs" style="display:none">
+    <a class="tabLink active" href="./index.html">إدارة الطلبيات</a>
+    <a class="tabLink" href="./view.html">عرض الطلبيات</a>
+    <a class="tabLink" href="./customers.html">العملاء</a>
   </div>
 
   <div class="row" style="margin-bottom:12px">
@@ -405,6 +419,7 @@ async function guardIndexAccess(){
 
   // Index allowed: Rahaf only
   if(myEmail === EMAIL_RAHAF){
+    if(navTabs) navTabs.style.display = "flex";
     return;
   }
   if(myEmail === EMAIL_REEM){
@@ -510,6 +525,7 @@ function renderSidebar(){
 }
 
 /* ===== DOM ===== */
+const navTabs = document.getElementById("navTabs");
 const ordersList = document.getElementById("ordersList");
 const newOrderBtn = document.getElementById("newOrderBtn");
 const main = document.getElementById("main");
