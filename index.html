@@ -885,8 +885,8 @@ document.addEventListener("paste",(e)=>{
 
 /* ===== Orders ===== */
 let pdfFonts = null;
-const PDF_FONT_REGULAR_URL = "https://cdn.jsdelivr.net/npm/@fontsource/amiri/files/amiri-arabic-400-normal.ttf";
-const PDF_FONT_BOLD_URL = "https://cdn.jsdelivr.net/npm/@fontsource/amiri/files/amiri-arabic-700-normal.ttf";
+const PDF_FONT_REGULAR_URL = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Regular.ttf";
+const PDF_FONT_BOLD_URL = "https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Bold.ttf";
 
 async function loadPdfFonts(pdfDoc){
   if(pdfFonts) return pdfFonts;
