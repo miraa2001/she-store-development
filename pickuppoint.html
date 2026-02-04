@@ -176,8 +176,13 @@ async function requireAuth(){
 
 async function getMyRole(){
   const { data: u } = await sb.auth.getUser();
-  const email = (u?.user?.email || "").toLowerCase();
-  const userId = u?.user?.id || "";
+  let email = (u?.user?.email || "").toLowerCase();
+  let userId = u?.user?.id || "";
+  if(!userId){
+    const { data: s } = await sb.auth.getSession();
+    email = (s?.session?.user?.email || "").toLowerCase();
+    userId = s?.session?.user?.id || "";
+  }
 
   if(!userId) return { email, role:"viewer" };
 
@@ -381,6 +386,10 @@ async function updateAllOrdersTotal(){
 async function loadUser(){
   const { data } = await sb.auth.getUser();
   userEmail = (data?.user?.email || "").toLowerCase();
+  if(!userEmail){
+    const { data: s } = await sb.auth.getSession();
+    userEmail = (s?.session?.user?.email || "").toLowerCase();
+  }
   isRahaf = userEmail === "rahaf@she-store.com";
   isLaaura = userEmail === "laaura@she-store.com";
   pickedAtHeader.style.display = isRahaf ? "" : "none";
