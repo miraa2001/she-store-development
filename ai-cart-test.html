@@ -63,10 +63,10 @@
     .roiWrap{display:flex;flex-direction:column;gap:4px;align-items:center}
     .roiLabel{font-size:10px;color:var(--muted);letter-spacing:.02em;text-transform:uppercase}
     .roiBox{
-      width:54px;height:54px;border-radius:8px;border:1px solid var(--border);
+      width:90px;border-radius:8px;border:1px solid var(--border);
       background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;
     }
-    .roiPreview{width:100%;height:100%;object-fit:cover;display:block}
+    .roiPreview{width:100%;height:auto;object-fit:contain;display:block}
     .thumb button{
       position:absolute;top:4px;right:4px;border:none;background:#000000a6;color:#fff;
       width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:12px;line-height:1;
@@ -200,6 +200,18 @@
         img.onerror = reject;
         img.src = url;
       });
+    }
+
+    async function buildFullCanvasFromUrl(url){
+      const img = await loadImageFromUrl(url);
+      const width = img.naturalWidth || img.width;
+      const height = img.naturalHeight || img.height;
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      return canvas;
     }
 
     async function buildRoiCanvasFromFile(file, url){
@@ -524,7 +536,12 @@
         }
         try{
           const text = await ocrCanvas(inputCanvas);
-          const prices = extractPricesFromText(text, i);
+          let prices = extractPricesFromText(text, i);
+          if(!prices.length){
+            const fullCanvas = await buildFullCanvasFromUrl(img.url);
+            const fullText = await ocrCanvas(fullCanvas);
+            prices = extractPricesFromText(fullText, i);
+          }
           allResults.push(...prices);
         }catch(err){
           console.error(err);
