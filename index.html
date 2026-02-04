@@ -423,8 +423,28 @@ function closeSidebar(){
   sidebar.classList.remove("open");
   overlay.classList.remove("open");
 }
-openBtn.onclick = (e)=>{ e.stopPropagation(); openSidebar(); };
+openBtn.onclick = (e)=>{
+  e.stopPropagation();
+  if(isMobile()){
+    e.preventDefault();
+    return;
+  }
+  openSidebar();
+};
+openBtn.addEventListener("touchstart",(e)=>{
+  if(!isMobile()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  openSidebar();
+},{ passive:false });
+
 closeBtn.onclick = (e)=>{ e.stopPropagation(); closeSidebar(); };
+closeBtn.addEventListener("touchstart",(e)=>{
+  if(!isMobile()) return;
+  e.preventDefault();
+  e.stopPropagation();
+  closeSidebar();
+},{ passive:false });
 overlay.onclick = closeSidebar;
 document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSidebar(); });
 window.addEventListener("pageshow", closeSidebar);
