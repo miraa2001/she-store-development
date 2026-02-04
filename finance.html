@@ -40,6 +40,9 @@
     .sidebar .danger{border-color:#f2c2c2;color:#b00020}
     .orderItem{border:1px solid #e7e7e7;border-radius:12px;padding:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
     .orderItem.active{border-color:#111}
+    .progress{width:100%;height:8px;background:#eee;border-radius:999px;overflow:hidden}
+    .progress span{display:block;height:100%;background:#2e7d32}
+    .btn.active{background:#111;color:#fff;border-color:#111}
     .orderGroup{margin-top:10px}
     .groupTitle{font-weight:700;color:#333;margin:10px 0 6px}
     input{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
@@ -110,13 +113,25 @@
           <div>
             <b id="orderTitle"></b>
           </div>
-          <span class="pill" id="orderRevenue">الإيراد: 0</span>
+          <span class="pill" id="orderStatus">قيد التحصيل</span>
         </div>
 
         <div class="row" style="margin-top:8px">
           <span class="pill" id="collectedTotal">المحصل: 0</span>
+          <span class="pill" id="pendingTotal">قيد التحصيل: 0</span>
+          <span class="pill" id="notPickedTotal">غير مستلم: 0</span>
+          <span class="pill" id="expectedTotal">الإجمالي المتوقع: 0</span>
+        </div>
+
+        <div style="margin-top:8px">
+          <div class="muted" id="progressLabel">نسبة التحصيل: 0%</div>
+          <div class="progress"><span id="progressBar" style="width:0%"></span></div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <span class="pill" id="realizedProfit">الربح المحقق: 0</span>
+          <span class="pill" id="projectedProfit">الربح المتوقع: 0</span>
           <span class="pill" id="spentTotal">المصروف: 0</span>
-          <span class="pill" id="revenueTotal">الربح/الخسارة: 0</span>
         </div>
 
         <div class="row" style="margin-top:10px">
@@ -143,9 +158,27 @@
         <div class="monthCharts" id="monthCharts" style="display:none">
           <div class="monthHeader">
             <b id="monthLabel">—</b>
-            <span class="pill" id="monthRevenue">الإيراد: 0</span>
+            <span class="pill" id="monthStatus">قيد التحصيل</span>
           </div>
-          <div class="muted" id="monthNote" style="margin-bottom:6px"></div>
+          <div class="row" style="margin-bottom:6px">
+            <span class="pill" id="monthCollected">المحصل: 0</span>
+            <span class="pill" id="monthPending">قيد التحصيل: 0</span>
+            <span class="pill" id="monthNotPicked">غير مستلم: 0</span>
+            <span class="pill" id="monthExpected">الإجمالي المتوقع: 0</span>
+          </div>
+          <div style="margin-bottom:10px">
+            <div class="muted" id="monthProgressLabel">نسبة التحصيل: 0%</div>
+            <div class="progress"><span id="monthProgressBar" style="width:0%"></span></div>
+          </div>
+          <div class="row" style="margin-bottom:8px">
+            <span class="pill" id="monthRealized">الربح المحقق: 0</span>
+            <span class="pill" id="monthProjected">الربح المتوقع: 0</span>
+            <span class="pill" id="monthSpent">المصروف: 0</span>
+          </div>
+          <div class="row" style="margin-bottom:6px;justify-content:flex-start">
+            <button class="btn" id="chartModeStatus" type="button">حالة التحصيل</button>
+            <button class="btn" id="chartModeProfit" type="button">عرض الأرباح</button>
+          </div>
           <div class="chartRow">
             <canvas id="monthPie"></canvas>
             <canvas id="monthLine"></canvas>
@@ -197,6 +230,16 @@ function formatILS(n){
   if(!isFinite(x)) return "0";
   const fixed = x.toFixed(2);
   return fixed.endsWith(".00") ? String(Math.round(x)) : fixed;
+}
+
+function getOrderStats(orderId){
+  return orderStatsById.get(orderId) || {
+    collected: 0,
+    pending: 0,
+    notPicked: 0,
+    expected: 0,
+    dailyCollected: new Map()
+  };
 }
 
 /* ===== Sidebar ===== */
@@ -255,9 +298,15 @@ const emptyEl = document.getElementById("empty");
 const mainEl = document.getElementById("main");
 const orderTitleEl = document.getElementById("orderTitle");
 const collectedTotalEl = document.getElementById("collectedTotal");
+const pendingTotalEl = document.getElementById("pendingTotal");
+const notPickedTotalEl = document.getElementById("notPickedTotal");
+const expectedTotalEl = document.getElementById("expectedTotal");
+const progressLabelEl = document.getElementById("progressLabel");
+const progressBarEl = document.getElementById("progressBar");
+const realizedProfitEl = document.getElementById("realizedProfit");
+const projectedProfitEl = document.getElementById("projectedProfit");
 const spentTotalEl = document.getElementById("spentTotal");
-const revenueTotalEl = document.getElementById("revenueTotal");
-const orderRevenueEl = document.getElementById("orderRevenue");
+const orderStatusEl = document.getElementById("orderStatus");
 const spentInput = document.getElementById("spentInput");
 const saveSpentBtn = document.getElementById("saveSpentBtn");
 const spentMsg = document.getElementById("spentMsg");
@@ -267,21 +316,32 @@ const prevYearBtn = document.getElementById("prevYearBtn");
 const nextYearBtn = document.getElementById("nextYearBtn");
 const monthCharts = document.getElementById("monthCharts");
 const monthLabel = document.getElementById("monthLabel");
-const monthRevenue = document.getElementById("monthRevenue");
-const monthNote = document.getElementById("monthNote");
+const monthStatus = document.getElementById("monthStatus");
+const monthCollected = document.getElementById("monthCollected");
+const monthPending = document.getElementById("monthPending");
+const monthNotPicked = document.getElementById("monthNotPicked");
+const monthExpected = document.getElementById("monthExpected");
+const monthProgressLabel = document.getElementById("monthProgressLabel");
+const monthProgressBar = document.getElementById("monthProgressBar");
+const monthRealized = document.getElementById("monthRealized");
+const monthProjected = document.getElementById("monthProjected");
+const monthSpent = document.getElementById("monthSpent");
 const monthPie = document.getElementById("monthPie");
 const monthLine = document.getElementById("monthLine");
 const monthPicker = document.getElementById("monthPicker");
 const monthPickerToggle = document.getElementById("monthPickerToggle");
+const chartModeStatus = document.getElementById("chartModeStatus");
+const chartModeProfit = document.getElementById("chartModeProfit");
 
 let orders = [];
-let collectedByOrder = new Map();
+let orderStatsById = new Map();
 let activeOrder = null;
 let chartInstances = [];
 let monthMap = new Map();
 let yearList = [];
 let selectedYear = null;
 let selectedMonth = null;
+let chartMode = "status";
 
 if(prevYearBtn){
   prevYearBtn.onclick = ()=>{
@@ -314,6 +374,19 @@ if(monthPickerToggle){
   };
 }
 
+if(chartModeStatus){
+  chartModeStatus.onclick = ()=>{
+    chartMode = "status";
+    renderMonthCharts();
+  };
+}
+if(chartModeProfit){
+  chartModeProfit.onclick = ()=>{
+    chartMode = "profit";
+    renderMonthCharts();
+  };
+}
+
 function showMain(on){
   mainEl.style.display = on ? "" : "none";
   emptyEl.style.display = on ? "none" : "";
@@ -329,19 +402,40 @@ function getOrderDate(order){
 async function fetchFinanceData(){
   const [ordersRes, purchasesRes] = await Promise.all([
     sb.from("orders").select("id, order_name, order_date, created_at, spent_amount").order("created_at",{ascending:false}),
-    sb.from("purchases").select("order_id, price, paid_price, collected").eq("collected", true)
+    sb.from("purchases").select("order_id, price, paid_price, collected, picked_up, collected_at")
   ]);
 
   if(ordersRes.error){ console.error(ordersRes.error); return; }
   if(purchasesRes.error){ console.error(purchasesRes.error); return; }
 
   orders = ordersRes.data || [];
-  collectedByOrder = new Map();
+  orderStatsById = new Map();
 
   (purchasesRes.data || []).forEach(p=>{
     const amount = parsePrice(p.paid_price ?? p.price);
-    const prev = collectedByOrder.get(p.order_id) || 0;
-    collectedByOrder.set(p.order_id, prev + amount);
+    if(!orderStatsById.has(p.order_id)){
+      orderStatsById.set(p.order_id, {
+        collected: 0,
+        pending: 0,
+        notPicked: 0,
+        expected: 0,
+        dailyCollected: new Map()
+      });
+    }
+    const stats = orderStatsById.get(p.order_id);
+    stats.expected += amount;
+    if(p.collected){
+      stats.collected += amount;
+      const dayKey = p.collected_at ? new Date(p.collected_at) : null;
+      if(dayKey && !isNaN(dayKey)){
+        const d = dayKey.getDate();
+        stats.dailyCollected.set(d, (stats.dailyCollected.get(d) || 0) + amount);
+      }
+    } else if(p.picked_up){
+      stats.pending += amount;
+    } else {
+      stats.notPicked += amount;
+    }
   });
 }
 
@@ -385,15 +479,36 @@ function renderOrders(){
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 
 function updateOrderSummary(order){
-  const collected = collectedByOrder.get(order.id) || 0;
+  const stats = getOrderStats(order.id);
+  const collected = stats.collected;
+  const pending = stats.pending;
+  const notPicked = stats.notPicked;
+  const expected = stats.expected;
   const spent = parsePrice(order.spent_amount);
-  const revenue = collected - spent;
+  const realized = collected - spent;
+  const projected = expected - spent;
 
+  const progressPct = expected > 0 ? Math.round((collected / expected) * 100) : 0;
   collectedTotalEl.textContent = `المحصل: ${formatILS(collected)}`;
+  pendingTotalEl.textContent = `قيد التحصيل: ${formatILS(pending)}`;
+  notPickedTotalEl.textContent = `غير مستلم: ${formatILS(notPicked)}`;
+  expectedTotalEl.textContent = `الإجمالي المتوقع: ${formatILS(expected)}`;
+  progressLabelEl.textContent = `نسبة التحصيل: ${progressPct}%`;
+  if(progressBarEl) progressBarEl.style.width = `${progressPct}%`;
+
+  realizedProfitEl.textContent = `الربح المحقق: ${formatILS(realized)}`;
+  projectedProfitEl.textContent = `الربح المتوقع: ${formatILS(projected)}`;
   spentTotalEl.textContent = `المصروف: ${formatILS(spent)}`;
-  revenueTotalEl.textContent = `الربح/الخسارة: ${formatILS(revenue)}`;
-  orderRevenueEl.textContent = `الإيراد: ${formatILS(revenue)}`;
   spentInput.value = spent ? String(spent) : "";
+
+  const isComplete = pending === 0 && notPicked === 0 && expected > 0;
+  if(expected === 0){
+    orderStatusEl.textContent = "لا يوجد مشتريات";
+  } else if(isComplete){
+    orderStatusEl.textContent = realized < 0 ? "عجز محقق" : "ربح محقق";
+  } else {
+    orderStatusEl.textContent = "قيد التحصيل";
+  }
 }
 
 async function selectOrder(order){
@@ -439,9 +554,9 @@ function buildMonthMap(){
     const date = getOrderDate(o);
     const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
     const label = date.toLocaleDateString("ar", { month:"long", year:"numeric" });
-    const collected = collectedByOrder.get(o.id) || 0;
+    const stats = getOrderStats(o.id);
     const spent = parsePrice(o.spent_amount);
-    const revenue = collected - spent;
+    let dailySum = 0;
 
     if(!monthMap.has(key)){
       monthMap.set(key, {
@@ -449,17 +564,30 @@ function buildMonthMap(){
         year: date.getFullYear(),
         month: date.getMonth(),
         collected: 0,
+        pending: 0,
+        notPicked: 0,
+        expected: 0,
         spent: 0,
-        revenue: 0,
-        daily: new Map()
+        dailyCollected: new Map()
       });
     }
     const m = monthMap.get(key);
-    m.collected += collected;
+    m.collected += stats.collected;
+    m.pending += stats.pending;
+    m.notPicked += stats.notPicked;
+    m.expected += stats.expected;
     m.spent += spent;
-    m.revenue += revenue;
-    const day = date.getDate();
-    m.daily.set(day, (m.daily.get(day) || 0) + revenue);
+
+    stats.dailyCollected.forEach((val, day)=>{
+      m.dailyCollected.set(day, (m.dailyCollected.get(day) || 0) + val);
+      dailySum += val;
+    });
+
+    if(stats.collected > dailySum){
+      const day = date.getDate();
+      const missing = stats.collected - dailySum;
+      m.dailyCollected.set(day, (m.dailyCollected.get(day) || 0) + missing);
+    }
   });
 
   yearList = [...new Set([...monthMap.values()].map(m=>m.year))].sort((a,b)=>a-b);
@@ -508,23 +636,60 @@ function renderMonthCharts(){
   monthCharts.style.display = "";
 
   monthLabel.textContent = m.label;
-  monthRevenue.textContent = `الإيراد: ${formatILS(m.revenue)}`;
-  monthNote.textContent = m.revenue < 0 ? "خسارة هذا الشهر" : "إيراد هذا الشهر";
+  const realized = m.collected - m.spent;
+  const projected = m.expected - m.spent;
+  const progressPct = m.expected > 0 ? Math.round((m.collected / m.expected) * 100) : 0;
+
+  monthCollected.textContent = `المحصل: ${formatILS(m.collected)}`;
+  monthPending.textContent = `قيد التحصيل: ${formatILS(m.pending)}`;
+  monthNotPicked.textContent = `غير مستلم: ${formatILS(m.notPicked)}`;
+  monthExpected.textContent = `الإجمالي المتوقع: ${formatILS(m.expected)}`;
+  monthProgressLabel.textContent = `نسبة التحصيل: ${progressPct}%`;
+  if(monthProgressBar) monthProgressBar.style.width = `${progressPct}%`;
+
+  monthRealized.textContent = `الربح المحقق: ${formatILS(realized)}`;
+  monthProjected.textContent = `الربح المتوقع: ${formatILS(projected)}`;
+  monthSpent.textContent = `المصروف: ${formatILS(m.spent)}`;
+
+  const isComplete = m.pending === 0 && m.notPicked === 0 && m.expected > 0;
+  if(m.expected === 0){
+    monthStatus.textContent = "لا يوجد مشتريات";
+  } else if(isComplete){
+    monthStatus.textContent = realized < 0 ? "عجز محقق" : "ربح محقق";
+  } else {
+    monthStatus.textContent = "قيد التحصيل";
+  }
   if(monthPickerToggle) monthPickerToggle.textContent = m.label;
 
   Chart.defaults.font.family = "Tahoma, Arial, system-ui";
   Chart.defaults.color = "#333";
 
-  const revenuePositive = Math.max(0, m.revenue);
-  const spentPositive = Math.max(0, m.spent);
+  if(chartModeStatus){
+    chartModeStatus.classList.toggle("active", chartMode === "status");
+  }
+  if(chartModeProfit){
+    chartModeProfit.classList.toggle("active", chartMode === "profit");
+  }
+
+  const pieLabels = chartMode === "profit"
+    ? ["الربح المحقق", "المصروف", "المتبقي المتوقع"]
+    : ["محصل", "قيد التحصيل", "غير مستلم"];
+
+  const pieData = chartMode === "profit"
+    ? [Math.max(0, realized), Math.max(0, m.spent), Math.max(0, m.expected - m.collected)]
+    : [Math.max(0, m.collected), Math.max(0, m.pending), Math.max(0, m.notPicked)];
+
+  const pieColors = chartMode === "profit"
+    ? ["#2e7d32", "#8d8d8d", "#c9a227"]
+    : ["#2e7d32", "#c9a227", "#b0b0b0"];
 
   const pie = new Chart(monthPie, {
     type: "doughnut",
     data: {
-      labels: ["الإيراد", "المصروف"],
+      labels: pieLabels,
       datasets: [{
-        data: [revenuePositive, spentPositive],
-        backgroundColor: ["#2e7d32", "#b00020"],
+        data: pieData,
+        backgroundColor: pieColors,
         borderWidth: 0
       }]
     },
@@ -540,7 +705,7 @@ function renderMonthCharts(){
   const data = [];
   for(let d=1; d<=daysInMonth; d++){
     labels.push(String(d));
-    data.push(m.daily.get(d) || 0);
+    data.push(m.dailyCollected.get(d) || 0);
   }
 
   const line = new Chart(monthLine, {
@@ -548,10 +713,10 @@ function renderMonthCharts(){
     data: {
       labels,
       datasets: [{
-        label: "الإيراد اليومي",
-        data,
-        borderColor: "#2e7d32",
-        backgroundColor: "rgba(46,125,50,0.15)",
+          label: "التحصيل اليومي",
+          data,
+          borderColor: "#2e7d32",
+          backgroundColor: "rgba(46,125,50,0.15)",
         tension: 0.25,
         fill: true,
         pointRadius: 2
