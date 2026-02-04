@@ -125,8 +125,11 @@
 
         <hr>
 
-        <div class="sectionTitle">ملخص شهري</div>
-        <div class="monthPicker">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <div class="sectionTitle" style="margin:0">ملخص شهري</div>
+          <button class="btn" id="monthPickerToggle" type="button">اختيار الشهر</button>
+        </div>
+        <div class="monthPicker" id="monthPicker" style="display:none">
           <div class="monthPickerHeader">
             <button class="monthNav" id="prevYearBtn" type="button">‹</button>
             <b id="yearLabel">—</b>
@@ -266,6 +269,8 @@ const monthRevenue = document.getElementById("monthRevenue");
 const monthNote = document.getElementById("monthNote");
 const monthPie = document.getElementById("monthPie");
 const monthLine = document.getElementById("monthLine");
+const monthPicker = document.getElementById("monthPicker");
+const monthPickerToggle = document.getElementById("monthPickerToggle");
 
 let orders = [];
 let collectedByOrder = new Map();
@@ -296,6 +301,14 @@ if(nextYearBtn){
       selectedMonth = null;
       renderMonthlyCharts();
     }
+  };
+}
+
+if(monthPickerToggle){
+  monthPickerToggle.onclick = ()=>{
+    if(!monthPicker) return;
+    const isOpen = monthPicker.style.display !== "none";
+    monthPicker.style.display = isOpen ? "none" : "";
   };
 }
 
@@ -449,7 +462,12 @@ function renderMonthPicker(){
     btn.className = "monthBtn" + (selectedMonth === key ? " active" : "") + (!hasData ? " disabled" : "");
     btn.textContent = monthsNames[i];
     btn.disabled = !hasData;
-    btn.onclick = ()=>{ selectedMonth = key; renderMonthPicker(); renderMonthCharts(); };
+    btn.onclick = ()=>{
+      selectedMonth = key;
+      renderMonthPicker();
+      renderMonthCharts();
+      if(monthPicker) monthPicker.style.display = "none";
+    };
     monthGrid.appendChild(btn);
   }
 }
@@ -459,6 +477,7 @@ function renderMonthCharts(){
   const m = selectedMonth ? monthMap.get(selectedMonth) : null;
   if(!m){
     monthCharts.style.display = "none";
+    if(monthPickerToggle) monthPickerToggle.textContent = "اختيار الشهر";
     return;
   }
   monthCharts.style.display = "";
@@ -466,6 +485,7 @@ function renderMonthCharts(){
   monthLabel.textContent = m.label;
   monthRevenue.textContent = `الإيراد: ${formatILS(m.revenue)}`;
   monthNote.textContent = m.revenue < 0 ? "خسارة هذا الشهر" : "إيراد هذا الشهر";
+  if(monthPickerToggle) monthPickerToggle.textContent = m.label;
 
   Chart.defaults.font.family = "Tahoma, Arial, system-ui";
   Chart.defaults.color = "#333";
