@@ -57,6 +57,10 @@
     }
     .searchResults button:last-child{border-bottom:none}
     .searchResults button:hover{background:#fafafa}
+    body.embed .topbar,
+    body.embed .sidebar,
+    body.embed .sidebarOverlay{display:none !important}
+    body.embed .wrap{padding:0;max-width:none}
   </style>
 </head>
 <body>
@@ -138,6 +142,8 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const PICKUP_VALUE = "من نقطة الاستلام";
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
+const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
+if(isEmbed) document.body.classList.add("embed");
 
 /* ========= Auth + Role Gate =========
    Allowed here: Rahaf + Reem + Laaura
@@ -234,14 +240,13 @@ function renderSidebar(){
 
   if(myEmail === "rahaf@she-store.com"){
     link("إدارة الطلبات", "./index.html?tab=orders");
-    link("مستلمو البيت", "./homepickup.html");
-    link("تحصيل المبالغ", "./collections.html");
+    link("الاستلام والتحصيل", "./pickup-dashboard.html");
     link("المالية", "./finance.html");
   }
 
   if(myEmail === "reem@she-store.com"){
-    link("عرض الطلبيات", "./view.html");
-    link("مستلمو البيت", "./homepickup.html");
+    link("إدارة الطلبات", "./index.html?tab=view");
+    link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
 
   btn("تسجيل خروج", "danger", async ()=>{

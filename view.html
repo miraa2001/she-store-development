@@ -337,15 +337,12 @@ function renderSidebar(){
 
   if(myEmail === EMAIL_RAHAF){
     link("إدارة الطلبات", "./index.html?tab=orders");
-    link("La Aura", "./pickuppoint.html");
-    link("مستلمو البيت", "./homepickup.html");
-    link("تحصيل المبالغ", "./collections.html");
+    link("الاستلام والتحصيل", "./pickup-dashboard.html");
     link("المالية", "./finance.html");
   }
 
   if(myEmail === EMAIL_REEM){
-    link("La Aura", "./pickuppoint.html");
-    link("مستلمو البيت", "./homepickup.html");
+    link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
 
   btn("تسجيل خروج", "danger", async ()=>{
