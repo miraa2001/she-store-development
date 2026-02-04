@@ -44,7 +44,7 @@
     .progress span{display:block;height:100%;background:#2e7d32}
     .btn.active{background:#111;color:#fff;border-color:#111}
     .kpiGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
-    @media(min-width:800px){.kpiGrid{grid-template-columns:repeat(4,1fr)}}
+    @media(min-width:800px){.kpiGrid{grid-template-columns:repeat(3,1fr)}}
     .kpi{border:1px solid #eee;border-radius:12px;padding:10px;background:#fff}
     .kpi .label{font-size:12px;color:#666}
     .kpi .value{font-size:18px;font-weight:700;margin-top:4px}
@@ -56,8 +56,9 @@
     .kpi .value.neg{color:#b00020}
     .kpiRow{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:10px}
     @media(min-width:800px){.kpiRow{grid-template-columns:repeat(3,1fr)}}
-    .progressBlock{margin-top:8px}
-    .progressText{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .progressBlock{margin-top:10px;margin-bottom:10px}
+    .progressText{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+    .progress{margin-top:6px}
     .progressText .muted{font-size:12px}
     .segmented{display:inline-flex;border:1px solid #e7e7e7;border-radius:999px;overflow:hidden}
     .segmented button{border:none;background:#fff;padding:8px 12px;cursor:pointer}
@@ -71,6 +72,10 @@
     input{padding:10px;border:1px solid #e7e7e7;border-radius:10px;font-family:inherit}
     input[type="number"]{max-width:220px}
     .sectionTitle{font-weight:700;margin:12px 0 6px}
+    .spentRow{justify-content:flex-start;gap:8px;flex-wrap:wrap}
+    .spentRow label{font-size:13px;color:#444}
+    .monthHeaderRow{flex-direction:column;align-items:center;gap:8px}
+    .monthPickerBtn{font-weight:700;font-size:16px;padding:10px 16px}
     .monthPicker{
       border:1px solid #eee;border-radius:14px;padding:12px;background:#fff
     }
@@ -146,17 +151,13 @@
             <div class="label">المحصل</div>
             <div class="value" id="collectedTotal">0</div>
           </div>
-          <div class="kpi t1">
-            <div class="label">تقدم التحصيل</div>
-            <div class="value" id="progressPct">0%</div>
-          </div>
           <div class="kpi t2">
             <div class="label">قيد التحصيل</div>
             <div class="value" id="pendingTotal">0</div>
           </div>
           <div class="kpi t2">
-            <div class="label">غير محصل</div>
-            <div class="value" id="notPickedTotal">0</div>
+            <div class="label">اجمالي التحصيل المتوقع</div>
+            <div class="value" id="expectedTotal">0</div>
           </div>
         </div>
 
@@ -170,7 +171,7 @@
         <div class="muted" id="progressEmpty" style="display:none;margin-top:6px">لا يوجد تحصيل بعد</div>
 
         <div class="kpiRow">
-          <div class="kpi t3">
+          <div class="kpi t3" id="realizedKpi">
             <div class="label" id="realizedLabel">الربح المحقق</div>
             <div class="value" id="realizedProfit">0</div>
           </div>
@@ -182,13 +183,10 @@
             <div class="label">المصروف</div>
             <div class="value" id="spentTotal">0</div>
           </div>
-          <div class="kpi t3">
-            <div class="label">الإجمالي المتوقع</div>
-            <div class="value" id="expectedTotal">0</div>
-          </div>
         </div>
 
-        <div class="row" style="margin-top:10px">
+        <div class="row spentRow" style="margin-top:10px">
+          <label for="spentInput">المصروف:</label>
           <input id="spentInput" type="number" step="0.01" min="0" placeholder="المصروف على الطلبية">
           <button class="btn primary" id="saveSpentBtn">حفظ المصروف</button>
           <span class="muted" id="spentMsg"></span>
@@ -196,9 +194,9 @@
 
         <hr>
 
-        <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="row monthHeaderRow" style="justify-content:center;align-items:center">
           <div class="sectionTitle" style="margin:0">ملخص شهري</div>
-          <button class="btn" id="monthPickerToggle" type="button">اختيار الشهر</button>
+          <button class="btn monthPickerBtn" id="monthPickerToggle" type="button">اختيار الشهر</button>
         </div>
         <div class="monthPicker" id="monthPicker" style="display:none">
           <div class="monthPickerHeader">
@@ -220,18 +218,14 @@
               <div class="label">المحصل</div>
               <div class="value" id="monthCollected">0</div>
             </div>
-            <div class="kpi t1">
-              <div class="label">تقدم التحصيل</div>
-              <div class="value" id="monthProgressPct">0%</div>
+            <div class="kpi t2">
+              <div class="label">قيد التحصيل</div>
+              <div class="value" id="monthPending">0</div>
             </div>
-          <div class="kpi t2">
-            <div class="label">قيد التحصيل</div>
-            <div class="value" id="monthPending">0</div>
-          </div>
-          <div class="kpi t2">
-            <div class="label">غير محصل</div>
-            <div class="value" id="monthNotPicked">0</div>
-          </div>
+            <div class="kpi t2">
+              <div class="label">اجمالي التحصيل المتوقع</div>
+              <div class="value" id="monthExpected">0</div>
+            </div>
           </div>
 
           <div class="progressBlock" id="monthProgressBlock">
@@ -244,21 +238,17 @@
           <div class="muted" id="monthProgressEmpty" style="display:none;margin-top:6px">لا يوجد تحصيل بعد</div>
 
           <div class="kpiRow">
-          <div class="kpi t3">
-            <div class="label" id="monthRealizedLabel">الربح المحقق</div>
-            <div class="value" id="monthRealized">0</div>
-          </div>
-          <div class="kpi t3">
-            <div class="label" id="monthProjectedLabel">الربح المتوقع</div>
-            <div class="value" id="monthProjected">0</div>
-          </div>
+            <div class="kpi t3" id="monthRealizedKpi">
+              <div class="label" id="monthRealizedLabel">الربح المحقق</div>
+              <div class="value" id="monthRealized">0</div>
+            </div>
+            <div class="kpi t3">
+              <div class="label" id="monthProjectedLabel">الربح المتوقع</div>
+              <div class="value" id="monthProjected">0</div>
+            </div>
             <div class="kpi t3">
               <div class="label">المصروف</div>
               <div class="value" id="monthSpent">0</div>
-            </div>
-            <div class="kpi t3">
-              <div class="label">الإجمالي المتوقع</div>
-              <div class="value" id="monthExpected">0</div>
             </div>
           </div>
 
@@ -412,6 +402,7 @@ const progressBarEl = document.getElementById("progressBar");
 const realizedProfitEl = document.getElementById("realizedProfit");
 const projectedProfitEl = document.getElementById("projectedProfit");
 const projectedLabelEl = document.getElementById("projectedLabel");
+const realizedKpi = document.getElementById("realizedKpi");
 const spentTotalEl = document.getElementById("spentTotal");
 const orderStatusEl = document.getElementById("orderStatus");
 const realizedLabelEl = document.getElementById("realizedLabel");
@@ -439,6 +430,7 @@ const monthRealized = document.getElementById("monthRealized");
 const monthProjected = document.getElementById("monthProjected");
 const monthProjectedLabel = document.getElementById("monthProjectedLabel");
 const monthSpent = document.getElementById("monthSpent");
+const monthRealizedKpi = document.getElementById("monthRealizedKpi");
 const monthRealizedLabel = document.getElementById("monthRealizedLabel");
 const monthPie = document.getElementById("monthPie");
 const monthLine = document.getElementById("monthLine");
@@ -608,7 +600,7 @@ function updateOrderSummary(order){
   const progressPct = expected > 0 ? Math.round((collected / expected) * 100) : 0;
   collectedTotalEl.textContent = formatILS(collected);
   pendingTotalEl.textContent = formatILS(pending);
-  notPickedTotalEl.textContent = formatILS(uncollected);
+  if(notPickedTotalEl) notPickedTotalEl.textContent = formatILS(uncollected);
   expectedTotalEl.textContent = formatILS(expected);
   if(progressPctEl) progressPctEl.textContent = `${progressPct}%`;
   progressLabelEl.textContent = `${progressPct}% مكتمل`;
@@ -624,13 +616,11 @@ function updateOrderSummary(order){
   }
 
   const incomplete = !(pending === 0 && notPicked === 0);
-  if(realizedLabelEl){
-    realizedLabelEl.textContent = incomplete ? "الربح المحقق" : "الربح المحقق";
+  if(realizedKpi){
+    realizedKpi.style.display = incomplete ? "none" : "";
   }
-  if(incomplete){
-    realizedProfitEl.textContent = "—";
-    realizedProfitEl.classList.remove("muted","neg");
-  } else {
+  if(!incomplete){
+    if(realizedLabelEl) realizedLabelEl.textContent = "الربح المحقق";
     realizedProfitEl.textContent = formatILS(realized);
     realizedProfitEl.classList.remove("muted");
     realizedProfitEl.classList.toggle("neg", realized < 0);
@@ -785,7 +775,7 @@ function renderMonthCharts(){
 
   monthCollected.textContent = formatILS(m.collected);
   monthPending.textContent = formatILS(m.pending);
-  monthNotPicked.textContent = formatILS(m.pending + m.notPicked);
+  if(monthNotPicked) monthNotPicked.textContent = formatILS(m.pending + m.notPicked);
   monthExpected.textContent = formatILS(m.expected);
   if(monthProgressPct) monthProgressPct.textContent = `${progressPct}%`;
   monthProgressLabel.textContent = `${progressPct}% مكتمل`;
@@ -801,13 +791,11 @@ function renderMonthCharts(){
   }
 
   const incomplete = !(m.pending === 0 && m.notPicked === 0);
-  if(monthRealizedLabel){
-    monthRealizedLabel.textContent = incomplete ? "الربح المحقق" : "الربح المحقق";
+  if(monthRealizedKpi){
+    monthRealizedKpi.style.display = incomplete ? "none" : "";
   }
-  if(incomplete){
-    monthRealized.textContent = "—";
-    monthRealized.classList.remove("muted","neg");
-  } else {
+  if(!incomplete){
+    if(monthRealizedLabel) monthRealizedLabel.textContent = "الربح المحقق";
     monthRealized.textContent = formatILS(realized);
     monthRealized.classList.remove("muted");
     monthRealized.classList.toggle("neg", realized < 0);
