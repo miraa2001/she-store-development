@@ -1232,15 +1232,30 @@ async function loadPurchases(){
             <span class="pill" data-edit-imgcount="${p.id}">0/10</span>
           </div>
 
-          <div class="row" style="margin-top:10px">
-            <div class="autoWrap">
-              <input data-f="name" data-customer-input="${p.id}" placeholder="اسم الزبون" value="${escapeAttr(p.customer_name || "")}" autocomplete="off">
-              <button class="btn" type="button" data-customer-clear="${p.id}" style="display:none">تغيير</button>
-              <div class="autoList" data-customer-list="${p.id}"></div>
+          <div style="margin-top:10px; display:flex; flex-direction:column; gap:8px">
+            <div class="row" style="align-items:center; gap:8px">
+              <span class="muted" style="min-width:90px">اسم الزبون</span>
+              <div class="autoWrap" style="flex:1">
+                <input data-f="name" data-customer-input="${p.id}" placeholder="اسم الزبون" value="${escapeAttr(p.customer_name || "")}" autocomplete="off">
+                <button class="btn" type="button" data-customer-clear="${p.id}" style="display:none">تغيير</button>
+                <div class="autoList" data-customer-list="${p.id}"></div>
+              </div>
             </div>
-            <input data-f="qty" type="number" step="1" min="1" placeholder="العدد" value="${escapeAttr(p.qty ?? 1)}">
-            <input data-f="price" type="number" step="0.01" min="0" placeholder="السعر" value="${escapeAttr(p.price ?? "")}">
-            <input data-f="paid" type="number" step="0.01" min="0" placeholder="المدفوع" value="${escapeAttr(p.paid_price ?? "")}">
+
+            <div class="row" style="align-items:center; gap:8px">
+              <span class="muted" style="min-width:90px">العدد</span>
+              <input data-f="qty" type="number" step="1" min="1" placeholder="العدد" value="${escapeAttr(p.qty ?? 1)}" style="flex:1">
+            </div>
+
+            <div class="row" style="align-items:center; gap:8px">
+              <span class="muted" style="min-width:90px">السعر</span>
+              <input data-f="price" type="number" step="0.01" min="0" placeholder="السعر" value="${escapeAttr(p.price ?? "")}" style="flex:1">
+            </div>
+
+            <div class="row" style="align-items:center; gap:8px">
+              <span class="muted" style="min-width:90px">المدفوع</span>
+              <input data-f="paid" type="number" step="0.01" min="0" placeholder="المدفوع" value="${escapeAttr(p.paid_price ?? "")}" style="flex:1">
+            </div>
           </div>
 
           <div class="row" style="margin-top:10px">
