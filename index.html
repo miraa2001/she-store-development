@@ -946,6 +946,31 @@ async function fetchPurchases(orderId){
   return data || [];
 }
 
+function normalizeUrl(url){
+  const raw = String(url || "").trim();
+  if(!raw) return "";
+  if(/^https?:\/\//i.test(raw)) return raw;
+  return `https://${raw}`;
+}
+
+function addLinkAnnotation(pdfDoc, page, url, x, y, width, height){
+  const { PDFName, PDFString } = PDFLib;
+  if(!url) return;
+  const rect = [x, y, x + width, y + height];
+  const linkAnnotation = pdfDoc.context.obj({
+    Type: PDFName.of("Annot"),
+    Subtype: PDFName.of("Link"),
+    Rect: rect,
+    Border: [0, 0, 0],
+    A: pdfDoc.context.obj({
+      Type: PDFName.of("Action"),
+      S: PDFName.of("URI"),
+      URI: PDFString.of(url)
+    })
+  });
+  page.node.addAnnot(linkAnnotation);
+}
+
 async function addPurchasePage(pdfDoc, purchase, order){
   const { rgb, PageSizes } = PDFLib;
   const page = pdfDoc.addPage(PageSizes?.A4 || [595.28, 841.89]);
@@ -1010,7 +1035,7 @@ async function addPurchasePage(pdfDoc, purchase, order){
     size: 11,
     font: latinRegular || regular,
     color: url === "—" ? rgb(0,0,0) : rgb(0.1,0.4,0.9),
-    link: url === "—" ? null : url,
+    link: url === "—" ? null : normalizeUrl(url),
     gap: 6,
     align:"left"
   }));
@@ -1033,9 +1058,10 @@ async function addPurchasePage(pdfDoc, purchase, order){
     let x = blockX + (blockWidth - textWidth) / 2;
     if(align === "right") x = blockX + (blockWidth - textWidth);
     if(align === "left") x = blockX;
-    const opts = { x, y, size, font, color, maxWidth: width - 80 };
-    if(link) opts.link = link;
-    page.drawText(safeText, opts);
+    page.drawText(safeText, { x, y, size, font, color, maxWidth: width - 80 });
+    if(link){
+      addLinkAnnotation(pdfDoc, page, link, x, y, textWidth, size + 2);
+    }
   };
 
   for(const line of lines){
