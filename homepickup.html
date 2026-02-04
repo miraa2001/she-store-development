@@ -56,6 +56,8 @@
     .chk{width:18px;height:18px}
     .thumbs{display:flex;gap:8px;flex-wrap:wrap}
     .thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #eee;cursor:pointer}
+    .paidCell{display:flex;align-items:center;gap:8px}
+    .paidCell .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;line-height:1}
     #lightbox{
       position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;
       padding:16px;z-index:100;gap:16px
@@ -449,8 +451,10 @@ function renderPurchases(){
     const paidCell = myEmail === EMAIL_RAHAF
       ? `
         <td data-paid-cell="${p.id}">
-          <span>${escapeHtml(p.paid_price ?? "—")}</span>
-          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
+          <div class="paidCell">
+            <span>${escapeHtml(p.paid_price ?? "—")}</span>
+            <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
+          </div>
         </td>
       `
       : ``;

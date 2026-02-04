@@ -57,6 +57,8 @@
     }
     .searchResults button:last-child{border-bottom:none}
     .searchResults button:hover{background:#fafafa}
+    .paidCell{display:flex;align-items:center;gap:8px}
+    .paidCell .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;line-height:1}
     body.embed .topbar,
     body.embed .sidebar,
     body.embed .sidebarOverlay{display:none !important}
@@ -548,8 +550,10 @@ function renderTable(list){
     const paidCell = isRahaf
       ? `
         <td data-paid-cell="${p.id}">
-          <span>${escapeHtml(p.paid_price ?? "—")}</span>
-          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
+          <div class="paidCell">
+            <span>${escapeHtml(p.paid_price ?? "—")}</span>
+            <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
+          </div>
         </td>
       `
       : ``;
