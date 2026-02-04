@@ -317,6 +317,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
 <script>
 const SUPABASE_URL = "https://maucjvxhrnkdeybltjco.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_0N65DXPMsk_3WVcLQ9wavQ_p9HgB_Bo";
@@ -884,6 +885,36 @@ document.addEventListener("paste",(e)=>{
 
 /* ===== Orders ===== */
 let pdfFonts = null;
+const PDF_FONT_REGULAR_URL = "https://cdn.jsdelivr.net/npm/@fontsource/amiri/files/amiri-arabic-400-normal.ttf";
+const PDF_FONT_BOLD_URL = "https://cdn.jsdelivr.net/npm/@fontsource/amiri/files/amiri-arabic-700-normal.ttf";
+
+async function loadPdfFonts(pdfDoc){
+  if(pdfFonts) return pdfFonts;
+  if(!window.fontkit){
+    throw new Error("تعذر تحميل محرك الخطوط");
+  }
+  pdfDoc.registerFontkit(window.fontkit);
+
+  const [regularRes, boldRes] = await Promise.all([
+    fetch(PDF_FONT_REGULAR_URL),
+    fetch(PDF_FONT_BOLD_URL)
+  ]);
+
+  if(!regularRes.ok || !boldRes.ok){
+    throw new Error("تعذر تحميل الخط العربي");
+  }
+
+  const [regularBytes, boldBytes] = await Promise.all([
+    regularRes.arrayBuffer(),
+    boldRes.arrayBuffer()
+  ]);
+
+  pdfFonts = {
+    regular: await pdfDoc.embedFont(regularBytes, { subset: true }),
+    bold: await pdfDoc.embedFont(boldBytes, { subset: true })
+  };
+  return pdfFonts;
+}
 
 async function fetchOrder(orderId){
   const { data, error } = await sb
@@ -907,11 +938,14 @@ async function fetchPurchases(orderId){
 }
 
 async function addPurchasePage(pdfDoc, purchase, order){
-  const { rgb, PageSizes, StandardFonts } = PDFLib;
+  const { rgb, PageSizes } = PDFLib;
   const page = pdfDoc.addPage(PageSizes?.A4 || [595.28, 841.89]);
   const { width, height } = page.getSize();
-  const regular = pdfFonts?.regular || await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = pdfFonts?.bold || await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  const regular = pdfFonts?.regular;
+  const bold = pdfFonts?.bold;
+  if(!regular || !bold){
+    throw new Error("خط PDF غير جاهز");
+  }
 
   const title = purchase.customer_name || order.order_name || "Purchase";
   const qtyText = `Quantity: ${purchase.qty ?? ""}`;
@@ -1017,12 +1051,10 @@ async function addPurchasePage(pdfDoc, purchase, order){
 }
 
 async function buildPdf(order, purchases){
-  const { PDFDocument, StandardFonts } = PDFLib;
+  const { PDFDocument } = PDFLib;
   const pdfDoc = await PDFDocument.create();
-  pdfFonts = {
-    regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
-    bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold)
-  };
+  pdfFonts = null;
+  await loadPdfFonts(pdfDoc);
 
   if(!purchases.length){
     const page = pdfDoc.addPage(PDFLib.PageSizes.A4);
