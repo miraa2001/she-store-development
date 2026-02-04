@@ -10,6 +10,7 @@
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
     .wrap{max-width:1100px;margin:auto;padding:16px}
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
+    .grid > *{min-width:0}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .card{background:#fff;border:1px solid #e7e7e7;border-radius:14px;padding:12px}
     .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -47,9 +48,11 @@
     .orderItem.active{border-color:#111}
     .ordersMeta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
     .sectionTitle{font-weight:700;margin:10px 0 6px}
-    table{width:100%;border-collapse:collapse}
+    .tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch;direction:ltr;max-width:100%}
+    table{width:max-content;min-width:100%;border-collapse:collapse;direction:rtl}
     th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
     th{color:#666;font-size:13px}
+    body.embed{overflow-x:hidden}
     body.embed .topbar,
     body.embed .sidebar,
     body.embed .sidebarOverlay{display:none !important}
@@ -106,26 +109,30 @@
         </div>
 
         <div class="sectionTitle">مستلمو البيت</div>
-        <table>
-          <thead>
-            <tr>
-              <th>الزبون</th>
-              <th>السعر</th>
-            </tr>
-          </thead>
-          <tbody id="homeBody"></tbody>
-        </table>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الزبون</th>
+                <th>السعر</th>
+              </tr>
+            </thead>
+            <tbody id="homeBody"></tbody>
+          </table>
+        </div>
 
         <div class="sectionTitle">نقطة الاستلام - La Aura</div>
-        <table>
-          <thead>
-            <tr>
-              <th>الزبون</th>
-              <th>السعر</th>
-            </tr>
-          </thead>
-          <tbody id="pickupBody"></tbody>
-        </table>
+        <div class="tableWrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الزبون</th>
+                <th>السعر</th>
+              </tr>
+            </thead>
+            <tbody id="pickupBody"></tbody>
+          </table>
+        </div>
       </div>
     </main>
   </div>
