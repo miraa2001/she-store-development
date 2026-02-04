@@ -112,6 +112,10 @@
     <main class="card">
       <div id="empty" class="muted">اختاري طلبية من القائمة</div>
 
+      <div id="allOrdersTotalWrap" class="row" style="margin-bottom:10px;display:none">
+        <span class="pill" id="allOrdersTotal">إجمالي التحصيل المطلوب: 0 ₪</span>
+      </div>
+
       <div id="main" style="display:none">
         <div class="row" style="justify-content:space-between;align-items:center">
           <div>
@@ -278,6 +282,8 @@ const purchaseCountEl = document.getElementById("purchaseCount");
 const pickedTotalEl = document.getElementById("pickedTotal");
 const tbody = document.getElementById("tbody");
 const collectBtn = document.getElementById("collectBtn");
+const allOrdersTotalWrap = document.getElementById("allOrdersTotalWrap");
+const allOrdersTotalEl = document.getElementById("allOrdersTotal");
 
 const searchInput = document.getElementById("searchInput");
 const searchResultsEl = document.getElementById("searchResults");
@@ -342,6 +348,24 @@ function updatePickedTotal(list){
     .filter(item=>item.picked_up)
     .reduce((sum,item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
   pickedTotalEl.textContent = `مجموع المستلم: ${formatILS(pickedTotal)} ₪`;
+}
+
+async function updateAllOrdersTotal(){
+  if(!allOrdersTotalEl || !allOrdersTotalWrap) return;
+  const { data, error } = await sb
+    .from("purchases")
+    .select("paid_price, price, picked_up, collected")
+    .eq("pickup_point", PICKUP_VALUE)
+    .eq("collected", false)
+    .eq("picked_up", true);
+
+  if(error){
+    console.error(error);
+    return;
+  }
+  const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+  allOrdersTotalEl.textContent = `إجمالي التحصيل المطلوب: ${formatILS(total)} ₪`;
+  allOrdersTotalWrap.style.display = "";
 }
 
 async function loadUser(){
@@ -533,6 +557,7 @@ if(collectBtn){
     const visibleList = list.filter(item=>!item.collected);
     renderTable(visibleList);
     updatePickedTotal(visibleList);
+    await updateAllOrdersTotal();
     collectBtn.disabled = false;
   };
 }
@@ -624,6 +649,7 @@ function renderTable(list){
         renderTable(visibleList);
         updatePickedTotal(visibleList);
       }
+      await updateAllOrdersTotal();
     };
   });
 
@@ -676,6 +702,7 @@ function renderTable(list){
         item.paid_price = nextVal;
         renderTable(visibleList);
         updatePickedTotal(visibleList);
+        await updateAllOrdersTotal();
       };
 
       saveBtn.onclick = save;
@@ -758,6 +785,7 @@ async function runSearch(){
   renderSidebar();
   await loadUser();
   await loadPickupOrders();
+  await updateAllOrdersTotal();
   if(orders.length && !isLaaura) selectOrder(orders[0]);
 })();
 </script>
