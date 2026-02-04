@@ -423,12 +423,22 @@ function closeSidebar(){
   sidebar.classList.remove("open");
   overlay.classList.remove("open");
 }
-openBtn.onclick = openSidebar;
-closeBtn.onclick = closeSidebar;
+openBtn.onclick = (e)=>{ e.stopPropagation(); openSidebar(); };
+closeBtn.onclick = (e)=>{ e.stopPropagation(); closeSidebar(); };
 overlay.onclick = closeSidebar;
 document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSidebar(); });
 window.addEventListener("pageshow", closeSidebar);
 window.addEventListener("resize", ()=>{ if(isMobile()) closeSidebar(); });
+document.addEventListener("click",(e)=>{
+  if(!sidebar.classList.contains("open")) return;
+  if(sidebar.contains(e.target) || openBtn.contains(e.target)) return;
+  closeSidebar();
+});
+document.addEventListener("touchstart",(e)=>{
+  if(!sidebar.classList.contains("open")) return;
+  if(sidebar.contains(e.target) || openBtn.contains(e.target)) return;
+  closeSidebar();
+},{ passive:true });
 
 function renderSidebar(){
   // Rahaf only here anyway, but keep it clean
@@ -512,6 +522,9 @@ const orderNameInput = document.getElementById("orderNameInput");
 const searchInput = document.getElementById("searchInput");
 const searchResultsEl = document.getElementById("searchResults");
 const searchCountEl = document.getElementById("searchCount");
+if(ordersList){
+  ordersList.addEventListener("click", ()=>{ if(isMobile()) closeSidebar(); });
+}
 
 
 /* ===== Lightbox (click image to enlarge) ===== */
