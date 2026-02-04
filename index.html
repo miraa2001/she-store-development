@@ -7,9 +7,8 @@
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3665/3665980.png" />
 
   <style>
-    html,body{overflow-x:hidden}
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
-    .wrap{max-width:1100px;margin:auto;padding:16px}
+    .wrap{max-width:1100px;margin:auto;padding:16px;overflow-x:hidden}
 
     /* ===== Image Lightbox ===== */
 
@@ -69,7 +68,9 @@
       -webkit-overflow-scrolling:touch;
       touch-action:pan-x;
       direction:ltr;
+      display:block;
     }
+    .tableWrap table{display:inline-block}
     table{width:100%;border-collapse:collapse;min-width:860px;direction:rtl}
     th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
     td a{word-break:break-all;overflow-wrap:anywhere}
