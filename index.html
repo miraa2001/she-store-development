@@ -909,9 +909,12 @@ async function loadPdfFonts(pdfDoc){
     boldRes.arrayBuffer()
   ]);
 
+  const { StandardFonts } = PDFLib;
   pdfFonts = {
     regular: await pdfDoc.embedFont(regularBytes, { subset: true }),
-    bold: await pdfDoc.embedFont(boldBytes, { subset: true })
+    bold: await pdfDoc.embedFont(boldBytes, { subset: true }),
+    latinRegular: await pdfDoc.embedFont(StandardFonts.Helvetica),
+    latinBold: await pdfDoc.embedFont(StandardFonts.HelveticaBold)
   };
   return pdfFonts;
 }
@@ -943,16 +946,18 @@ async function addPurchasePage(pdfDoc, purchase, order){
   const { width, height } = page.getSize();
   const regular = pdfFonts?.regular;
   const bold = pdfFonts?.bold;
+  const latinRegular = pdfFonts?.latinRegular;
+  const latinBold = pdfFonts?.latinBold;
   if(!regular || !bold){
     throw new Error("خط PDF غير جاهز");
   }
 
   const title = purchase.customer_name || order.order_name || "Purchase";
-  const qtyText = `Quantity: ${purchase.qty ?? ""}`;
+  const qtyText = `الكمية: ${purchase.qty ?? ""}`;
   const unitPrice = purchase.price === null || purchase.price === undefined ? "—" : formatILS(purchase.price);
   const paidPrice = purchase.paid_price === null || purchase.paid_price === undefined ? "—" : formatILS(purchase.paid_price);
-  const priceText = `Unit price: ${unitPrice}${unitPrice === "—" ? "" : " ₪"}`;
-  const paidText = `Paid price: ${paidPrice}${paidPrice === "—" ? "" : " ₪"}`;
+  const priceText = `سعر القطعة: ${unitPrice}${unitPrice === "—" ? "" : " ₪"}`;
+  const paidText = `السعر المدفوع: ${paidPrice}${paidPrice === "—" ? "" : " ₪"}`;
 
   const links = (purchase.purchase_links || []).map(l=>l.url).filter(Boolean);
   const linkLines = links.length ? links : ["—"];
@@ -990,23 +995,24 @@ async function addPurchasePage(pdfDoc, purchase, order){
   }
 
   const lines = [
-    { text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14 },
-    { text: qtyText, size: 14, font: regular, color: rgb(0,0,0), gap: 8 },
-    { text: priceText, size: 14, font: regular, color: rgb(0,0,0), gap: 8 },
-    { text: paidText, size: 14, font: regular, color: rgb(0,0,0), gap: 14 },
-    { text: "Product URL:", size: 12, font: bold, color: rgb(0,0,0), gap: 6 }
+    { text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14, align:"right" },
+    { text: qtyText, size: 14, font: regular, color: rgb(0,0,0), gap: 8, align:"right" },
+    { text: priceText, size: 14, font: regular, color: rgb(0,0,0), gap: 8, align:"right" },
+    { text: paidText, size: 14, font: regular, color: rgb(0,0,0), gap: 14, align:"right" },
+    { text: "رابط المنتج:", size: 12, font: bold, color: rgb(0,0,0), gap: 6, align:"right" }
   ];
 
   linkLines.forEach((url)=> lines.push({
     text: url,
     size: 11,
-    font: regular,
+    font: latinRegular || regular,
     color: url === "—" ? rgb(0,0,0) : rgb(0.1,0.4,0.9),
     link: url === "—" ? null : url,
-    gap: 6
+    gap: 6,
+    align:"left"
   }));
 
-  lines.push({ text: "Images:", size: 12, font: bold, color: rgb(0,0,0), gap: 8 });
+  lines.push({ text: "الصور:", size: 12, font: bold, color: rgb(0,0,0), gap: 8, align:"right" });
 
   const thumbsGap = 12;
   const rowHeight = Math.max(...thumbItems.map(t=>t.height));
@@ -1015,10 +1021,15 @@ async function addPurchasePage(pdfDoc, purchase, order){
   const contentHeight = lines.reduce((sum,l)=> sum + l.size + l.gap, 0) + rowHeight;
   let y = (height + contentHeight) / 2;
 
-  const drawCenteredText = (text, size, font, color, link)=>{
+  const blockWidth = Math.max(0, width - 120);
+  const blockX = (width - blockWidth) / 2;
+
+  const drawTextLine = (text, size, font, color, link, align="center")=>{
     const safeText = String(text ?? "");
     const textWidth = font.widthOfTextAtSize(safeText, size);
-    const x = Math.max(40, (width - textWidth) / 2);
+    let x = blockX + (blockWidth - textWidth) / 2;
+    if(align === "right") x = blockX + (blockWidth - textWidth);
+    if(align === "left") x = blockX;
     const opts = { x, y, size, font, color, maxWidth: width - 80 };
     if(link) opts.link = link;
     page.drawText(safeText, opts);
@@ -1026,7 +1037,7 @@ async function addPurchasePage(pdfDoc, purchase, order){
 
   for(const line of lines){
     y -= line.size;
-    drawCenteredText(line.text, line.size, line.font, line.color, line.link);
+    drawTextLine(line.text, line.size, line.font, line.color, line.link, line.align);
     y -= line.gap;
   }
 
@@ -1041,7 +1052,7 @@ async function addPurchasePage(pdfDoc, purchase, order){
         x,
         y: rowY + Math.max(0, (rowHeight - item.height) / 2),
         size: 10,
-        font: regular,
+        font: latinRegular || regular,
         color: rgb(0.4,0.4,0.4),
         maxWidth: item.width
       });
