@@ -306,12 +306,13 @@ async function sendNtfy(message){
   }
 }
 
-function buildPickupMessage({ customerName, price, pickupLabel }){
+function buildPickupMessage({ picked, customerName, price, pickupLabel }){
   const priceText = formatILS(price);
   const nameText = customerName || "";
   const pickupText = pickupLabel || "";
+  const status = picked ? "✅" : "❌";
   return [
-    "تم استلام الطلب ✅",
+    `تم استلام الطلب ${status}`,
     `الزبون: ${nameText}`,
     `نقطة الاستلام: ${pickupText}`,
     `السعر: ${priceText}`
@@ -583,8 +584,9 @@ function renderTable(list){
         return;
       }
 
-      if(item && val){
+      if(item){
         await sendNtfy(buildPickupMessage({
+          picked: val,
           customerName: item.customer_name,
           price: item.price,
           pickupLabel: PICKUP_VALUE
