@@ -210,6 +210,7 @@
             <input type="checkbox" id="arrivedToggle">
             <span>تم وصول الطلب</span>
           </label>
+          <button class="btn" id="exportPdfBtn" type="button">تصدير PDF</button>
           <span class="muted" id="arrivedMsg"></span>
         </div>
 
@@ -475,6 +476,11 @@ const tbody = document.getElementById("tbody");
 const arrivedRow = document.getElementById("arrivedRow");
 const arrivedToggle = document.getElementById("arrivedToggle");
 const arrivedMsg = document.getElementById("arrivedMsg");
+const exportPdfBtn = document.getElementById("exportPdfBtn");
+
+if(exportPdfBtn){
+  exportPdfBtn.disabled = true;
+}
 
 const customer = document.getElementById("customer");
 const customerList = document.getElementById("customerList");
@@ -954,9 +960,7 @@ async function addPurchasePage(pdfDoc, purchase, order){
 
   const title = purchase.customer_name || order.order_name || "Purchase";
   const qtyText = `الكمية: ${purchase.qty ?? ""}`;
-  const unitPrice = purchase.price === null || purchase.price === undefined ? "—" : formatILS(purchase.price);
   const paidPrice = purchase.paid_price === null || purchase.paid_price === undefined ? "—" : formatILS(purchase.paid_price);
-  const priceText = `سعر القطعة: ${unitPrice}${unitPrice === "—" ? "" : " ₪"}`;
   const paidText = `السعر المدفوع: ${paidPrice}${paidPrice === "—" ? "" : " ₪"}`;
 
   const links = (purchase.purchase_links || []).map(l=>l.url).filter(Boolean);
@@ -997,7 +1001,6 @@ async function addPurchasePage(pdfDoc, purchase, order){
   const lines = [
     { text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14, align:"right" },
     { text: qtyText, size: 14, font: regular, color: rgb(0,0,0), gap: 8, align:"right" },
-    { text: priceText, size: 14, font: regular, color: rgb(0,0,0), gap: 8, align:"right" },
     { text: paidText, size: 14, font: regular, color: rgb(0,0,0), gap: 14, align:"right" },
     { text: "رابط المنتج:", size: 12, font: bold, color: rgb(0,0,0), gap: 6, align:"right" }
   ];
@@ -1132,31 +1135,7 @@ async function loadOrders(){
   orders.forEach(o=>{
     const div=document.createElement("div");
     div.className="orderItem"+(activeOrder?.id===o.id?" active":"");
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = o.order_name || "";
-
-    const meta = document.createElement("div");
-    meta.className = "row";
-    meta.style.gap = "6px";
-
-    const pill = document.createElement("span");
-    pill.className = "pill";
-    pill.textContent = "فتح";
-
-    const exportBtn = document.createElement("button");
-    exportBtn.type = "button";
-    exportBtn.className = "btn";
-    exportBtn.textContent = "تصدير PDF";
-    exportBtn.onclick = (e)=>{
-      e.stopPropagation();
-      exportOrderPdf(o.id, exportBtn);
-    };
-
-    meta.appendChild(pill);
-    meta.appendChild(exportBtn);
-
-    div.appendChild(nameSpan);
-    div.appendChild(meta);
+    div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">فتح</span>`;
     div.onclick = ()=>selectOrder(o);
     ordersList.appendChild(div);
   });
@@ -1173,6 +1152,10 @@ async function selectOrder(o){
     arrivedRow.style.display = canSeeArrived ? "" : "none";
     arrivedMsg.textContent = "";
     arrivedToggle.checked = !!o.arrived;
+  }
+  if(exportPdfBtn){
+    exportPdfBtn.disabled = false;
+    exportPdfBtn.onclick = ()=> exportOrderPdf(activeOrder.id, exportPdfBtn);
   }
   clearDuplicateWarning();
 
@@ -1218,6 +1201,9 @@ deleteOrderBtn.onclick = async ()=>{
   if(arrivedRow){
     arrivedRow.style.display = "none";
     arrivedMsg.textContent = "";
+  }
+  if(exportPdfBtn){
+    exportPdfBtn.disabled = true;
   }
   await loadOrders();
 };
