@@ -52,7 +52,7 @@
     .orderGroupMeta{display:flex;gap:8px;align-items:center}
 
     table{width:100%;border-collapse:collapse}
-    th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:top}
+    th,td{border-bottom:1px solid #eee;padding:10px;text-align:right;vertical-align:middle}
     th{color:#666;font-size:13px}
     .chk{width:18px;height:18px}
     .highlight{background:#fff8d6}
@@ -64,7 +64,11 @@
     .searchResults button:last-child{border-bottom:none}
     .searchResults button:hover{background:#fafafa}
     .paidCell{display:flex;align-items:center;gap:8px}
-    .paidCell .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;line-height:1}
+    .paidCell span{display:inline-flex;align-items:center}
+    .paidCell .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      padding:6px 10px;line-height:1;height:32px
+    }
     body.embed .topbar,
     body.embed .sidebar,
     body.embed .sidebarOverlay{display:none !important}
