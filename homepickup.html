@@ -62,9 +62,8 @@
     .chk{width:18px;height:18px}
     .thumbs{display:flex;gap:8px;flex-wrap:wrap}
     .thumbs img{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #eee;cursor:pointer}
-    .paidCell{display:flex;align-items:center;gap:8px}
-    .paidCell span{display:inline-flex;align-items:center}
-    .paidCell .btn{
+    .editCol{width:1%;white-space:nowrap;text-align:center}
+    .editCol .btn{
       display:inline-flex;align-items:center;justify-content:center;
       padding:6px 10px;line-height:1;height:32px
     }
@@ -158,6 +157,7 @@
               <th>الزبون</th>
               <th>السعر</th>
               <th id="paidPriceHeader" style="display:none">المدفوع</th>
+              <th id="paidEditHeader" class="editCol" style="display:none"></th>
               <th>صور</th>
               <th>تم الاستلام</th>
               <th>وقت الاستلام</th>
@@ -215,6 +215,7 @@ async function guardHomePickupAccess(){
     window.location.replace("./login.html");
   }
   if(paidPriceHeader) paidPriceHeader.style.display = email === EMAIL_RAHAF ? "" : "none";
+  if(paidEditHeader) paidEditHeader.style.display = email === EMAIL_RAHAF ? "" : "none";
 }
 /* ===== Sidebar ===== */
 const sidebar = document.getElementById("sidebar");
@@ -284,6 +285,7 @@ const orderTitleEl = document.getElementById("orderTitle");
 const purchaseCountEl = document.getElementById("purchaseCount");
 const totalPriceEl = document.getElementById("totalPrice");
 const paidPriceHeader = document.getElementById("paidPriceHeader");
+const paidEditHeader = document.getElementById("paidEditHeader");
 const tbody = document.getElementById("tbody");
 const lb = document.getElementById("lightbox");
 const lbImg = lb ? lb.querySelector("img") : null;
@@ -460,11 +462,9 @@ function renderPurchases(){
 
     const paidCell = myEmail === EMAIL_RAHAF
       ? `
-        <td data-paid-cell="${p.id}">
-          <div class="paidCell">
-            <span>${escapeHtml(p.paid_price ?? "—")}</span>
-            <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
-          </div>
+        <td data-paid-value-cell="${p.id}">${escapeHtml(p.paid_price ?? "—")}</td>
+        <td class="editCol" data-paid-edit-cell="${p.id}">
+          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
         </td>
       `
       : ``;
@@ -525,17 +525,21 @@ function renderPurchases(){
       const entry = purchases.find(p=>String(p.id) === String(id));
       if(!entry || myEmail !== EMAIL_RAHAF) return;
 
-      const cell = btn.closest("td");
+      const valueCell = tbody.querySelector(`[data-paid-value-cell="${id}"]`);
+      const editCell = tbody.querySelector(`[data-paid-edit-cell="${id}"]`);
+      if(!valueCell || !editCell) return;
       const currentVal = entry.paid_price ?? "";
-      cell.innerHTML = `
+      valueCell.innerHTML = `
         <input type="number" step="0.01" min="0" data-paid-input="${id}" value="${escapeAttr(currentVal)}" style="width:90px">
+      `;
+      editCell.innerHTML = `
         <button class="btn" data-paid-save="${id}">✅</button>
         <button class="btn" data-paid-cancel="${id}">✖</button>
       `;
 
-      const input = cell.querySelector(`[data-paid-input="${id}"]`);
-      const saveBtn = cell.querySelector(`[data-paid-save="${id}"]`);
-      const cancelBtn = cell.querySelector(`[data-paid-cancel="${id}"]`);
+      const input = valueCell.querySelector(`[data-paid-input="${id}"]`);
+      const saveBtn = editCell.querySelector(`[data-paid-save="${id}"]`);
+      const cancelBtn = editCell.querySelector(`[data-paid-cancel="${id}"]`);
 
       const cancel = ()=>{ renderPurchases(); };
       cancelBtn.onclick = cancel;
