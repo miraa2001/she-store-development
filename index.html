@@ -984,9 +984,9 @@ async function addPurchasePage(pdfDoc, purchase, order){
   }
 
   const title = purchase.customer_name || order.order_name || "Purchase";
-  const qtyText = `الكمية: ${purchase.qty ?? ""}`;
+  const qtyValue = purchase.qty ?? "—";
+  const unitPrice = purchase.price === null || purchase.price === undefined ? "—" : formatILS(purchase.price);
   const paidPrice = purchase.paid_price === null || purchase.paid_price === undefined ? "—" : formatILS(purchase.paid_price);
-  const paidText = `السعر المدفوع: ${paidPrice}${paidPrice === "—" ? "" : " ₪"}`;
 
   const links = (purchase.purchase_links || []).map(l=>l.url).filter(Boolean);
   const linkLines = links.length ? links : ["—"];
@@ -1024,10 +1024,11 @@ async function addPurchasePage(pdfDoc, purchase, order){
   }
 
   const lines = [
-    { text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14, align:"right" },
-    { text: qtyText, size: 14, font: regular, color: rgb(0,0,0), gap: 8, align:"right" },
-    { text: paidText, size: 14, font: regular, color: rgb(0,0,0), gap: 14, align:"right" },
-    { text: "رابط المنتج:", size: 12, font: bold, color: rgb(0,0,0), gap: 6, align:"right" }
+    { type:"text", text: title, size: 22, font: bold, color: rgb(0,0,0), gap: 14, align:"right" },
+    { type:"pair", label: "الكمية", value: qtyValue, size: 14, gap: 8 },
+    { type:"pair", label: "سعر القطعة", value: unitPrice, size: 14, gap: 8 },
+    { type:"pair", label: "السعر المدفوع", value: paidPrice, size: 14, gap: 14 },
+    { type:"text", text: "رابط المنتج:", size: 12, font: bold, color: rgb(0,0,0), gap: 6, align:"right" }
   ];
 
   linkLines.forEach((url)=> lines.push({
@@ -1063,10 +1064,24 @@ async function addPurchasePage(pdfDoc, purchase, order){
       addLinkAnnotation(pdfDoc, page, link, x, y, textWidth, size + 2);
     }
   };
+  const drawPairLine = (label, value, size)=>{
+    const labelText = String(label ?? "");
+    const valueText = String(value ?? "—");
+    const labelWidth = regular.widthOfTextAtSize(labelText, size);
+    const valueWidth = (latinRegular || regular).widthOfTextAtSize(valueText, size);
+    const labelX = blockX + blockWidth - labelWidth;
+    const valueX = blockX;
+    page.drawText(labelText, { x: labelX, y, size, font: regular, color: rgb(0,0,0) });
+    page.drawText(valueText, { x: valueX, y, size, font: latinRegular || regular, color: rgb(0,0,0) });
+  };
 
   for(const line of lines){
     y -= line.size;
-    drawTextLine(line.text, line.size, line.font, line.color, line.link, line.align);
+    if(line.type === "pair"){
+      drawPairLine(line.label, line.value, line.size);
+    } else {
+      drawTextLine(line.text, line.size, line.font, line.color, line.link, line.align);
+    }
     y -= line.gap;
   }
 
