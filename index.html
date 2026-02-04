@@ -22,7 +22,7 @@
     }
     .sidebarOverlay{
       position:fixed;inset:0;background:rgba(0,0,0,.35);
-      display:none;z-index:50
+      display:none;z-index:50;pointer-events:none
     }
     .sidebar{
       position:fixed;top:0;right:0;height:100vh;width:min(280px, 82vw);
@@ -33,7 +33,7 @@
       box-sizing:border-box;
     }
     .sidebar.open{transform:translateX(0)}
-    .sidebarOverlay.open{display:block}
+    .sidebarOverlay.open{display:block;pointer-events:auto}
     .sidebarHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}
     .sidebarHeader b{font-size:16px}
     .sidebar a,.sidebar button{
@@ -427,6 +427,8 @@ openBtn.onclick = openSidebar;
 closeBtn.onclick = closeSidebar;
 overlay.onclick = closeSidebar;
 document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeSidebar(); });
+window.addEventListener("pageshow", closeSidebar);
+window.addEventListener("resize", ()=>{ if(isMobile()) closeSidebar(); });
 
 function renderSidebar(){
   // Rahaf only here anyway, but keep it clean
@@ -1781,6 +1783,7 @@ addBtn.onclick = async ()=>{
 (async function init(){
   await guardIndexAccess();
   renderSidebar();
+  closeSidebar();
   await loadOrders();
 })();
 </script>
