@@ -155,7 +155,7 @@
             <div class="value" id="pendingTotal">0</div>
           </div>
           <div class="kpi t2">
-            <div class="label">غير مستلم</div>
+            <div class="label">غير محصل</div>
             <div class="value" id="notPickedTotal">0</div>
           </div>
         </div>
@@ -175,7 +175,7 @@
             <div class="value" id="realizedProfit">0</div>
           </div>
           <div class="kpi t3">
-            <div class="label">الربح المتوقع</div>
+            <div class="label" id="projectedLabel">الربح المتوقع</div>
             <div class="value" id="projectedProfit">0</div>
           </div>
           <div class="kpi t3">
@@ -224,14 +224,14 @@
               <div class="label">تقدم التحصيل</div>
               <div class="value" id="monthProgressPct">0%</div>
             </div>
-            <div class="kpi t2">
-              <div class="label">قيد التحصيل</div>
-              <div class="value" id="monthPending">0</div>
-            </div>
-            <div class="kpi t2">
-              <div class="label">غير مستلم</div>
-              <div class="value" id="monthNotPicked">0</div>
-            </div>
+          <div class="kpi t2">
+            <div class="label">قيد التحصيل</div>
+            <div class="value" id="monthPending">0</div>
+          </div>
+          <div class="kpi t2">
+            <div class="label">غير محصل</div>
+            <div class="value" id="monthNotPicked">0</div>
+          </div>
           </div>
 
           <div class="progressBlock" id="monthProgressBlock">
@@ -244,14 +244,14 @@
           <div class="muted" id="monthProgressEmpty" style="display:none;margin-top:6px">لا يوجد تحصيل بعد</div>
 
           <div class="kpiRow">
-            <div class="kpi t3">
-              <div class="label" id="monthRealizedLabel">الربح المحقق</div>
-              <div class="value" id="monthRealized">0</div>
-            </div>
-            <div class="kpi t3">
-              <div class="label">الربح المتوقع</div>
-              <div class="value" id="monthProjected">0</div>
-            </div>
+          <div class="kpi t3">
+            <div class="label" id="monthRealizedLabel">الربح المحقق</div>
+            <div class="value" id="monthRealized">0</div>
+          </div>
+          <div class="kpi t3">
+            <div class="label" id="monthProjectedLabel">الربح المتوقع</div>
+            <div class="value" id="monthProjected">0</div>
+          </div>
             <div class="kpi t3">
               <div class="label">المصروف</div>
               <div class="value" id="monthSpent">0</div>
@@ -411,6 +411,7 @@ const progressLabelEl = document.getElementById("progressLabel");
 const progressBarEl = document.getElementById("progressBar");
 const realizedProfitEl = document.getElementById("realizedProfit");
 const projectedProfitEl = document.getElementById("projectedProfit");
+const projectedLabelEl = document.getElementById("projectedLabel");
 const spentTotalEl = document.getElementById("spentTotal");
 const orderStatusEl = document.getElementById("orderStatus");
 const realizedLabelEl = document.getElementById("realizedLabel");
@@ -436,6 +437,7 @@ const monthProgressBlock = document.getElementById("monthProgressBlock");
 const monthProgressBar = document.getElementById("monthProgressBar");
 const monthRealized = document.getElementById("monthRealized");
 const monthProjected = document.getElementById("monthProjected");
+const monthProjectedLabel = document.getElementById("monthProjectedLabel");
 const monthSpent = document.getElementById("monthSpent");
 const monthRealizedLabel = document.getElementById("monthRealizedLabel");
 const monthPie = document.getElementById("monthPie");
@@ -623,13 +625,22 @@ function updateOrderSummary(order){
 
   const incomplete = !(pending === 0 && notPicked === 0);
   if(realizedLabelEl){
-    realizedLabelEl.textContent = incomplete ? "الربح المحقق (حتى الآن)" : "الربح المحقق";
+    realizedLabelEl.textContent = incomplete ? "الربح المحقق" : "الربح المحقق";
   }
-  realizedProfitEl.textContent = formatILS(realized);
-  realizedProfitEl.classList.toggle("muted", incomplete && realized < 0);
-  realizedProfitEl.classList.toggle("neg", !incomplete && realized < 0);
+  if(incomplete){
+    realizedProfitEl.textContent = "—";
+    realizedProfitEl.classList.remove("muted","neg");
+  } else {
+    realizedProfitEl.textContent = formatILS(realized);
+    realizedProfitEl.classList.remove("muted");
+    realizedProfitEl.classList.toggle("neg", realized < 0);
+  }
 
+  if(projectedLabelEl){
+    projectedLabelEl.textContent = projected < 0 ? "الخسارة" : "الربح المتوقع";
+  }
   projectedProfitEl.textContent = formatILS(projected);
+  projectedProfitEl.classList.toggle("neg", projected < 0);
   spentTotalEl.textContent = formatILS(spent);
   spentInput.value = spent ? String(spent) : "";
 
@@ -791,13 +802,22 @@ function renderMonthCharts(){
 
   const incomplete = !(m.pending === 0 && m.notPicked === 0);
   if(monthRealizedLabel){
-    monthRealizedLabel.textContent = incomplete ? "الربح المحقق (حتى الآن)" : "الربح المحقق";
+    monthRealizedLabel.textContent = incomplete ? "الربح المحقق" : "الربح المحقق";
   }
-  monthRealized.textContent = formatILS(realized);
-  monthRealized.classList.toggle("muted", incomplete && realized < 0);
-  monthRealized.classList.toggle("neg", !incomplete && realized < 0);
+  if(incomplete){
+    monthRealized.textContent = "—";
+    monthRealized.classList.remove("muted","neg");
+  } else {
+    monthRealized.textContent = formatILS(realized);
+    monthRealized.classList.remove("muted");
+    monthRealized.classList.toggle("neg", realized < 0);
+  }
 
+  if(monthProjectedLabel){
+    monthProjectedLabel.textContent = projected < 0 ? "الخسارة" : "الربح المتوقع";
+  }
   monthProjected.textContent = formatILS(projected);
+  monthProjected.classList.toggle("neg", projected < 0);
   monthSpent.textContent = formatILS(m.spent);
 
   const isComplete = m.pending === 0 && m.notPicked === 0 && m.expected > 0;
