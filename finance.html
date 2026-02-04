@@ -597,6 +597,7 @@ function updateOrderSummary(order){
   const collected = stats.collected;
   const pending = stats.pending;
   const notPicked = stats.notPicked;
+  const uncollected = pending + notPicked;
   const expected = stats.expected;
   const spent = parsePrice(order.spent_amount);
   const realized = collected - spent;
@@ -605,7 +606,7 @@ function updateOrderSummary(order){
   const progressPct = expected > 0 ? Math.round((collected / expected) * 100) : 0;
   collectedTotalEl.textContent = formatILS(collected);
   pendingTotalEl.textContent = formatILS(pending);
-  notPickedTotalEl.textContent = formatILS(notPicked);
+  notPickedTotalEl.textContent = formatILS(uncollected);
   expectedTotalEl.textContent = formatILS(expected);
   if(progressPctEl) progressPctEl.textContent = `${progressPct}%`;
   progressLabelEl.textContent = `${progressPct}% مكتمل`;
@@ -773,7 +774,7 @@ function renderMonthCharts(){
 
   monthCollected.textContent = formatILS(m.collected);
   monthPending.textContent = formatILS(m.pending);
-  monthNotPicked.textContent = formatILS(m.notPicked);
+  monthNotPicked.textContent = formatILS(m.pending + m.notPicked);
   monthExpected.textContent = formatILS(m.expected);
   if(monthProgressPct) monthProgressPct.textContent = `${progressPct}%`;
   monthProgressLabel.textContent = `${progressPct}% مكتمل`;
