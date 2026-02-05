@@ -236,7 +236,7 @@ async function guardAuraPickup(){
   isRahaf = email === EMAIL_RAHAF;
   isLaaura = email === EMAIL_LAAURA;
 
-  const allowed = [EMAIL_RAHAF, EMAIL_REEM, EMAIL_RAWAND, EMAIL_LAAURA];
+  const allowed = [EMAIL_RAHAF, EMAIL_LAAURA];
   if(!allowed.includes(email)){
     window.location.replace("./login.html");
   }
