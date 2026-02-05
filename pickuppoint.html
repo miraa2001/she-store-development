@@ -121,7 +121,7 @@
 <div class="wrap">
   <div class="topbar">
     <div class="brand">
-      <b>نقطة الاستلام - La Aura</b>
+      <b>La Aura</b>
     </div>
     <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
@@ -213,7 +213,9 @@ const PICKUP_ALIASES = [
 ];
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 const EMAIL_RAWAND = "rawand@she-store.com";
-const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
+const isEmbedParam = new URLSearchParams(location.search).get("embed") === "1";
+const isInFrame = window.self !== window.top;
+const isEmbed = isEmbedParam || isInFrame;
 if(isEmbed) document.body.classList.add("embed");
 const isIOSChrome = /CriOS/i.test(navigator.userAgent);
 if(isIOSChrome) document.body.classList.add("ios-chrome");
@@ -444,7 +446,6 @@ async function updateAllOrdersTotal(){
   const { data, error } = await sb
     .from("purchases")
     .select("paid_price, price, picked_up, collected, pickup_point")
-    .in("pickup_point", PICKUP_ALIASES)
     .eq("collected", false)
     .eq("picked_up", true);
 
@@ -556,15 +557,46 @@ function formatDateTime(iso){
 }
 
 async function loadPickupOrders(){
-  const { data: purchaseRows, error: pErr } = await sb
-    .from("purchases")
-    .select("order_id, pickup_point, picked_up, paid_price, price")
-    .in("pickup_point", PICKUP_ALIASES);
+  const fetchOrders = async (ids=null)=>{
+    let q = sb.from("orders")
+      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
+      .order("created_at",{ascending:false});
+    if(Array.isArray(ids) && ids.length){
+      q = q.in("id", ids);
+    }
+    return await q;
+  };
 
+  const fetchPurchases = async (ids=null)=>{
+    let q = sb.from("purchases")
+      .select("order_id, pickup_point, picked_up, paid_price, price");
+    if(Array.isArray(ids) && ids.length){
+      q = q.in("order_id", ids);
+    }
+    return await q;
+  };
+
+  const { data: purchaseRows, error: pErr } = await fetchPurchases();
   if(pErr){ console.error(pErr); return; }
 
-  const auraPurchases = (purchaseRows || []).filter(p=>isAuraPickup(p.pickup_point));
-  const orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
+  let auraPurchases = (purchaseRows || []).filter(p=>isAuraPickup(p.pickup_point));
+  let orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
+
+  if(!orderIds.length){
+    const { data: strictOrders, error: soErr } = await sb
+      .from("orders")
+      .select("id")
+      .eq("arrived", true)
+      .eq("placed_at_pickup", true);
+    if(soErr){ console.error(soErr); return; }
+    const ids = (strictOrders || []).map(o=>o.id);
+    if(ids.length){
+      const { data: p2, error: p2Err } = await fetchPurchases(ids);
+      if(p2Err){ console.error(p2Err); return; }
+      auraPurchases = (p2 || []).filter(p=>isAuraPickup(p.pickup_point));
+      orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
+    }
+  }
 
   if(!orderIds.length){
     orders = [];
@@ -574,12 +606,7 @@ async function loadPickupOrders(){
     return;
   }
 
-  const { data: orderRows, error: oErr } = await sb
-    .from("orders")
-    .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
-    .in("id", orderIds)
-    .order("created_at",{ascending:false});
-
+  const { data: orderRows, error: oErr } = await fetchOrders(orderIds);
   if(oErr){ console.error(oErr); return; }
 
   const ordersMap = new Map((orderRows || []).map(o=>[o.id, { ...o, purchases: [] }]));
@@ -678,12 +705,13 @@ if(collectBtn){
     const pendingText = formatILS(pendingTotal);
 
     collectBtn.disabled = true;
-    const { error } = await sb
-      .from("purchases")
-      .update({ collected: true, collected_at: new Date().toISOString() })
-      .eq("order_id", activeOrder.id)
-      .in("pickup_point", PICKUP_ALIASES)
-      .eq("picked_up", true);
+    const ids = pendingList.map(p=>p.id);
+    const { error } = ids.length
+      ? await sb
+          .from("purchases")
+          .update({ collected: true, collected_at: new Date().toISOString() })
+          .in("id", ids)
+      : { error: null };
 
     if(error){
       console.error(error);
@@ -716,8 +744,7 @@ if(collectAllBtn){
 
     const { data, error } = await sb
       .from("purchases")
-      .select("paid_price, price")
-      .in("pickup_point", PICKUP_ALIASES)
+      .select("id, paid_price, price, pickup_point")
       .eq("picked_up", true)
       .eq("collected", false);
 
@@ -726,18 +753,20 @@ if(collectAllBtn){
       return;
     }
 
-    const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+    const auraList = (data || []).filter(item=>isAuraPickup(item.pickup_point));
+    const total = auraList.reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
     if(total <= 0){
       return;
     }
 
     collectAllBtn.disabled = true;
-    const { error: upErr } = await sb
-      .from("purchases")
-      .update({ collected: true, collected_at: new Date().toISOString() })
-      .in("pickup_point", PICKUP_ALIASES)
-      .eq("picked_up", true)
-      .eq("collected", false);
+    const ids = auraList.map(p=>p.id);
+    const { error: upErr } = ids.length
+      ? await sb
+          .from("purchases")
+          .update({ collected: true, collected_at: new Date().toISOString() })
+          .in("id", ids)
+      : { error: null };
 
     if(upErr){
       console.error(upErr);
@@ -965,7 +994,6 @@ async function runSearch(){
     .from("purchases")
     .select("id, order_id, customer_name, price, created_at, pickup_point")
     .in("order_id", orderIds)
-    .in("pickup_point", PICKUP_ALIASES)
     .ilike("customer_name", `%${q}%`)
     .order("created_at",{ascending:false})
     .limit(50);

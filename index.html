@@ -299,7 +299,7 @@
         <div id="ordersList" style="margin-top:10px"></div>
       </div>
       <div class="listCollapsed">
-        <button class="miniBtn" id="ordersListToggleMini" type="button" aria-label="عرض القائمة">☰</button>
+        <button class="miniBtn" id="ordersListToggleMini" type="button" aria-label="عرض القائمة">◀</button>
         <div class="miniLabel">القائمة</div>
       </div>
     </aside>
@@ -316,7 +316,7 @@
                 <span class="pill" id="orderStats">—</span>
               </div>
               <div class="row" style="gap:8px;align-items:center">
-                <button class="btn" id="ordersListToggle" type="button">إخفاء القائمة</button>
+                <button class="btn iconBtn" id="ordersListToggle" type="button" aria-label="إخفاء القائمة">▶</button>
                 <button class="icon-btn" id="editOrderBtn" title="تعديل اسم الطلبية" aria-label="تعديل اسم الطلبية">✏️</button>
               </div>
             </div>
@@ -448,7 +448,7 @@
           <div id="viewOrdersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
         </div>
         <div class="listCollapsed">
-          <button class="miniBtn" id="viewOrdersListToggleMini" type="button" aria-label="عرض القائمة">☰</button>
+          <button class="miniBtn" id="viewOrdersListToggleMini" type="button" aria-label="عرض القائمة">◀</button>
           <div class="miniLabel">القائمة</div>
         </div>
       </aside>
@@ -471,7 +471,7 @@
             </div>
 
             <div class="row" style="gap:8px">
-              <button class="btn" id="viewOrdersListToggle" type="button">إخفاء القائمة</button>
+              <button class="btn iconBtn" id="viewOrdersListToggle" type="button" aria-label="إخفاء القائمة">▶</button>
               <span class="pill" id="viewPurchaseCount">0</span>
               <button class="btn iconBtn" id="viewToggleBtn" type="button" aria-label="عرض القائمة">
                 <img src="https://cdn-icons-png.flaticon.com/512/8616/8616159.png" alt="">
@@ -619,11 +619,12 @@ function setOrdersListCollapsed(collapsed){
   ordersListCollapsed = collapsed;
   if(ordersGrid) ordersGrid.classList.toggle("list-collapsed", collapsed);
   if(ordersListToggle){
-    ordersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+    ordersListToggle.textContent = "▶";
   }
   if(ordersListToggleMini){
     ordersListToggleMini.setAttribute("aria-label", collapsed ? "عرض القائمة" : "إخفاء القائمة");
     ordersListToggleMini.title = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+    ordersListToggleMini.textContent = "◀";
   }
 }
 
@@ -632,11 +633,12 @@ function setViewListCollapsed(collapsed){
   viewListCollapsed = collapsed;
   if(viewGrid) viewGrid.classList.toggle("list-collapsed", collapsed);
   if(viewOrdersListToggle){
-    viewOrdersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+    viewOrdersListToggle.textContent = "▶";
   }
   if(viewOrdersListToggleMini){
     viewOrdersListToggleMini.setAttribute("aria-label", collapsed ? "عرض القائمة" : "إخفاء القائمة");
     viewOrdersListToggleMini.title = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+    viewOrdersListToggleMini.textContent = "◀";
   }
 }
 
