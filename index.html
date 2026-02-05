@@ -101,8 +101,23 @@
 
     /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
-    .grid.list-collapsed{grid-template-columns:1fr}
-    .grid.list-collapsed > aside{display:none}
+    .grid.list-collapsed{grid-template-columns:72px 1fr}
+    .grid.list-collapsed .listFull{display:none}
+    .grid.list-collapsed .listCollapsed{display:flex}
+    .listCollapsed{
+      display:none;flex-direction:column;align-items:center;gap:10px;
+      padding:8px 6px;min-height:200px
+    }
+    .listCollapsed .miniBtn{
+      width:44px;height:44px;border-radius:14px;border:1px solid #e5e5e5;
+      background:#fff;display:flex;align-items:center;justify-content:center;
+      font-size:20px;cursor:pointer
+    }
+    .listCollapsed .miniLabel{font-size:11px;color:#666;text-align:center}
+    @media(max-width:900px){
+      .grid{grid-template-columns:1fr}
+      .grid.list-collapsed{grid-template-columns:1fr}
+    }
     .grid > *{min-width:0}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .orderDetail{max-height:calc(100vh - 220px);overflow:auto;position:relative;padding-inline-end:2px}
@@ -272,15 +287,21 @@
 
   <div class="grid" id="ordersGrid">
     <aside class="card">
-      <div class="row" style="justify-content:space-between">
-        <b>الطلبيات</b>
-        <div class="row">
-          <input id="orderNameInput" placeholder="اسم الطلبية" />
-          <button class="btn danger" id="deleteOrderBtn" disabled>حذف الطلبية</button>
-          <button class="btn primary" id="newOrderBtn">+ إنشاء طلبية</button>
+      <div class="listFull">
+        <div class="row" style="justify-content:space-between">
+          <b>الطلبيات</b>
+          <div class="row">
+            <input id="orderNameInput" placeholder="اسم الطلبية" />
+            <button class="btn danger" id="deleteOrderBtn" disabled>حذف الطلبية</button>
+            <button class="btn primary" id="newOrderBtn">+ إنشاء طلبية</button>
+          </div>
         </div>
+        <div id="ordersList" style="margin-top:10px"></div>
       </div>
-      <div id="ordersList" style="margin-top:10px"></div>
+      <div class="listCollapsed">
+        <button class="miniBtn" id="ordersListToggleMini" type="button" aria-label="عرض القائمة">☰</button>
+        <div class="miniLabel">القائمة</div>
+      </div>
     </aside>
 
     <main class="card">
@@ -418,12 +439,18 @@
 
     <div class="grid" id="viewGrid">
       <aside class="card">
-        <div class="row" style="justify-content:space-between">
-          <b>الطلبيات</b>
-          <span class="pill" id="viewOrdersCount">0</span>
+        <div class="listFull">
+          <div class="row" style="justify-content:space-between">
+            <b>الطلبيات</b>
+            <span class="pill" id="viewOrdersCount">0</span>
+          </div>
+          <div id="viewOrdersList" style="margin-top:10px"></div>
+          <div id="viewOrdersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
         </div>
-        <div id="viewOrdersList" style="margin-top:10px"></div>
-        <div id="viewOrdersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
+        <div class="listCollapsed">
+          <button class="miniBtn" id="viewOrdersListToggleMini" type="button" aria-label="عرض القائمة">☰</button>
+          <div class="miniLabel">القائمة</div>
+        </div>
       </aside>
 
       <main class="card">
@@ -594,6 +621,10 @@ function setOrdersListCollapsed(collapsed){
   if(ordersListToggle){
     ordersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
   }
+  if(ordersListToggleMini){
+    ordersListToggleMini.setAttribute("aria-label", collapsed ? "عرض القائمة" : "إخفاء القائمة");
+    ordersListToggleMini.title = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+  }
 }
 
 let viewListCollapsed = false;
@@ -602,6 +633,10 @@ function setViewListCollapsed(collapsed){
   if(viewGrid) viewGrid.classList.toggle("list-collapsed", collapsed);
   if(viewOrdersListToggle){
     viewOrdersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+  }
+  if(viewOrdersListToggleMini){
+    viewOrdersListToggleMini.setAttribute("aria-label", collapsed ? "عرض القائمة" : "إخفاء القائمة");
+    viewOrdersListToggleMini.title = collapsed ? "عرض القائمة" : "إخفاء القائمة";
   }
 }
 
@@ -796,6 +831,7 @@ const orderTitle = document.getElementById("orderTitle");
 const orderStats = document.getElementById("orderStats");
 const ordersGrid = document.getElementById("ordersGrid");
 const ordersListToggle = document.getElementById("ordersListToggle");
+const ordersListToggleMini = document.getElementById("ordersListToggleMini");
 const tbody = document.getElementById("tbody");
 const arrivedRow = document.getElementById("arrivedRow");
 const arrivedToggle = document.getElementById("arrivedToggle");
@@ -861,6 +897,7 @@ const viewContent = document.getElementById("viewContent");
 const viewListView = document.getElementById("viewListView");
 const viewGrid = document.getElementById("viewGrid");
 const viewOrdersListToggle = document.getElementById("viewOrdersListToggle");
+const viewOrdersListToggleMini = document.getElementById("viewOrdersListToggleMini");
 const viewCounter = document.getElementById("viewCounter");
 const viewPrev = document.getElementById("viewPrev");
 const viewNext = document.getElementById("viewNext");
@@ -1665,8 +1702,14 @@ if(exportPdfBtn){
 if(ordersListToggle){
   ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
 }
+if(ordersListToggleMini){
+  ordersListToggleMini.onclick = ()=> setOrdersListCollapsed(false);
+}
 if(viewOrdersListToggle){
   viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
+}
+if(viewOrdersListToggleMini){
+  viewOrdersListToggleMini.onclick = ()=> setViewListCollapsed(false);
 }
   await loadOrders();
   showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeleteOrder });
