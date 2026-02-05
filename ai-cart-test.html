@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Cart Total Tester</title>
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/base.css">
+  <script src="assets/ui.js" defer></script>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -318,6 +321,8 @@
         }
         const btn = document.createElement("button");
         btn.textContent = "×";
+        btn.setAttribute("aria-label", "إزالة الصورة");
+        btn.title = "إزالة الصورة";
         btn.onclick = () => {
           URL.revokeObjectURL(img.url);
           images = images.filter((_, i) => i !== idx);

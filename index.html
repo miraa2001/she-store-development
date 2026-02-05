@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>إدارة الطلبات</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3665/3665980.png" />
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/base.css">
+  <script src="assets/ui.js" defer></script>
 
   <style>
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
@@ -100,6 +103,28 @@
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
     .grid > *{min-width:0}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
+    .orderDetail{max-height:calc(100vh - 220px);overflow:auto;position:relative;padding-inline-end:2px}
+    .orderSticky{
+      position:sticky;top:0;background:#fff;z-index:5;
+      padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid #eee
+    }
+    @media(max-width:900px){
+      .orderDetail{max-height:none;overflow:visible}
+      .orderSticky{position:static}
+    }
+    .actionCell{position:relative}
+    .actionMenu{
+      position:absolute;inset-inline-end:0;top:36px;min-width:160px;
+      background:#fff;border:1px solid #e7e7e7;border-radius:12px;
+      box-shadow:0 8px 16px rgba(0,0,0,.08);padding:6px;display:none;z-index:20
+    }
+    .actionMenu.open{display:block}
+    .actionMenu button{
+      width:100%;text-align:right;border:none;background:transparent;padding:8px;border-radius:8px;
+      font-family:inherit;cursor:pointer
+    }
+    .actionMenu button:hover{background:#f6f8fb}
+    .actionMenu .danger{color:#b00020}
 
     .card{background:#fff;border:1px solid #e7e7e7;border-radius:14px;padding:12px}
     .btn{border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer}
@@ -216,7 +241,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebarHeader">
     <b>القائمة</b>
-    <button class="menuBtn" id="closeSidebarBtn" type="button">✕</button>
+    <button class="menuBtn" id="closeSidebarBtn" type="button" aria-label="إغلاق القائمة">✕</button>
   </div>
   <div id="sidebarContent"></div>
 </aside>
@@ -227,7 +252,7 @@
       <b>إدارة الطلبات</b>
       <div class="muted">إضافة / حذف / تعديل</div>
     </div>
-    <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
+    <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
 
   <div class="tabs" id="navTabs" style="display:none">
@@ -260,32 +285,38 @@
       <div id="empty" class="muted">اختاري طلبية</div>
 
       <div id="main" style="display:none">
-        <div class="row" style="justify-content:space-between;align-items:center">
-          <div class="row" style="gap:8px;align-items:center">
-            <b id="orderTitle"></b>
-            <span class="pill" id="orderStats">—</span>
+        <div class="orderDetail">
+          <div class="orderSticky">
+            <div class="row" style="justify-content:space-between;align-items:center">
+              <div class="row" style="gap:8px;align-items:center">
+                <b id="orderTitle"></b>
+                <span class="pill" id="orderStats">—</span>
+              </div>
+              <button class="icon-btn" id="editOrderBtn" title="تعديل اسم الطلبية" aria-label="تعديل اسم الطلبية">✏️</button>
+            </div>
+
+            <div class="row" id="editOrderRow" style="display:none;margin-top:6px">
+              <input id="editOrderInput" placeholder="اسم الطلبية الجديد">
+              <button class="btn primary" id="saveOrderBtn">حفظ</button>
+              <button class="btn" id="cancelOrderBtn">إلغاء</button>
+            </div>
+
+            <div class="row" id="arrivedRow" style="margin-top:8px;display:none">
+              <label class="row" style="gap:8px;cursor:pointer">
+                <input type="checkbox" id="arrivedToggle">
+                <span>تم وصول الطلب</span>
+                <span id="arrivedBadge"></span>
+              </label>
+              <div class="row" style="gap:8px">
+                <button class="btn" id="exportPdfBtn" type="button">تصدير PDF</button>
+                <button class="btn primary" id="addPurchaseBtn" type="button">إضافة مشترى</button>
+              </div>
+              <span class="muted" id="arrivedMsg"></span>
+            </div>
           </div>
-          <button class="btn" id="editOrderBtn" title="تعديل اسم الطلبية">✏️</button>
-        </div>
 
-        <div class="row" id="editOrderRow" style="display:none;margin-top:6px">
-          <input id="editOrderInput" placeholder="اسم الطلبية الجديد">
-          <button class="btn primary" id="saveOrderBtn">حفظ</button>
-          <button class="btn" id="cancelOrderBtn">إلغاء</button>
-        </div>
-
-        <div class="row" id="arrivedRow" style="margin-top:8px;display:none">
-          <label class="row" style="gap:8px;cursor:pointer">
-            <input type="checkbox" id="arrivedToggle">
-            <span>تم وصول الطلب</span>
-          </label>
-          <button class="btn" id="exportPdfBtn" type="button">تصدير PDF</button>
-          <span class="muted" id="arrivedMsg"></span>
-        </div>
-
-        <hr>
-
-        <b>إضافة مشترى</b>
+          <div class="orderContent" id="addPurchaseSection">
+            <b>إضافة مشترى</b>
         <div class="row">
           <div class="autoWrap">
             <input id="customer" placeholder="اسم الزبون" autocomplete="off">
@@ -361,7 +392,7 @@
               <th>مكان الاستلام</th>
               <th>صور</th>
               <th>ملاحظة</th>
-              <th></th>
+              <th>إجراءات</th>
             </tr>
           </thead>
           <tbody id="tbody"></tbody>
@@ -747,6 +778,20 @@ if(exportPdfBtn){
   exportPdfBtn.disabled = true;
 }
 
+function updateArrivedBadge(){
+  if(!arrivedBadge) return;
+  if(!activeOrder){
+    arrivedBadge.innerHTML = "";
+    return;
+  }
+  const isArrived = !!activeOrder.arrived;
+  if(typeof statusBadge === "function"){
+    arrivedBadge.innerHTML = statusBadge(isArrived ? "وصل" : "غير واصل", isArrived ? "success" : "neutral");
+  } else {
+    arrivedBadge.textContent = isArrived ? "وصل" : "غير واصل";
+  }
+}
+
 const customer = document.getElementById("customer");
 const customerList = document.getElementById("customerList");
 const customerClearBtn = document.getElementById("customerClearBtn");
@@ -771,6 +816,8 @@ const editOrderRow = document.getElementById("editOrderRow");
 const editOrderInput = document.getElementById("editOrderInput");
 const saveOrderBtn = document.getElementById("saveOrderBtn");
 const cancelOrderBtn = document.getElementById("cancelOrderBtn");
+const addPurchaseBtn = document.getElementById("addPurchaseBtn");
+const arrivedBadge = document.getElementById("arrivedBadge");
 const orderNameInput = document.getElementById("orderNameInput");
 const searchInput = document.getElementById("searchInput");
 const searchResultsEl = document.getElementById("searchResults");
@@ -1123,8 +1170,15 @@ editOrderBtn.onclick = () => {
   if(!activeOrder) return;
   editOrderInput.value = activeOrder.order_name;
   editOrderRow.style.display="";
+  editOrderInput.focus();
 };
 cancelOrderBtn.onclick = () => { editOrderRow.style.display="none"; };
+if(editOrderInput){
+  editOrderInput.onkeydown = (e)=>{
+    if(e.key === "Enter"){ e.preventDefault(); saveOrderBtn.click(); }
+    if(e.key === "Escape"){ e.preventDefault(); editOrderRow.style.display="none"; }
+  };
+}
 saveOrderBtn.onclick = async () => {
   const newName = editOrderInput.value.trim();
   if(!newName){ alert("اسم الطلبية مطلوب"); return; }
@@ -1493,6 +1547,7 @@ async function selectOrder(o){
     arrivedRow.style.display = canSeeArrived ? "" : "none";
     arrivedMsg.textContent = "";
     arrivedToggle.checked = !!o.arrived;
+    updateArrivedBadge();
   }
   if(exportPdfBtn){
     exportPdfBtn.disabled = false;
@@ -1520,19 +1575,49 @@ newOrderBtn.onclick = async ()=>{
   await selectOrder(data);
 };
 
+async function undoDeleteOrder(){
+  if(!lastDeletedOrder) return;
+  const { order, purchases } = lastDeletedOrder;
+  const { error: orderErr } = await sb.from("orders").insert(order);
+  if(orderErr){
+    console.error(orderErr);
+    showToast?.("فشل التراجع", { type:"danger" });
+    return;
+  }
+  if(purchases?.length){
+    const purchaseRows = purchases.map(p=>{
+      const { purchase_links, purchase_images, ...rest } = p;
+      return rest;
+    });
+    await sb.from("purchases").insert(purchaseRows);
+    const links = purchases.flatMap(p=>(p.purchase_links || []).map(l=>({ purchase_id:p.id, url:l.url || l })));
+    if(links.length) await sb.from("purchase_links").insert(links);
+    const images = purchases.flatMap(p=>(p.purchase_images || []).map(img=>({ id: img.id, purchase_id:p.id, storage_path: img.storage_path })));
+    if(images.length) await sb.from("purchase_images").insert(images);
+  }
+  await loadOrders();
+  lastDeletedOrder = null;
+}
+
 deleteOrderBtn.onclick = async ()=>{
   if(!activeOrder) return;
-  if(!confirm("متأكدة بدك تحذفي الطلبية كاملة بكل مشترياتها؟")) return;
+  const ok = await (confirmModal ? confirmModal({
+    title:"حذف الطلبية",
+    message:"هل تريدين حذف الطلبية كاملة بكل مشترياتها؟"
+  }) : Promise.resolve(confirm("متأكدة بدك تحذفي الطلبية كاملة بكل مشترياتها؟")));
+  if(!ok) return;
 
-  const { data: imgs } = await sb
-    .from("purchase_images")
-    .select("storage_path, purchases!inner(order_id)")
-    .eq("purchases.order_id", activeOrder.id);
+  const { data: purchases, error: pErr } = await sb
+    .from("purchases")
+    .select("*,purchase_links(url),purchase_images(id,storage_path)")
+    .eq("order_id", activeOrder.id);
+  if(pErr) console.error(pErr);
 
+  const orderSnapshot = { ...activeOrder };
   const { error } = await sb.from("orders").delete().eq("id", activeOrder.id);
   if(error){ console.error(error); alert("فشل حذف الطلبية."); return; }
 
-  if(imgs?.length) await sb.storage.from(BUCKET).remove(imgs.map(x=>x.storage_path));
+  lastDeletedOrder = { order: orderSnapshot, purchases: purchases || [] };
 
   activeOrder=null;
   deleteOrderBtn.disabled=true;
@@ -1547,6 +1632,7 @@ deleteOrderBtn.onclick = async ()=>{
     exportPdfBtn.disabled = true;
   }
   await loadOrders();
+  showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeleteOrder });
 };
 
 if(arrivedToggle){
@@ -1573,6 +1659,7 @@ if(arrivedToggle){
 
     arrivedMsg.textContent = "تم ✅";
     activeOrder.arrived = val;
+    updateArrivedBadge();
     await loadOrders();
   };
 }
@@ -1682,6 +1769,107 @@ function closeEditRow(purchaseId){
   const row = tbody.querySelector(`tr[data-edit-row="${purchaseId}"]`);
   if(row) row.style.display="none";
   if(activeEditPasteTarget===purchaseId) activeEditPasteTarget=null;
+}
+
+function resetEditRow(purchaseId){
+  const row = tbody.querySelector(`tr[data-edit-row="${purchaseId}"]`);
+  const p = activePurchases.find(x=>String(x.id)===String(purchaseId));
+  if(!row || !p) return;
+
+  const setVal = (sel, val)=>{
+    const el = row.querySelector(sel);
+    if(el) el.value = val ?? "";
+  };
+  setVal(`[data-f="name"]`, p.customer_name || "");
+  setVal(`[data-f="qty"]`, p.qty ?? 1);
+  setVal(`[data-f="price"]`, p.price ?? "");
+  setVal(`[data-f="paid"]`, p.paid_price ?? p.price ?? "");
+  setVal(`[data-f="bag"]`, p.bag_size || "كيس صغير");
+  setVal(`[data-f="pickup"]`, p.pickup_point || "من نقطة الاستلام");
+  setVal(`[data-f="note"]`, p.note || "");
+
+  const links = (p.purchase_links || []).map(l=>l.url || l);
+  for(let i=1;i<=5;i++){
+    const el = row.querySelector(`[data-l="${i}"]`);
+    if(el) el.value = links[i-1] || "";
+  }
+
+  editImageState.set(purchaseId, {
+    newFiles:[],
+    deleteImgIds:new Set(),
+    deletePaths:new Set(),
+    existingCount:(p.purchase_images || []).length
+  });
+  const paidInput = row.querySelector(`[data-f="paid"]`);
+  if(paidInput) paidInput.dataset.manual = "";
+  row.querySelectorAll("[data-existing-thumb]").forEach(t=>t.classList.remove("removing"));
+  renderNewPreview(purchaseId);
+  updateEditCounts(purchaseId);
+}
+
+let actionMenuBound = false;
+function closeAllActionMenus(){
+  tbody?.querySelectorAll(".actionMenu.open").forEach(menu=>menu.classList.remove("open"));
+  tbody?.querySelectorAll("[data-actions][aria-expanded='true']").forEach(btn=>btn.setAttribute("aria-expanded","false"));
+}
+
+function toggleActionMenu(id){
+  const menu = tbody?.querySelector(`[data-menu="${id}"]`);
+  const btn = tbody?.querySelector(`[data-actions="${id}"]`);
+  if(!menu || !btn) return;
+  const isOpen = menu.classList.contains("open");
+  closeAllActionMenus();
+  if(!isOpen){
+    menu.classList.add("open");
+    btn.setAttribute("aria-expanded","true");
+  }
+}
+
+function bindActionMenuHandlers(){
+  if(actionMenuBound || !tbody) return;
+  actionMenuBound = true;
+
+  tbody.addEventListener("click", (e)=>{
+    const menuBtn = e.target.closest("[data-actions]");
+    if(menuBtn){
+      e.stopPropagation();
+      toggleActionMenu(menuBtn.dataset.actions);
+      return;
+    }
+    const actionBtn = e.target.closest("[data-action]");
+    if(actionBtn){
+      e.stopPropagation();
+      const id = actionBtn.dataset.id;
+      const action = actionBtn.dataset.action;
+      closeAllActionMenus();
+      if(action === "edit"){
+        toggleEditRow(id);
+        updateEditCounts(id);
+        renderNewPreview(id);
+      } else if(action === "paid"){
+        toggleEditRow(id);
+        updateEditCounts(id);
+        renderNewPreview(id);
+        setTimeout(()=>{
+          const row = tbody.querySelector(`tr[data-edit-row="${id}"]`);
+          const input = row?.querySelector(`[data-f="paid"]`);
+          if(input) input.focus();
+        }, 0);
+      } else if(action === "delete"){
+        deletePurchase(id);
+      }
+      return;
+    }
+  });
+
+  document.addEventListener("click", (e)=>{
+    if(!e.target.closest(".actionMenu") && !e.target.closest("[data-actions]")){
+      closeAllActionMenus();
+    }
+  });
+  document.addEventListener("keydown", (e)=>{
+    if(e.key === "Escape") closeAllActionMenus();
+  });
 }
 
 async function saveInlineEdit(purchaseId){
@@ -1816,9 +2004,13 @@ async function loadPurchases(){
       <td>${escapeHtml(pickupTxt)}</td>
       <td class="thumbs">${imgs}</td>
       <td>${escapeHtml(noteTxt) || "—"}</td>
-      <td>
-        <button class="btn" data-edit="${p.id}" title="تعديل">✏️</button>
-        <button class="btn danger" data-del="${p.id}" title="حذف">🗑</button>
+      <td class="actionCell">
+        <button class="icon-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
+        <div class="actionMenu" data-menu="${p.id}" role="menu">
+          <button type="button" data-action="edit" data-id="${p.id}">تعديل</button>
+          <button type="button" data-action="paid" data-id="${p.id}">تعديل المدفوع</button>
+          <button type="button" class="danger" data-action="delete" data-id="${p.id}">حذف</button>
+        </div>
       </td>
     `;
 
@@ -1959,17 +2151,27 @@ async function loadPurchases(){
     getOrCreateEditState(p.id, (p.purchase_images||[]).length);
   });
 
-  tbody.querySelectorAll("button[data-del]").forEach(btn=> btn.onclick=()=>deletePurchase(btn.dataset.del));
-  tbody.querySelectorAll("button[data-edit]").forEach(btn=>{
-    btn.onclick=()=>{
-      const id=btn.dataset.edit;
-      toggleEditRow(id);
-      updateEditCounts(id);
-      renderNewPreview(id);
+  bindActionMenuHandlers();
+  tbody.querySelectorAll("button[data-cancel]").forEach(btn=> btn.onclick=()=>{
+    const id = btn.dataset.cancel;
+    resetEditRow(id);
+    closeEditRow(id);
+  });
+  tbody.querySelectorAll("button[data-save]").forEach(btn=> btn.onclick=()=>saveInlineEdit(btn.dataset.save));
+
+  tbody.querySelectorAll('tr[data-edit-row]').forEach(row=>{
+    row.onkeydown = (e)=>{
+      const id = row.dataset.editRow;
+      if(e.key === "Escape"){
+        e.preventDefault();
+        resetEditRow(id);
+        closeEditRow(id);
+      } else if(e.key === "Enter" && e.target.tagName !== "TEXTAREA"){
+        e.preventDefault();
+        saveInlineEdit(id);
+      }
     };
   });
-  tbody.querySelectorAll("button[data-cancel]").forEach(btn=> btn.onclick=()=>closeEditRow(btn.dataset.cancel));
-  tbody.querySelectorAll("button[data-save]").forEach(btn=> btn.onclick=()=>saveInlineEdit(btn.dataset.save));
 
   tbody.querySelectorAll("[data-existing-thumb]").forEach(thumb=>{
     const purchaseId=thumb.dataset.existingThumb;
@@ -2039,10 +2241,65 @@ document.addEventListener("paste",(e)=>{
   if(pasted.length) addEditFiles(activeEditPasteTarget, pasted);
 });
 
-async function deletePurchase(id){
-  if(!confirm("حذف؟")) return;
-  await sb.from("purchases").delete().eq("id",id);
+let lastDeletedPurchase = null;
+let lastDeletedOrder = null;
+
+async function undoDeletePurchase(){
+  if(!lastDeletedPurchase) return;
+  const { purchase, links, images } = lastDeletedPurchase;
+  const { error } = await sb.from("purchases").insert(purchase);
+  if(error){
+    console.error(error);
+    showToast?.("فشل التراجع", { type:"danger" });
+    return;
+  }
+  if(links?.length){
+    await sb.from("purchase_links").insert(
+      links.map(l=>({ purchase_id: purchase.id, url: l.url || l }))
+    );
+  }
+  if(images?.length){
+    await sb.from("purchase_images").insert(
+      images.map(img=>({ id: img.id, purchase_id: purchase.id, storage_path: img.storage_path }))
+    );
+  }
   await loadPurchases();
+  lastDeletedPurchase = null;
+}
+
+async function deletePurchase(id){
+  const p = activePurchases.find(x=>String(x.id)===String(id));
+  if(!p) return;
+  const ok = await (confirmModal ? confirmModal({
+    title:"حذف المشترى",
+    message:"هل تريدين حذف هذا المشترى؟"
+  }) : Promise.resolve(confirm("حذف؟")));
+  if(!ok) return;
+
+  const snapshot = {
+    ...p,
+    purchase_links: p.purchase_links || [],
+    purchase_images: p.purchase_images || []
+  };
+  const { purchase_links, purchase_images, ...purchase } = snapshot;
+
+  const { error } = await sb.from("purchases").delete().eq("id", id);
+  if(error){
+    console.error(error);
+    alert("فشل حذف المشترى.");
+    return;
+  }
+  await loadPurchases();
+  lastDeletedPurchase = { purchase, links: purchase_links, images: purchase_images };
+  showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeletePurchase });
+}
+
+if(addPurchaseBtn){
+  addPurchaseBtn.onclick = ()=>{
+    const target = document.getElementById("addPurchaseSection");
+    if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
+    if(customer) customer.focus();
+  };
 }
 
 /* ===== Add new purchase ===== */
@@ -2681,7 +2938,7 @@ function renderCustList(list){
       <td>${escapeHtml(c.phone || "")}</td>
       <td>${escapeHtml(c.city || "")}</td>
       <td>${escapeHtml(c.usual_pickup_point || "")}</td>
-      <td><button class="btn iconBtn" data-edit="${c.id}" title="تعديل">✏️</button></td>
+      <td><button class="btn iconBtn" data-edit="${c.id}" title="تعديل" aria-label="تعديل العميل">✏️</button></td>
     `;
 
     const editTr = document.createElement("tr");

@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>نقطة الاستلام - La Aura</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3665/3665980.png" />
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/base.css">
+  <script src="assets/ui.js" defer></script>
 
   <style>
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
@@ -110,7 +113,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebarHeader">
     <b>القائمة</b>
-    <button class="menuBtn" id="closeSidebarBtn" type="button">✕</button>
+    <button class="menuBtn" id="closeSidebarBtn" type="button" aria-label="إغلاق القائمة">✕</button>
   </div>
   <div id="sidebarContent"></div>
 </aside>
@@ -120,7 +123,7 @@
     <div class="brand">
       <b>نقطة الاستلام - La Aura</b>
     </div>
-    <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
+    <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
 
   <div class="row" style="margin-bottom:12px">
@@ -136,7 +139,10 @@
         <span class="pill" id="ordersCount">0</span>
       </div>
       <div id="ordersList" style="margin-top:10px"></div>
-      <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">لا يوجد طلبيات</div>
+      <div id="ordersEmpty" class="muted" style="margin-top:10px;display:none">
+        لا يوجد بيانات
+        <div style="margin-top:8px"><button class="btn" id="ordersRefreshBtn" type="button">تحديث</button></div>
+      </div>
     </aside>
 
     <div class="globalSummary summaryCol" style="display:none" id="allOrdersTotalWrap">
@@ -147,7 +153,10 @@
     </div>
 
     <main class="card mainCol">
-      <div id="empty" class="muted">اختاري طلبية من القائمة</div>
+      <div id="empty" class="muted">
+        لا يوجد بيانات
+        <div style="margin-top:8px"><button class="btn" id="emptyRefreshBtn" type="button">تحديث</button></div>
+      </div>
 
       <div id="main" style="display:none">
         <div class="row" style="justify-content:space-between;align-items:center">
@@ -316,8 +325,10 @@ function renderSidebar(){
 const ordersListEl = document.getElementById("ordersList");
 const ordersEmptyEl = document.getElementById("ordersEmpty");
 const ordersCountEl = document.getElementById("ordersCount");
+const ordersRefreshBtn = document.getElementById("ordersRefreshBtn");
 
 const emptyEl = document.getElementById("empty");
+const emptyRefreshBtn = document.getElementById("emptyRefreshBtn");
 const mainEl = document.getElementById("main");
 const orderTitleEl = document.getElementById("orderTitle");
 const purchaseCountEl = document.getElementById("purchaseCount");
@@ -472,12 +483,18 @@ function buildOrderGroups(list){
         id: `group-${dateKey || "unknown"}`,
         label,
         order_name: label,
-        orderIds: []
+        orderIds: [],
+        count: 0,
+        total: 0
       };
       map.set(dateKey, group);
       groups.push(group);
     }
-    map.get(dateKey).orderIds.push(order.id);
+    const g = map.get(dateKey);
+    g.orderIds.push(order.id);
+    const list = order.purchases || [];
+    g.count += list.length;
+    g.total += list.reduce((sum, p)=> sum + parsePrice(p.paid_price ?? p.price), 0);
   });
 
   return groups;
@@ -485,14 +502,19 @@ function buildOrderGroups(list){
 
 function findGroupForOrder(order){
   const dateKey = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+  const list = orders.filter(o=>{
+    const oKey = formatDMY(o.order_date || o.placed_at_pickup_at || o.created_at);
+    return oKey === dateKey;
+  });
+  const count = list.reduce((sum,o)=> sum + (o.purchases || []).length, 0);
+  const total = list.reduce((sum,o)=> sum + (o.purchases || []).reduce((s,p)=> s + parsePrice(p.paid_price ?? p.price), 0), 0);
   return {
     id: `group-${dateKey || "unknown"}`,
     label: `طلبية ${dateKey || ""}`.trim(),
     order_name: `طلبية ${dateKey || ""}`.trim(),
-    orderIds: orders.filter(o=>{
-      const oKey = formatDMY(o.order_date || o.placed_at_pickup_at || o.created_at);
-      return oKey === dateKey;
-    }).map(o=>o.id)
+    orderIds: list.map(o=>o.id),
+    count,
+    total
   };
 }
 
@@ -507,7 +529,7 @@ function formatDateTime(iso){
 async function loadPickupOrders(){
   const { data, error } = await sb
     .from("orders")
-    .select("id, order_name, order_date, placed_at_pickup_at, created_at, purchases!inner(pickup_point)")
+    .select("id, order_name, order_date, placed_at_pickup_at, created_at, purchases!inner(pickup_point, picked_up, paid_price, price)")
     .eq("arrived", true)
     .eq("placed_at_pickup", true)
     .eq("purchases.pickup_point", PICKUP_VALUE)
@@ -516,6 +538,9 @@ async function loadPickupOrders(){
   if(error){ console.error(error); return; }
 
   orders = data || [];
+  if(isLaaura){
+    orders = orders.filter(o=> (o.purchases || []).some(p=>!p.picked_up));
+  }
   const listItems = isLaaura ? buildOrderGroups(orders) : orders;
   ordersCountEl.textContent = listItems.length;
 
@@ -526,10 +551,17 @@ async function loadPickupOrders(){
     const div = document.createElement("div");
     const label = formatOrderLabel(o);
     div.className = "orderItem" + (activeOrder?.id === o.id ? " active" : "");
+    const metaChips = o.orderIds
+      ? `
+        <span class="pill">الطلبات: ${o.orderIds.length}</span>
+        <span class="pill">المشتريات: ${o.count || 0}</span>
+        <span class="pill">${formatILS(o.total || 0)} ₪</span>
+      `
+      : ``;
     div.innerHTML = `
       <div><b>${escapeHtml(label)}</b></div>
       <div class="orderGroupMeta">
-        ${o.orderIds ? `<span class="pill">${o.orderIds.length}</span>` : ""}
+        ${metaChips}
         <span class="pill">فتح</span>
       </div>
     `;
@@ -624,6 +656,9 @@ if(collectBtn){
   };
 }
 
+if(ordersRefreshBtn) ordersRefreshBtn.onclick = loadPickupOrders;
+if(emptyRefreshBtn) emptyRefreshBtn.onclick = loadPickupOrders;
+
 if(collectAllBtn){
   collectAllBtn.onclick = async ()=>{
     if(!isRahaf) return;
@@ -702,11 +737,14 @@ function renderTable(list){
 
     const checked = p.picked_up ? "checked" : "";
     const pickedAt = fmtDate(p.picked_up_at);
+    const pickupBadge = (typeof statusBadge === "function")
+      ? statusBadge(p.picked_up ? "تم الاستلام" : "غير مستلم", p.picked_up ? "success" : "neutral")
+      : (p.picked_up ? "تم الاستلام" : "غير مستلم");
     const paidCell = isRahaf
       ? `
         <td data-paid-value-cell="${p.id}">${escapeHtml(p.paid_price ?? "—")}</td>
         <td class="editCol" data-paid-edit-cell="${p.id}">
-          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع">✏️</button>
+          <button class="btn" data-edit-paid="${p.id}" title="تعديل المدفوع" aria-label="تعديل المدفوع">✏️</button>
         </td>
       `
       : ``;
@@ -717,7 +755,12 @@ function renderTable(list){
       <td>${escapeHtml(p.paid_price ?? p.price ?? "")}</td>
       ${paidCell}
       <td>${escapeHtml(p.bag_size || "—")}</td>
-      <td><input class="chk" type="checkbox" data-id="${p.id}" ${checked}></td>
+      <td>
+        <label class="row" style="gap:6px;align-items:center">
+          <input class="chk" type="checkbox" data-id="${p.id}" ${checked}>
+          <span>${pickupBadge}</span>
+        </label>
+      </td>
       ${isRahaf ? `<td>${escapeHtml(pickedAt)}</td>` : ``}
     `;
     tbody.appendChild(tr);
@@ -761,13 +804,22 @@ function renderTable(list){
         }));
       }
 
-      if(isRahaf){
-        const list = purchasesByOrder.get(activeOrder.id) || [];
-        const visibleList = list.filter(entry=>!entry.collected);
-        renderTable(visibleList);
-        updatePickedTotal(visibleList);
-      }
+      const list = purchasesByOrder.get(activeOrder.id) || [];
+      const visibleList = list.filter(entry=>!entry.collected);
+      renderTable(visibleList);
+      updatePickedTotal(visibleList);
       await updateAllOrdersTotal();
+
+      if(isLaaura && list.length && list.every(p=>p.picked_up)){
+        await loadPickupOrders();
+        if(!orders.length){
+          activeOrder = null;
+          showMain(false);
+          return;
+        }
+        const nextGroup = buildOrderGroups(orders)[0];
+        if(nextGroup) await selectOrder(nextGroup);
+      }
     };
   });
 

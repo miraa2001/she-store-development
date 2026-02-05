@@ -4,6 +4,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>الاستلام والتحصيل</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3665/3665980.png" />
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/base.css">
+  <script src="assets/ui.js" defer></script>
   <style>
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
     .wrap{max-width:1200px;margin:auto;padding:16px}
@@ -60,7 +63,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebarHeader">
     <b>القائمة</b>
-    <button class="menuBtn" id="closeSidebarBtn" type="button">✕</button>
+    <button class="menuBtn" id="closeSidebarBtn" type="button" aria-label="إغلاق القائمة">✕</button>
   </div>
   <div id="sidebarContent"></div>
 </aside>
@@ -71,7 +74,7 @@
       <b>الاستلام والتحصيل</b>
       <div class="muted">من البيت + La Aura + التحصيل</div>
     </div>
-    <button class="menuBtn" id="openSidebarBtn" type="button">☰</button>
+    <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
 
   <div class="tabs" id="tabs">
