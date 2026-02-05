@@ -2636,7 +2636,10 @@ async function initViewPanel(){
 
 /* ===== Customers panel ===== */
 function custNormalizePhone(value){
-  return (value || "").replace(/[^\\d]/g, "");
+  const s = (value || "")
+    .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+  return s.replace(/[^\\d]/g, "");
 }
 
 function custIsValidPhone(value){
