@@ -667,8 +667,16 @@ if(collectHomeBtn){
     if(!activeOrder || myEmail !== EMAIL_RAHAF) return;
 
     const pendingList = purchases.filter(p=>!p.collected && p.picked_up);
+    if(!pendingList.length) return;
     const pendingTotal = pendingList.reduce((sum,p)=> sum + parsePrice(p.paid_price ?? p.price), 0);
     const pendingText = formatILS(pendingTotal);
+    const ok = await (typeof confirmModal === "function"
+      ? confirmModal({
+          title:"تحصيل المبالغ",
+          message:`تأكيد تحصيل ${pendingList.length} مشتريات بمبلغ ${pendingText} ₪؟`
+        })
+      : Promise.resolve(confirm(`تأكيد تحصيل ${pendingList.length} مشتريات بمبلغ ${pendingText} ₪؟`)));
+    if(!ok) return;
 
     collectHomeBtn.disabled = true;
     const { error } = await sb

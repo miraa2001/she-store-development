@@ -3038,7 +3038,10 @@ function renderCustList(list){
       <td>${escapeHtml(c.phone || "")}</td>
       <td>${escapeHtml(c.city || "")}</td>
       <td>${escapeHtml(c.usual_pickup_point || "")}</td>
-      <td><button class="btn iconBtn" data-edit="${c.id}" title="تعديل" aria-label="تعديل العميل">✏️</button></td>
+      <td>
+        <button class="btn iconBtn" data-edit="${c.id}" title="تعديل" aria-label="تعديل العميل">✏️</button>
+        <button class="btn iconBtn danger" data-delete="${c.id}" data-name="${escapeAttr(c.name || "")}" title="حذف" aria-label="حذف العميل">🗑️</button>
+      </td>
     `;
 
     const editTr = document.createElement("tr");
@@ -3087,6 +3090,26 @@ function renderCustList(list){
       custTableBody.querySelectorAll("tr[data-edit-row]").forEach(row=>{
         row.style.display = row.dataset.editRow === id ? "" : "none";
       });
+    };
+  });
+
+  custTableBody.querySelectorAll("button[data-delete]").forEach(btn=>{
+    btn.onclick = async ()=>{
+      const id = btn.dataset.delete;
+      const name = btn.dataset.name || "";
+      const ok = await (confirmModal ? confirmModal({
+        title:"حذف العميل",
+        message:`هل تريدين حذف العميل${name ? ` (${name})` : ""}؟`
+      }) : Promise.resolve(confirm(`هل تريدين حذف العميل${name ? ` (${name})` : ""}؟`)));
+      if(!ok) return;
+
+      const { error } = await sb.from("customers").delete().eq("id", id);
+      if(error){
+        console.error(error);
+        alert(error.message || "فشل حذف العميل.");
+        return;
+      }
+      await loadCustomersPanel();
     };
   });
 
