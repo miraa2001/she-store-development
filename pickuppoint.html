@@ -141,7 +141,7 @@
 
     <div class="globalSummary summaryCol" style="display:none" id="allOrdersTotalWrap">
       <div class="row">
-        <span class="pill" id="allOrdersTotal">إجمالي التحصيل المطلوب: 0 ₪</span>
+        <span class="pill" id="allOrdersTotal">اجمالي المبلغ للتسليم: 0 ₪</span>
         <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
       </div>
     </div>
@@ -395,12 +395,14 @@ function updatePickedTotal(list){
 
 async function updateAllOrdersTotal(){
   if(!allOrdersTotalEl || !allOrdersTotalWrap) return;
-  const isRahafUser = isRahaf || myEmail === "rahaf@she-store.com" || userEmail === "rahaf@she-store.com";
-  allOrdersTotalWrap.style.display = isRahafUser ? "" : "none";
+  const isTotalUser = isRahaf || isLaaura ||
+    myEmail === "rahaf@she-store.com" || myEmail === "laaura@she-store.com" ||
+    userEmail === "rahaf@she-store.com" || userEmail === "laaura@she-store.com";
+  allOrdersTotalWrap.style.display = isTotalUser ? "" : "none";
   if(collectAllBtn){
-    collectAllBtn.style.display = isRahafUser ? "" : "none";
+    collectAllBtn.style.display = isRahaf ? "" : "none";
   }
-  if(!isRahafUser) return;
+  if(!isTotalUser) return;
   const { data, error } = await sb
     .from("purchases")
     .select("paid_price, price, picked_up, collected")
@@ -410,12 +412,16 @@ async function updateAllOrdersTotal(){
 
   if(error){
     console.error(error);
-    allOrdersTotalEl.textContent = "إجمالي التحصيل المطلوب: —";
+    allOrdersTotalEl.textContent = isRahaf
+      ? "اجمالي المبلغ للتحصيل: —"
+      : "اجمالي المبلغ للتسليم: —";
     if(collectAllBtn) collectAllBtn.disabled = true;
     return;
   }
   const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
-  allOrdersTotalEl.textContent = `إجمالي التحصيل المطلوب: ${formatILS(total)} ₪`;
+  allOrdersTotalEl.textContent = isRahaf
+    ? `اجمالي المبلغ للتحصيل: ${formatILS(total)} ₪`
+    : `اجمالي المبلغ للتسليم: ${formatILS(total)} ₪`;
   if(collectAllBtn) collectAllBtn.disabled = total <= 0;
 }
 
@@ -448,7 +454,7 @@ function formatOrderLabel(order){
     return order.label || "طلبية";
   }
   if(userEmail === "laaura@she-store.com"){
-    const dateLabel = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+    const dateLabel = formatDMY(order.placed_at_pickup_at || order.order_date || order.created_at);
     return `طلبية ${dateLabel || ""}`.trim();
   }
   return order.order_name || "طلبية";
@@ -459,7 +465,7 @@ function buildOrderGroups(list){
   const map = new Map();
 
   list.forEach(order=>{
-    const dateKey = formatDMY(order.order_date || order.placed_at_pickup_at || order.created_at);
+    const dateKey = formatDMY(order.placed_at_pickup_at || order.order_date || order.created_at);
     const label = `طلبية ${dateKey || ""}`.trim();
     if(!map.has(dateKey)){
       const group = {
