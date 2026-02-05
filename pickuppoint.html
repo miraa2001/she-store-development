@@ -212,13 +212,14 @@ const PICKUP_ALIASES = [
   "لاورا"
 ];
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
+const EMAIL_RAWAND = "rawand@she-store.com";
 const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
 if(isEmbed) document.body.classList.add("embed");
 const isIOSChrome = /CriOS/i.test(navigator.userAgent);
 if(isIOSChrome) document.body.classList.add("ios-chrome");
 
 /* ========= Auth + Role Gate =========
-   Allowed here: Rahaf + Reem + Laaura
+   Allowed here: Rahaf + Reem + Rawand + Laaura
 */
 async function requireAuth(){
   const { data } = await sb.auth.getSession();
@@ -265,6 +266,7 @@ async function guardPickupPage(){
   const allowed = [
     "rahaf@she-store.com",
     "reem@she-store.com",
+    "rawand@she-store.com",
     "laaura@she-store.com"
   ];
 
@@ -321,7 +323,7 @@ function renderSidebar(){
     link("المالية", "./finance.html");
   }
 
-  if(myEmail === "reem@she-store.com"){
+  if(myEmail === "reem@she-store.com" || myEmail === "rawand@she-store.com"){
     link("إدارة الطلبات", "./index.html?tab=view");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }

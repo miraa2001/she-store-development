@@ -563,6 +563,7 @@ const BUCKET = "purchase-images";
 
 const EMAIL_RAHAF = "rahaf@she-store.com";
 const EMAIL_REEM  = "reem@she-store.com";
+const EMAIL_RAWAND= "rawand@she-store.com";
 const EMAIL_LAAURA= "laaura@she-store.com";
 
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
@@ -594,9 +595,6 @@ function setOrdersListCollapsed(collapsed){
     ordersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
   }
 }
-if(ordersListToggle){
-  ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
-}
 
 let viewListCollapsed = false;
 function setViewListCollapsed(collapsed){
@@ -605,9 +603,6 @@ function setViewListCollapsed(collapsed){
   if(viewOrdersListToggle){
     viewOrdersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
   }
-}
-if(viewOrdersListToggle){
-  viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
 }
 
 /* ===== Auth guard ===== */
@@ -657,7 +652,7 @@ async function guardIndexAccess(){
     if(navTabs) navTabs.style.display = "flex";
     return "rahaf";
   }
-  if(myEmail === EMAIL_REEM){
+  if(myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND){
     return "reem";
   }
   if(myEmail === EMAIL_LAAURA){
@@ -748,7 +743,7 @@ function renderSidebar(){
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
     link("المالية", "./finance.html");
   }
-  if(myEmail === EMAIL_REEM){
+  if(myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND){
     link("عرض الطلبيات", "./index.html?tab=view");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
@@ -1663,9 +1658,16 @@ deleteOrderBtn.onclick = async ()=>{
     arrivedRow.style.display = "none";
     arrivedMsg.textContent = "";
   }
-  if(exportPdfBtn){
-    exportPdfBtn.disabled = true;
-  }
+if(exportPdfBtn){
+  exportPdfBtn.disabled = true;
+}
+
+if(ordersListToggle){
+  ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
+}
+if(viewOrdersListToggle){
+  viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
+}
   await loadOrders();
   showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeleteOrder });
 };
@@ -2398,7 +2400,7 @@ let viewHighlightPurchaseId = null;
 let viewMode = "card";
 let viewSearchTimer = null;
 
-const canEditViewBagSize = () => myEmail === EMAIL_RAHAF || myEmail === EMAIL_REEM;
+const canEditViewBagSize = () => myEmail === EMAIL_RAHAF || myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND;
 
 function viewBagSizeEditor(p){
   const current = p.bag_size || "كيس صغير";

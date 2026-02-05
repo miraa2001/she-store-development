@@ -102,6 +102,7 @@ const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const EMAIL_RAHAF = "rahaf@she-store.com";
 const EMAIL_REEM  = "reem@she-store.com";
+const EMAIL_RAWAND= "rawand@she-store.com";
 const EMAIL_LAAURA= "laaura@she-store.com";
 
 const sidebar = document.getElementById("sidebar");
@@ -232,7 +233,7 @@ async function guard(){
   const { data: u } = await sb.auth.getUser();
   const email = (u?.user?.email || "").toLowerCase();
   if(email === EMAIL_RAHAF) return "rahaf";
-  if(email === EMAIL_REEM) return "reem";
+  if(email === EMAIL_REEM || email === EMAIL_RAWAND) return "reem";
   if(email === EMAIL_LAAURA) return "laaura";
   window.location.replace("./login.html");
   return null;

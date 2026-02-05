@@ -205,6 +205,7 @@ const HOME_PICKUP_VALUE = "من البيت";
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 const EMAIL_RAHAF = "rahaf@she-store.com";
 const EMAIL_REEM  = "reem@she-store.com";
+const EMAIL_RAWAND= "rawand@she-store.com";
 const EMAIL_LAAURA= "laaura@she-store.com";
 const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
 if(isEmbed) document.body.classList.add("embed");
@@ -229,7 +230,7 @@ async function guardHomePickupAccess(){
   const email = (u?.user?.email || "").toLowerCase();
   myEmail = email;
 
-  if(email !== EMAIL_RAHAF && email !== EMAIL_REEM){
+  if(email !== EMAIL_RAHAF && email !== EMAIL_REEM && email !== EMAIL_RAWAND){
     window.location.replace("./login.html");
   }
   if(paidPriceHeader) paidPriceHeader.style.display = email === EMAIL_RAHAF ? "" : "none";
@@ -283,7 +284,7 @@ function renderSidebar(){
     link("المالية", "./finance.html");
   }
 
-  if(myEmail === EMAIL_REEM){
+  if(myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND){
     link("إدارة الطلبات", "./index.html?tab=view");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
