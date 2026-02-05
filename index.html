@@ -898,6 +898,19 @@ const viewListView = document.getElementById("viewListView");
 const viewGrid = document.getElementById("viewGrid");
 const viewOrdersListToggle = document.getElementById("viewOrdersListToggle");
 const viewOrdersListToggleMini = document.getElementById("viewOrdersListToggleMini");
+
+if(ordersListToggle){
+  ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
+}
+if(ordersListToggleMini){
+  ordersListToggleMini.onclick = ()=> setOrdersListCollapsed(false);
+}
+if(viewOrdersListToggle){
+  viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
+}
+if(viewOrdersListToggleMini){
+  viewOrdersListToggleMini.onclick = ()=> setViewListCollapsed(false);
+}
 const viewCounter = document.getElementById("viewCounter");
 const viewPrev = document.getElementById("viewPrev");
 const viewNext = document.getElementById("viewNext");
@@ -1695,22 +1708,6 @@ deleteOrderBtn.onclick = async ()=>{
     arrivedRow.style.display = "none";
     arrivedMsg.textContent = "";
   }
-if(exportPdfBtn){
-  exportPdfBtn.disabled = true;
-}
-
-if(ordersListToggle){
-  ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
-}
-if(ordersListToggleMini){
-  ordersListToggleMini.onclick = ()=> setOrdersListCollapsed(false);
-}
-if(viewOrdersListToggle){
-  viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
-}
-if(viewOrdersListToggleMini){
-  viewOrdersListToggleMini.onclick = ()=> setViewListCollapsed(false);
-}
   await loadOrders();
   showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeleteOrder });
 };

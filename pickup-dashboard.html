@@ -199,8 +199,18 @@ Object.keys(frames).forEach(key=>{
 
 function loadFrame(key){
   const frame = frames[key];
-  if(frame && !frame.src){
-    frame.src = frame.dataset.src;
+  if(!frame) return;
+  const desired = frame.dataset.src;
+  if(!desired) return;
+  try{
+    const desiredUrl = new URL(desired, window.location.href).href;
+    if(frame.src !== desiredUrl){
+      frame.src = desired;
+    }
+  }catch{
+    if(!frame.src || frame.src === "about:blank"){
+      frame.src = desired;
+    }
   }
 }
 

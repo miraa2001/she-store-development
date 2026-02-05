@@ -556,33 +556,39 @@ function formatDateTime(iso){
 }
 
 async function loadPickupOrders(){
-  const fetchOrders = async (strict)=>{
-    let q = sb.from("orders")
-      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup, purchases(pickup_point, picked_up, paid_price, price)")
-      .order("created_at",{ascending:false});
-    if(strict){
-      q = q.eq("arrived", true).eq("placed_at_pickup", true);
-    }
-    return await q;
-  };
+  const { data: purchaseRows, error: pErr } = await sb
+    .from("purchases")
+    .select("order_id, pickup_point, picked_up, paid_price, price")
+    .in("pickup_point", PICKUP_ALIASES);
 
-  let { data, error } = await fetchOrders(true);
-  if(error){ console.error(error); return; }
+  if(pErr){ console.error(pErr); return; }
 
-  let all = (data || []).map(o=>{
-    const filtered = (o.purchases || []).filter(p=>isAuraPickup(p.pickup_point));
-    return { ...o, purchases: filtered };
-  }).filter(o=> (o.purchases || []).length);
+  const auraPurchases = (purchaseRows || []).filter(p=>isAuraPickup(p.pickup_point));
+  const orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
 
-  if(!all.length){
-    const fallback = await fetchOrders(false);
-    if(fallback.error){ console.error(fallback.error); return; }
-    all = (fallback.data || []).map(o=>{
-      const filtered = (o.purchases || []).filter(p=>isAuraPickup(p.pickup_point));
-      return { ...o, purchases: filtered };
-    }).filter(o=> (o.purchases || []).length);
+  if(!orderIds.length){
+    orders = [];
+    ordersListEl.innerHTML = "";
+    ordersEmptyEl.style.display = "";
+    ordersCountEl.textContent = "0";
+    return;
   }
 
+  const { data: orderRows, error: oErr } = await sb
+    .from("orders")
+    .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
+    .in("id", orderIds)
+    .order("created_at",{ascending:false});
+
+  if(oErr){ console.error(oErr); return; }
+
+  const ordersMap = new Map((orderRows || []).map(o=>[o.id, { ...o, purchases: [] }]));
+  auraPurchases.forEach(p=>{
+    const ord = ordersMap.get(p.order_id);
+    if(ord) ord.purchases.push(p);
+  });
+
+  let all = [...ordersMap.values()].filter(o=> (o.purchases || []).length);
   const strict = all.filter(o=> o.arrived && o.placed_at_pickup);
   orders = strict.length ? strict : all;
   if(isLaaura){
