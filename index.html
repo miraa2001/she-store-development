@@ -1374,6 +1374,12 @@ images.addEventListener("change",()=>{ addFiles(images.files); images.value=""; 
 dropZone.addEventListener("drop",(e)=> addFiles(e.dataTransfer.files));
 
 document.addEventListener("paste",(e)=>{
+  if(typeof activeEditPasteTarget !== "undefined" && activeEditPasteTarget){
+    const row = tbody && tbody.querySelector ? tbody.querySelector(`tr[data-edit-row="${activeEditPasteTarget}"]`) : null;
+    if(row && row.style.display !== "none"){
+      return;
+    }
+  }
   const items=e.clipboardData?.items||[];
   const pasted=[];
   for(const it of items){
@@ -2379,7 +2385,10 @@ document.addEventListener("paste",(e)=>{
       const f=it.getAsFile(); if(f) pasted.push(f);
     }
   }
-  if(pasted.length) addEditFiles(activeEditPasteTarget, pasted);
+  if(pasted.length){
+    e.preventDefault();
+    addEditFiles(activeEditPasteTarget, pasted);
+  }
 });
 
 let lastDeletedPurchase = null;
