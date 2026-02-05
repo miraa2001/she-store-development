@@ -102,6 +102,7 @@
     }
     body.embed{overflow-x:hidden}
     body.embed .topbar,
+    body.embed .menuBtn,
     body.embed .sidebar,
     body.embed .sidebarOverlay{display:none !important}
     body.embed .wrap{padding:0;max-width:none}
@@ -214,7 +215,12 @@ const PICKUP_ALIASES = [
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 const EMAIL_RAWAND = "rawand@she-store.com";
 const isEmbedParam = new URLSearchParams(location.search).get("embed") === "1";
-const isInFrame = window.self !== window.top;
+let isInFrame = false;
+try{
+  isInFrame = window.self !== window.top;
+} catch {
+  isInFrame = true;
+}
 const isEmbed = isEmbedParam || isInFrame;
 if(isEmbed) document.body.classList.add("embed");
 const isIOSChrome = /CriOS/i.test(navigator.userAgent);
@@ -383,6 +389,7 @@ function isAuraPickup(value){
   if(!n) return false;
   if(n.includes("aura")) return true;
   if(n.includes("لاورا") || n.includes("لااورا")) return true;
+  if(n.includes("نقطه") || n.includes("نقطة") || n.includes("استلام")) return true;
   const target = normalizePickup(PICKUP_VALUE);
   return n === target || n.includes(target);
 }
