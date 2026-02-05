@@ -369,9 +369,15 @@ function normalizePickup(value){
     .replace(/[أإآ]/g, "ا");
 }
 function isAuraPickup(value){
-  const n = normalizePickup(value);
+  const n = normalizePickup(value || PICKUP_VALUE);
   if(!n) return false;
   if(n.includes("بيت") || n.includes("توصيل")) return false;
+
+  if(PICKUP_ALIASES.some(alias=>{
+    const a = normalizePickup(alias);
+    return a && (n === a || n.includes(a));
+  })) return true;
+
   if(n.includes("aura")) return true;
   if(n.includes("لاورا") || n.includes("لااورا")) return true;
   if(n.includes("نقطه") || n.includes("نقطة") || n.includes("استلام")) return true;
@@ -583,9 +589,6 @@ async function loadPickupOrders(){
   orders = (orderRows || []).map(o=>({ ...o, purchases: map.get(o.id) || [] }))
     .filter(o=> (o.purchases || []).length);
 
-  if(isLaaura){
-    orders = orders.filter(o=> (o.purchases || []).some(p=>!p.picked_up));
-  }
   const listItems = isLaaura ? buildOrderGroups(orders) : orders;
   ordersCountEl.textContent = listItems.length;
 
