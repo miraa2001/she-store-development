@@ -2639,12 +2639,12 @@ function custNormalizePhone(value){
   const s = (value || "")
     .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
     .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
-  return s.replace(/[^\\d]/g, "");
+  return s.replace(/[^\d]/g, "");
 }
 
 function custIsValidPhone(value){
   const phone = custNormalizePhone(value);
-  return /^(970|972)\\d{7,9}$/.test(phone);
+  return /^(970|972)\d{7,9}$/.test(phone);
 }
 
 function custCityOptions(selected){
