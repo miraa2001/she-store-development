@@ -111,6 +111,11 @@
     <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
 
+  <div id="debugInfo" class="card" style="display:none;margin-bottom:12px;background:#fff7e6;border-color:#ffd7a3">
+    <b>Debug</b>
+    <div id="debugBody" class="muted" style="margin-top:6px"></div>
+  </div>
+
   <div class="row" style="margin-bottom:12px">
     <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
     <span class="pill" id="searchCount" style="display:none"></span>
@@ -362,6 +367,17 @@ let highlightPurchaseId = null;
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function escapeAttr(s=""){ return escapeHtml(s); }
 
+const debugInfoEl = document.getElementById("debugInfo");
+const debugBodyEl = document.getElementById("debugBody");
+const debugParam = new URLSearchParams(location.search).get("debug") === "1";
+function setDebug(lines, force=false){
+  if(!debugInfoEl || !debugBodyEl) return;
+  if(!force && !debugParam && !isRahaf && !isLaaura) return;
+  const list = (lines || []).filter(Boolean);
+  debugBodyEl.innerHTML = list.map(l=>`<div>${escapeHtml(l)}</div>`).join("");
+  debugInfoEl.style.display = list.length ? "" : "none";
+}
+
 function normalizePickup(value){
   return String(value || "")
     .toLowerCase()
@@ -559,16 +575,30 @@ async function loadPickupOrders(){
     .from("purchases")
     .select("order_id, pickup_point, picked_up, paid_price, price");
 
-  if(pErr){ console.error(pErr); return; }
+  if(pErr){
+    console.error(pErr);
+    setDebug([`purchases error: ${pErr.message || JSON.stringify(pErr)}`], true);
+    if(ordersEmptyEl){
+      ordersEmptyEl.style.display = "";
+      ordersCountEl.textContent = "0";
+    }
+    return;
+  }
 
   const auraPurchases = (pRows || []).filter(p=>isAuraPickup(p.pickup_point));
   const orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
+  const pickupSamples = [...new Set((pRows || []).map(p=>p.pickup_point).filter(Boolean))].slice(0,6);
 
   if(!orderIds.length){
     orders = [];
     ordersListEl.innerHTML = "";
     ordersEmptyEl.style.display = "";
     ordersCountEl.textContent = "0";
+    setDebug([
+      `purchases: ${ (pRows || []).length }`,
+      `aura matches: ${ auraPurchases.length }`,
+      `pickup samples: ${ pickupSamples.join(" | ") || "none" }`
+    ]);
     return;
   }
 
@@ -578,7 +608,11 @@ async function loadPickupOrders(){
     .in("id", orderIds)
     .order("created_at",{ascending:false});
 
-  if(oErr){ console.error(oErr); return; }
+  if(oErr){
+    console.error(oErr);
+    setDebug([`orders error: ${oErr.message || JSON.stringify(oErr)}`], true);
+    return;
+  }
 
   const map = new Map();
   auraPurchases.forEach(p=>{
@@ -594,6 +628,15 @@ async function loadPickupOrders(){
 
   ordersListEl.innerHTML = "";
   ordersEmptyEl.style.display = listItems.length ? "none" : "";
+  if(!listItems.length){
+    setDebug([
+      `orders fetched: ${ (orderRows || []).length }`,
+      `aura matches: ${ auraPurchases.length }`,
+      `pickup samples: ${ pickupSamples.join(" | ") || "none" }`
+    ]);
+  }else{
+    setDebug([], true);
+  }
 
   listItems.forEach(o=>{
     const div = document.createElement("div");
