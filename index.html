@@ -1185,6 +1185,17 @@ function renderCustomerSuggestions(listEl, customers, inputEl, clearBtn, opts={}
   addBtn.className = "autoAdd";
   addBtn.textContent = "+ إضافة زبون جديد";
   addBtn.onclick = ()=>{
+    const typedName = (inputEl?.value || "").trim();
+    const applyPrefill = ()=>{
+      if(typedName){
+        if(custName){
+          custName.value = typedName;
+          custName.focus();
+        } else {
+          sessionStorage.setItem("prefillCustomerName", typedName);
+        }
+      }
+    };
     if(typeof showTab === "function"){
       showTab("customers");
       try{
@@ -1192,8 +1203,10 @@ function renderCustomerSuggestions(listEl, customers, inputEl, clearBtn, opts={}
         url.searchParams.set("tab", "customers");
         history.replaceState(null, "", url);
       } catch {}
+      applyPrefill();
       return;
     }
+    if(typedName) sessionStorage.setItem("prefillCustomerName", typedName);
     window.location.href = "./index.html?tab=customers";
   };
   listEl.appendChild(addBtn);
@@ -3263,6 +3276,15 @@ async function initCustomersPanel(){
   await loadCustomersPanel();
 }
 
+function applyCustomerPrefill(){
+  const stored = sessionStorage.getItem("prefillCustomerName");
+  if(stored && custName){
+    custName.value = stored;
+    custName.focus();
+    sessionStorage.removeItem("prefillCustomerName");
+  }
+}
+
 (async function init(){
   const role = await guardIndexAccess();
   if(!role) return;
@@ -3273,6 +3295,7 @@ async function initCustomersPanel(){
     await loadOrders();
     await initCustomersPanel();
   }
+  applyCustomerPrefill();
   await initViewPanel();
 })();
 </script>
