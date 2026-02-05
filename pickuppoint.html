@@ -225,6 +225,7 @@ async function requireAuth(){
 
 let myEmail = "";
 let isRahaf = false;
+let isLaaura = false;
 async function guardAuraPickup(){
   const ok = await requireAuth();
   if(!ok) return;
@@ -233,6 +234,7 @@ async function guardAuraPickup(){
   const email = (u?.user?.email || "").toLowerCase();
   myEmail = email;
   isRahaf = email === EMAIL_RAHAF;
+  isLaaura = email === EMAIL_LAAURA;
 
   const allowed = [EMAIL_RAHAF, EMAIL_REEM, EMAIL_RAWAND, EMAIL_LAAURA];
   if(!allowed.includes(email)){
@@ -313,6 +315,9 @@ const purchaseCountEl = document.getElementById("purchaseCount");
 const pickedTotalEl = document.getElementById("pickedTotal");
 const tbody = document.getElementById("tbody");
 const collectBtn = document.getElementById("collectBtn");
+const allOrdersTotalWrap = document.getElementById("allOrdersTotalWrap");
+const allOrdersTotalEl = document.getElementById("allOrdersTotal");
+const collectAllBtn = document.getElementById("collectAllBtn");
 const searchInput = document.getElementById("searchInput");
 const searchResultsEl = document.getElementById("searchResults");
 const searchCountEl = document.getElementById("searchCount");
@@ -324,6 +329,7 @@ let orders = [];
 let activeOrder = null;
 let purchases = [];
 let highlightPurchaseId = null;
+let listItems = [];
 
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function escapeAttr(s=""){ return escapeHtml(s); }
@@ -362,6 +368,55 @@ function formatDateTime(iso){
   const date = `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
   const time = `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
   return `${date} ${time}`;
+}
+
+function formatDMY(iso){
+  if(!iso) return "";
+  const d = new Date(iso);
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
+}
+
+function getOrderDateKey(order){
+  return formatDMY(order?.placed_at_pickup_at || order?.order_date || order?.created_at);
+}
+
+function formatOrderLabel(order){
+  if(order?.orderIds){
+    return order.label || "\u0637\u0644\u0628\u064a\u0629";
+  }
+  return order?.order_name || "\u0637\u0644\u0628\u064a\u0629";
+}
+
+function buildOrderGroups(list){
+  const groups = [];
+  const map = new Map();
+
+  list.forEach(order=>{
+    const dateKey = getOrderDateKey(order);
+    const label = `\u0637\u0644\u0628\u064a\u0629 ${dateKey || ""}`.trim();
+    if(!map.has(dateKey)){
+      const group = {
+        id: `group-${dateKey || "unknown"}`,
+        label,
+        orderIds: []
+      };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orderIds.push(order.id);
+  });
+
+  return groups;
+}
+
+function findGroupForOrder(order){
+  const dateKey = getOrderDateKey(order);
+  const sameDay = orders.filter(o=> getOrderDateKey(o) === dateKey);
+  return {
+    id: `group-${dateKey || "unknown"}`,
+    label: `\u0637\u0644\u0628\u064a\u0629 ${dateKey || ""}`.trim(),
+    orderIds: sameDay.map(o=>o.id)
+  };
 }
 
 function parsePrice(v){
@@ -408,6 +463,34 @@ function updatePickedTotal(list){
     .filter(item=>item.picked_up)
     .reduce((sum,item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
   pickedTotalEl.textContent = `\u0645\u062c\u0645\u0648\u0639 \u0627\u0644\u0645\u0633\u062a\u0644\u0645: ${formatILS(pickedTotal)} \u20aa`;
+}
+
+async function updateAllOrdersTotal(){
+  if(!allOrdersTotalEl || !allOrdersTotalWrap) return;
+  const show = isRahaf;
+  allOrdersTotalWrap.style.display = show ? "" : "none";
+  if(collectAllBtn){
+    collectAllBtn.style.display = show ? "" : "none";
+  }
+  if(!show) return;
+
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, paid_price, price, picked_up, collected, pickup_point")
+    .eq("picked_up", true)
+    .eq("collected", false);
+
+  if(error){
+    console.error(error);
+    allOrdersTotalEl.textContent = "\u0627\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0628\u0644\u063a \u0644\u0644\u062a\u062d\u0635\u064a\u0644: \u2014";
+    if(collectAllBtn) collectAllBtn.disabled = true;
+    return;
+  }
+
+  const auraList = (data || []).filter(item=>isAuraPickup(item.pickup_point));
+  const total = auraList.reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+  allOrdersTotalEl.textContent = `\u0627\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0645\u0628\u0644\u063a \u0644\u0644\u062a\u062d\u0635\u064a\u0644: ${formatILS(total)} \u20aa`;
+  if(collectAllBtn) collectAllBtn.disabled = total <= 0;
 }
 
 function renderTable(){
@@ -492,6 +575,7 @@ function renderTable(){
       }
 
       renderTable();
+      await updateAllOrdersTotal();
     };
   });
 
@@ -536,6 +620,7 @@ function renderTable(){
         }
         entry.paid_price = nextVal;
         renderTable();
+        await updateAllOrdersTotal();
       };
 
       saveBtn.onclick = save;
@@ -561,14 +646,19 @@ async function loadOrders(){
   if(error){ console.error(error); return; }
 
   orders = data || [];
-  ordersCountEl.textContent = orders.length;
+  listItems = isLaaura ? buildOrderGroups(orders) : orders;
+  ordersCountEl.textContent = listItems.length;
   ordersListEl.innerHTML = "";
-  ordersEmptyEl.style.display = orders.length ? "none" : "";
+  ordersEmptyEl.style.display = listItems.length ? "none" : "";
 
-  orders.forEach(o=>{
+  listItems.forEach(o=>{
     const div = document.createElement("div");
     div.className = "orderItem" + (activeOrder?.id === o.id ? " active" : "");
-    div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">\u0641\u062a\u062d</span>`;
+    const label = formatOrderLabel(o);
+    const meta = o.orderIds
+      ? `<span class="pill">\u0627\u0644\u0637\u0644\u0628\u0627\u062a: ${o.orderIds.length}</span>`
+      : `<span class="pill">\u0641\u062a\u062d</span>`;
+    div.innerHTML = `<span>${escapeHtml(label)}</span>${meta}`;
     div.onclick = () => selectOrder(o);
     ordersListEl.appendChild(div);
   });
@@ -585,12 +675,26 @@ async function fetchPurchases(orderId){
   return (data || []).filter(p=>isAuraPickup(p.pickup_point));
 }
 
+async function fetchPurchasesForOrders(orderIds){
+  if(!orderIds.length) return [];
+  const { data, error } = await sb
+    .from("purchases")
+    .select("id, order_id, customer_name, price, paid_price, bag_size, picked_up, picked_up_at, pickup_point, collected")
+    .in("order_id", orderIds)
+    .order("created_at", { ascending: true });
+
+  if(error){ console.error(error); return []; }
+  return (data || []).filter(p=>isAuraPickup(p.pickup_point));
+}
+
 async function selectOrder(order){
   activeOrder = order;
-  orderTitleEl.textContent = order.order_name || "\u0637\u0644\u0628\u064a\u0629";
+  orderTitleEl.textContent = formatOrderLabel(order);
   await loadOrders();
 
-  purchases = await fetchPurchases(order.id);
+  purchases = order.orderIds
+    ? await fetchPurchasesForOrders(order.orderIds)
+    : await fetchPurchases(order.id);
   if(collectBtn){
     collectBtn.style.display = isRahaf ? "" : "none";
   }
@@ -617,21 +721,75 @@ if(collectBtn){
           .in("id", ids)
       : { error: null };
 
+  if(error){
+    console.error(error);
+    collectBtn.disabled = false;
+    return;
+  }
+
+  await sendNtfy([
+    "\u062a\u0645 \u0627\u0633\u062a\u0644\u0627\u0645 \u062a\u062d\u0635\u064a\u0644 \u0627\u0644\u0646\u0642\u0648\u062f \u2705",
+    "\u0627\u0644\u0645\u0643\u0627\u0646: \u0646\u0642\u0637\u0629 \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 (La Aura)",
+    `\u0627\u0644\u0645\u0628\u0644\u063a: ${pendingText}`
+  ].join("\n"));
+
+  purchases = await fetchPurchases(activeOrder.id);
+  renderTable();
+  await updateAllOrdersTotal();
+  collectBtn.disabled = false;
+  };
+}
+
+if(collectAllBtn){
+  collectAllBtn.onclick = async ()=>{
+    if(!isRahaf) return;
+
+    const { data, error } = await sb
+      .from("purchases")
+      .select("id, paid_price, price, pickup_point")
+      .eq("picked_up", true)
+      .eq("collected", false);
+
     if(error){
       console.error(error);
-      collectBtn.disabled = false;
+      return;
+    }
+
+    const auraList = (data || []).filter(item=>isAuraPickup(item.pickup_point));
+    const total = auraList.reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+    if(total <= 0){
+      return;
+    }
+
+    collectAllBtn.disabled = true;
+    const ids = auraList.map(p=>p.id);
+    const { error: upErr } = ids.length
+      ? await sb
+          .from("purchases")
+          .update({ collected: true, collected_at: new Date().toISOString() })
+          .in("id", ids)
+      : { error: null };
+
+    if(upErr){
+      console.error(upErr);
+      collectAllBtn.disabled = false;
       return;
     }
 
     await sendNtfy([
       "\u062a\u0645 \u0627\u0633\u062a\u0644\u0627\u0645 \u062a\u062d\u0635\u064a\u0644 \u0627\u0644\u0646\u0642\u0648\u062f \u2705",
       "\u0627\u0644\u0645\u0643\u0627\u0646: \u0646\u0642\u0637\u0629 \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645 (La Aura)",
-      `\u0627\u0644\u0645\u0628\u0644\u063a: ${pendingText}`
+      `\u0627\u0644\u0645\u0628\u0644\u063a: ${formatILS(total)}`
     ].join("\n"));
 
-    purchases = await fetchPurchases(activeOrder.id);
-    renderTable();
-    collectBtn.disabled = false;
+    if(activeOrder){
+      purchases = activeOrder.orderIds
+        ? await fetchPurchasesForOrders(activeOrder.orderIds)
+        : await fetchPurchases(activeOrder.id);
+      renderTable();
+    }
+    await updateAllOrdersTotal();
+    collectAllBtn.disabled = false;
   };
 }
 
@@ -682,7 +840,10 @@ async function runSearch(){
     btn.onclick = async ()=>{
       searchResultsEl.style.display = "none";
       highlightPurchaseId = r.id;
-      if(ord) await selectOrder(ord);
+      if(ord){
+        const target = isLaaura ? findGroupForOrder(ord) : ord;
+        await selectOrder(target);
+      }
       setTimeout(()=>{ highlightPurchaseId = null; renderTable(); }, 2500);
     };
     searchResultsEl.appendChild(btn);
@@ -694,7 +855,8 @@ async function runSearch(){
   await guardAuraPickup();
   renderSidebar();
   await loadOrders();
-  if(orders.length) selectOrder(orders[0]);
+  if(listItems.length) selectOrder(listItems[0]);
+  await updateAllOrdersTotal();
 })();
 </script>
 </body>
