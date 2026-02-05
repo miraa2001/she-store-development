@@ -201,6 +201,16 @@ const SUPABASE_ANON_KEY="sb_publishable_0N65DXPMsk_3WVcLQ9wavQ_p9HgB_Bo";
 const sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 
 const PICKUP_VALUE = "من نقطة الاستلام";
+const PICKUP_ALIASES = [
+  PICKUP_VALUE,
+  "من نقطه الاستلام",
+  "La Aura",
+  "la aura",
+  "LAAURA",
+  "لا اورا",
+  "لا أورا",
+  "لاورا"
+];
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 const isEmbed = new URLSearchParams(location.search).get("embed") === "1";
 if(isEmbed) document.body.classList.add("embed");
@@ -358,6 +368,21 @@ let highlightPurchaseId = null;
 function escapeHtml(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
 function escapeAttr(s=""){ return escapeHtml(s); }
 
+function normalizePickup(value){
+  return String(value || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[أإآ]/g, "ا");
+}
+function isAuraPickup(value){
+  const n = normalizePickup(value);
+  if(!n) return false;
+  if(n.includes("aura")) return true;
+  if(n.includes("لاورا") || n.includes("لااورا")) return true;
+  const target = normalizePickup(PICKUP_VALUE);
+  return n === target || n.includes(target);
+}
+
 function parsePrice(v){
   if(v === null || v === undefined) return 0;
   if(typeof v === "number") return isFinite(v) ? v : 0;
@@ -416,8 +441,8 @@ async function updateAllOrdersTotal(){
   if(!isTotalUser) return;
   const { data, error } = await sb
     .from("purchases")
-    .select("paid_price, price, picked_up, collected")
-    .eq("pickup_point", PICKUP_VALUE)
+    .select("paid_price, price, picked_up, collected, pickup_point")
+    .in("pickup_point", PICKUP_ALIASES)
     .eq("collected", false)
     .eq("picked_up", true);
 
@@ -429,7 +454,9 @@ async function updateAllOrdersTotal(){
     if(collectAllBtn) collectAllBtn.disabled = true;
     return;
   }
-  const total = (data || []).reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
+  const total = (data || [])
+    .filter(item=>isAuraPickup(item.pickup_point))
+    .reduce((sum, item)=> sum + parsePrice(item.paid_price ?? item.price), 0);
   allOrdersTotalEl.textContent = isRahaf
     ? `اجمالي المبلغ للتحصيل: ${formatILS(total)} ₪`
     : `اجمالي المبلغ للتسليم: ${formatILS(total)} ₪`;
@@ -527,17 +554,35 @@ function formatDateTime(iso){
 }
 
 async function loadPickupOrders(){
-  const { data, error } = await sb
-    .from("orders")
-    .select("id, order_name, order_date, placed_at_pickup_at, created_at, purchases!inner(pickup_point, picked_up, paid_price, price)")
-    .eq("arrived", true)
-    .eq("placed_at_pickup", true)
-    .eq("purchases.pickup_point", PICKUP_VALUE)
-    .order("created_at",{ascending:false});
+  const fetchOrders = async (strict)=>{
+    let q = sb.from("orders")
+      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup, purchases(pickup_point, picked_up, paid_price, price)")
+      .order("created_at",{ascending:false});
+    if(strict){
+      q = q.eq("arrived", true).eq("placed_at_pickup", true);
+    }
+    return await q;
+  };
 
+  let { data, error } = await fetchOrders(true);
   if(error){ console.error(error); return; }
 
-  orders = data || [];
+  let all = (data || []).map(o=>{
+    const filtered = (o.purchases || []).filter(p=>isAuraPickup(p.pickup_point));
+    return { ...o, purchases: filtered };
+  }).filter(o=> (o.purchases || []).length);
+
+  if(!all.length){
+    const fallback = await fetchOrders(false);
+    if(fallback.error){ console.error(fallback.error); return; }
+    all = (fallback.data || []).map(o=>{
+      const filtered = (o.purchases || []).filter(p=>isAuraPickup(p.pickup_point));
+      return { ...o, purchases: filtered };
+    }).filter(o=> (o.purchases || []).length);
+  }
+
+  const strict = all.filter(o=> o.arrived && o.placed_at_pickup);
+  orders = strict.length ? strict : all;
   if(isLaaura){
     orders = orders.filter(o=> (o.purchases || []).some(p=>!p.picked_up));
   }
@@ -575,11 +620,10 @@ async function loadPurchasesForOrder(orderId){
     .from("purchases")
     .select("id, order_id, customer_name, price, paid_price, bag_size, picked_up, picked_up_at, created_at, pickup_point, collected")
     .eq("order_id", orderId)
-    .eq("pickup_point", PICKUP_VALUE)
     .order("created_at",{ascending:true});
 
   if(error){ console.error(error); return []; }
-  return data || [];
+  return (data || []).filter(p=>isAuraPickup(p.pickup_point));
 }
 
 async function loadPurchasesForOrders(orderIds){
@@ -588,11 +632,10 @@ async function loadPurchasesForOrders(orderIds){
     .from("purchases")
     .select("id, order_id, customer_name, price, paid_price, bag_size, picked_up, picked_up_at, created_at, pickup_point, collected")
     .in("order_id", orderIds)
-    .eq("pickup_point", PICKUP_VALUE)
     .order("created_at",{ascending:true});
 
   if(error){ console.error(error); return []; }
-  return data || [];
+  return (data || []).filter(p=>isAuraPickup(p.pickup_point));
 }
 
 async function selectOrder(o){
@@ -631,7 +674,7 @@ if(collectBtn){
       .from("purchases")
       .update({ collected: true, collected_at: new Date().toISOString() })
       .eq("order_id", activeOrder.id)
-      .eq("pickup_point", PICKUP_VALUE)
+      .in("pickup_point", PICKUP_ALIASES)
       .eq("picked_up", true);
 
     if(error){
@@ -666,7 +709,7 @@ if(collectAllBtn){
     const { data, error } = await sb
       .from("purchases")
       .select("paid_price, price")
-      .eq("pickup_point", PICKUP_VALUE)
+      .in("pickup_point", PICKUP_ALIASES)
       .eq("picked_up", true)
       .eq("collected", false);
 
@@ -684,7 +727,7 @@ if(collectAllBtn){
     const { error: upErr } = await sb
       .from("purchases")
       .update({ collected: true, collected_at: new Date().toISOString() })
-      .eq("pickup_point", PICKUP_VALUE)
+      .in("pickup_point", PICKUP_ALIASES)
       .eq("picked_up", true)
       .eq("collected", false);
 
@@ -912,16 +955,16 @@ async function runSearch(){
 
   const { data, error } = await sb
     .from("purchases")
-    .select("id, order_id, customer_name, price, created_at")
+    .select("id, order_id, customer_name, price, created_at, pickup_point")
     .in("order_id", orderIds)
-    .eq("pickup_point", PICKUP_VALUE)
+    .in("pickup_point", PICKUP_ALIASES)
     .ilike("customer_name", `%${q}%`)
     .order("created_at",{ascending:false})
     .limit(50);
 
   if(error){ console.error(error); return; }
 
-  const results = data || [];
+  const results = (data || []).filter(r=>isAuraPickup(r.pickup_point));
   searchCount.textContent = `${results.length} نتيجة`;
   searchCount.style.display = "";
   searchResultsEl.style.display = "";

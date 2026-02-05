@@ -101,6 +101,8 @@
 
     /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
+    .grid.list-collapsed{grid-template-columns:1fr}
+    .grid.list-collapsed > aside{display:none}
     .grid > *{min-width:0}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
     .orderDetail{max-height:calc(100vh - 220px);overflow:auto;position:relative;padding-inline-end:2px}
@@ -268,7 +270,7 @@
   </div>
   <div id="searchResults" class="searchResults" style="display:none"></div>
 
-  <div class="grid">
+  <div class="grid" id="ordersGrid">
     <aside class="card">
       <div class="row" style="justify-content:space-between">
         <b>الطلبيات</b>
@@ -292,7 +294,10 @@
                 <b id="orderTitle"></b>
                 <span class="pill" id="orderStats">—</span>
               </div>
-              <button class="icon-btn" id="editOrderBtn" title="تعديل اسم الطلبية" aria-label="تعديل اسم الطلبية">✏️</button>
+              <div class="row" style="gap:8px;align-items:center">
+                <button class="btn" id="ordersListToggle" type="button">إخفاء القائمة</button>
+                <button class="icon-btn" id="editOrderBtn" title="تعديل اسم الطلبية" aria-label="تعديل اسم الطلبية">✏️</button>
+              </div>
             </div>
 
             <div class="row" id="editOrderRow" style="display:none;margin-top:6px">
@@ -302,14 +307,15 @@
             </div>
 
             <div class="row" id="arrivedRow" style="margin-top:8px;display:none">
-              <label class="row" style="gap:8px;cursor:pointer">
-                <input type="checkbox" id="arrivedToggle">
-                <span>تم وصول الطلب</span>
+              <div class="row" style="gap:8px;align-items:center">
+                <label class="row" style="gap:8px;cursor:pointer">
+                  <input type="checkbox" id="arrivedToggle">
+                  <span>تم وصول الطلب</span>
+                </label>
                 <span id="arrivedBadge"></span>
-              </label>
+              </div>
               <div class="row" style="gap:8px">
                 <button class="btn" id="exportPdfBtn" type="button">تصدير PDF</button>
-                <button class="btn primary" id="addPurchaseBtn" type="button">إضافة مشترى</button>
               </div>
               <span class="muted" id="arrivedMsg"></span>
             </div>
@@ -410,7 +416,7 @@
     </div>
     <div id="viewSearchResults" class="searchResults" style="display:none"></div>
 
-    <div class="grid">
+    <div class="grid" id="viewGrid">
       <aside class="card">
         <div class="row" style="justify-content:space-between">
           <b>الطلبيات</b>
@@ -437,7 +443,8 @@
               </div>
             </div>
 
-            <div class="row">
+            <div class="row" style="gap:8px">
+              <button class="btn" id="viewOrdersListToggle" type="button">إخفاء القائمة</button>
               <span class="pill" id="viewPurchaseCount">0</span>
               <button class="btn iconBtn" id="viewToggleBtn" type="button" aria-label="عرض القائمة">
                 <img src="https://cdn-icons-png.flaticon.com/512/8616/8616159.png" alt="">
@@ -578,6 +585,30 @@ function escapeAttr(s=""){ return escapeHtml(s); }
 function todayName(){ const d=new Date(); return `طلبية ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
 
 function isMobile(){ return window.matchMedia("(max-width: 900px)").matches; }
+
+let ordersListCollapsed = false;
+function setOrdersListCollapsed(collapsed){
+  ordersListCollapsed = collapsed;
+  if(ordersGrid) ordersGrid.classList.toggle("list-collapsed", collapsed);
+  if(ordersListToggle){
+    ordersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+  }
+}
+if(ordersListToggle){
+  ordersListToggle.onclick = ()=> setOrdersListCollapsed(!ordersListCollapsed);
+}
+
+let viewListCollapsed = false;
+function setViewListCollapsed(collapsed){
+  viewListCollapsed = collapsed;
+  if(viewGrid) viewGrid.classList.toggle("list-collapsed", collapsed);
+  if(viewOrdersListToggle){
+    viewOrdersListToggle.textContent = collapsed ? "عرض القائمة" : "إخفاء القائمة";
+  }
+}
+if(viewOrdersListToggle){
+  viewOrdersListToggle.onclick = ()=> setViewListCollapsed(!viewListCollapsed);
+}
 
 /* ===== Auth guard ===== */
 async function requireAuth(){
@@ -768,6 +799,8 @@ const main = document.getElementById("main");
 const empty = document.getElementById("empty");
 const orderTitle = document.getElementById("orderTitle");
 const orderStats = document.getElementById("orderStats");
+const ordersGrid = document.getElementById("ordersGrid");
+const ordersListToggle = document.getElementById("ordersListToggle");
 const tbody = document.getElementById("tbody");
 const arrivedRow = document.getElementById("arrivedRow");
 const arrivedToggle = document.getElementById("arrivedToggle");
@@ -816,7 +849,6 @@ const editOrderRow = document.getElementById("editOrderRow");
 const editOrderInput = document.getElementById("editOrderInput");
 const saveOrderBtn = document.getElementById("saveOrderBtn");
 const cancelOrderBtn = document.getElementById("cancelOrderBtn");
-const addPurchaseBtn = document.getElementById("addPurchaseBtn");
 const arrivedBadge = document.getElementById("arrivedBadge");
 const orderNameInput = document.getElementById("orderNameInput");
 const searchInput = document.getElementById("searchInput");
@@ -832,6 +864,8 @@ const viewViewer = document.getElementById("viewViewer");
 const viewTitle = document.getElementById("viewTitle");
 const viewContent = document.getElementById("viewContent");
 const viewListView = document.getElementById("viewListView");
+const viewGrid = document.getElementById("viewGrid");
+const viewOrdersListToggle = document.getElementById("viewOrdersListToggle");
 const viewCounter = document.getElementById("viewCounter");
 const viewPrev = document.getElementById("viewPrev");
 const viewNext = document.getElementById("viewNext");
@@ -1542,6 +1576,7 @@ async function selectOrder(o){
   empty.style.display="none";
   main.style.display="";
   orderTitle.textContent=o.order_name;
+  setOrdersListCollapsed(true);
   if(arrivedRow){
     const canSeeArrived = myEmail === EMAIL_RAHAF;
     arrivedRow.style.display = canSeeArrived ? "" : "none";
@@ -2294,14 +2329,6 @@ async function deletePurchase(id){
   showToast?.("تم الحذف", { actionText:"تراجع", onAction: undoDeletePurchase });
 }
 
-if(addPurchaseBtn){
-  addPurchaseBtn.onclick = ()=>{
-    const target = document.getElementById("addPurchaseSection");
-    if(target) target.scrollIntoView({ behavior:"smooth", block:"start" });
-    if(customer) customer.focus();
-  };
-}
-
 /* ===== Add new purchase ===== */
 addBtn.onclick = async ()=>{
   if(!activeOrder) return;
@@ -2654,6 +2681,7 @@ async function selectViewOrder(o){
   viewIdx = 0;
 
   if(isMobile()) closeSidebar();
+  setViewListCollapsed(true);
 
   await loadViewOrders();
 
@@ -2702,6 +2730,13 @@ function renderView(){
   const note = (p.note || "").trim();
   const bagValue = p.bag_size || "كيس صغير";
   const bagMarkup = canEditViewBagSize() ? viewBagSizeEditor(p) : escapeHtml(bagValue);
+  const isRahafView = myEmail === EMAIL_RAHAF;
+  const priceValue = p.price ?? "";
+  const paidValue = p.paid_price ?? p.price ?? "";
+  const priceBlock = isRahafView
+    ? `<div class="priceRow"><div><b>السعر:</b> ${escapeHtml(priceValue)}</div></div>`
+    : "";
+  const paidBlock = `<div class="priceRow"><div><b>${isRahafView ? "السعر المدفوع" : "السعر المدفوع"}:</b> ${escapeHtml(paidValue)}</div></div>`;
 
   const highlight = (viewHighlightPurchaseId && viewHighlightPurchaseId === p.id)
     ? `<div class="highlight" style="margin-bottom:10px">✅ هذا هو البحث</div>`
@@ -2716,7 +2751,8 @@ function renderView(){
       ${highlight}
       <div><b>الزبون:</b> ${escapeHtml(p.customer_name || "")}</div>
       <div><b>العدد:</b> ${escapeHtml(p.qty ?? "")}</div>
-      <div class="priceRow"><div><b>السعر:</b> ${escapeHtml(p.price ?? "")}</div></div>
+      ${priceBlock}
+      ${paidBlock}
       <div><b>حجم الكيس:</b> ${bagMarkup}</div>
       <div style="margin-top:8px"><b>روابط:</b><br>${links}</div>
       <div style="margin-top:10px"><b>مكان الاستلام:</b> ${escapeHtml(pickup)}</div>
@@ -2750,6 +2786,9 @@ function renderViewList(){
     const note = (p.note || "").trim();
     const bagValue = p.bag_size || "كيس صغير";
     const bagMarkup = canEditViewBagSize() ? viewBagSizeEditor(p) : escapeHtml(bagValue);
+    const isRahafView = myEmail === EMAIL_RAHAF;
+    const priceValue = p.price ?? "";
+    const paidValue = p.paid_price ?? p.price ?? "";
     const highlightClass = (viewHighlightPurchaseId && viewHighlightPurchaseId === p.id) ? "highlight" : "";
     const waBtn = viewCanShowWhatsapp()
       ? `<button class="btn waBtn" type="button" data-wa="${p.id}" aria-label="إرسال رسالة واتساب">ارسل رسالة واتساب</button>`
@@ -2761,7 +2800,8 @@ function renderViewList(){
         <td>${i + 1}</td>
         <td>${escapeHtml(p.customer_name || "")}</td>
         <td>${escapeHtml(p.qty ?? "")}</td>
-        <td><div class="priceRow">${escapeHtml(p.price ?? "")}</div></td>
+        ${isRahafView ? `<td><div class="priceRow">${escapeHtml(priceValue)}</div></td>` : ``}
+        <td><div class="priceRow">${escapeHtml(paidValue)}</div></td>
         <td>${escapeHtml(pickup)}</td>
         <td>${bagMarkup}</td>
         <td>${links}</td>
@@ -2780,7 +2820,8 @@ function renderViewList(){
             <th>#</th>
             <th>الزبون</th>
             <th>العدد</th>
-            <th>السعر</th>
+            ${myEmail === EMAIL_RAHAF ? `<th>السعر</th>` : ``}
+            <th>السعر المدفوع</th>
             <th>مكان الاستلام</th>
             <th>حجم الكيس</th>
             <th>روابط</th>
