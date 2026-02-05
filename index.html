@@ -2636,12 +2636,12 @@ async function initViewPanel(){
 
 /* ===== Customers panel ===== */
 function custNormalizePhone(value){
-  return (value || "").replace(/\\s+/g, "");
+  return (value || "").replace(/[^\\d]/g, "");
 }
 
 function custIsValidPhone(value){
   const phone = custNormalizePhone(value);
-  return /^(\\+?970|\\+?972)\\d{7,9}$/.test(phone);
+  return /^(970|972)\\d{7,9}$/.test(phone);
 }
 
 function custCityOptions(selected){
