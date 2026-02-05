@@ -12,23 +12,10 @@
   <style>
     body{font-family:system-ui,Tahoma,Arial;margin:0;background:#fafafa;color:#111}
     .wrap{max-width:1100px;margin:auto;padding:16px}
-    .grid{
-      display:grid;
-      grid-template-columns:320px 1fr;
-      grid-template-areas:
-        "orders summary"
-        "orders main";
-      gap:12px
-    }
+    .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
     .grid > *{min-width:0}
     @media(max-width:900px){
-      .grid{
-        grid-template-columns:1fr;
-        grid-template-areas:
-          "orders"
-          "summary"
-          "main";
-      }
+      .grid{grid-template-columns:1fr}
     }
     .card{background:#fff;border:1px solid #e7e7e7;border-radius:14px;padding:12px}
     .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -90,15 +77,12 @@
       display:inline-flex;align-items:center;justify-content:center;
       padding:6px 10px;line-height:1;height:32px
     }
-    .ordersCol{grid-area:orders}
-    .summaryCol{grid-area:summary}
-    .mainCol{grid-area:main}
     .globalSummary{
       background:#f4f7ff;
       border:1px solid #dfe6ff;
       border-radius:14px;
       padding:10px 12px;
-      margin-bottom:14px
+      margin-bottom:12px
     }
     body.embed{overflow-x:hidden}
     body.embed .topbar,
@@ -134,7 +118,7 @@
   <div id="searchResults" class="searchResults" style="display:none"></div>
 
   <div class="grid">
-    <aside class="card ordersCol">
+    <aside class="card">
       <div class="row" style="justify-content:space-between">
         <b>الطلبيات</b>
         <span class="pill" id="ordersCount">0</span>
@@ -146,14 +130,13 @@
       </div>
     </aside>
 
-    <div class="globalSummary summaryCol" style="display:none" id="allOrdersTotalWrap">
-      <div class="row">
-        <span class="pill" id="allOrdersTotal">اجمالي المبلغ للتسليم: 0 ₪</span>
-        <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
+    <main class="card">
+      <div class="globalSummary" style="display:none" id="allOrdersTotalWrap">
+        <div class="row">
+          <span class="pill" id="allOrdersTotal">اجمالي المبلغ للتسليم: 0 ₪</span>
+          <button class="btn" id="collectAllBtn" style="display:none">تم استلام تحصيل الكل</button>
+        </div>
       </div>
-    </div>
-
-    <main class="card mainCol">
       <div id="empty" class="muted">
         لا يوجد بيانات
         <div style="margin-top:8px"><button class="btn" id="emptyRefreshBtn" type="button">تحديث</button></div>
@@ -221,6 +204,7 @@ try{
 } catch {
   isInFrame = true;
 }
+if(window.frameElement) isInFrame = true;
 const isEmbed = isEmbedParam || isInFrame;
 if(isEmbed) document.body.classList.add("embed");
 const isIOSChrome = /CriOS/i.test(navigator.userAgent);
@@ -387,6 +371,7 @@ function normalizePickup(value){
 function isAuraPickup(value){
   const n = normalizePickup(value);
   if(!n) return false;
+  if(n.includes("بيت") || n.includes("توصيل")) return false;
   if(n.includes("aura")) return true;
   if(n.includes("لاورا") || n.includes("لااورا")) return true;
   if(n.includes("نقطه") || n.includes("نقطة") || n.includes("استلام")) return true;
@@ -564,67 +549,44 @@ function formatDateTime(iso){
 }
 
 async function loadPickupOrders(){
-  const fetchOrders = async (ids=null)=>{
-    let q = sb.from("orders")
-      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
-      .order("created_at",{ascending:false});
-    if(Array.isArray(ids) && ids.length){
-      q = q.in("id", ids);
-    }
-    return await q;
-  };
+  let { data: orderRows, error: oErr } = await sb
+    .from("orders")
+    .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
+    .eq("arrived", true)
+    .eq("placed_at_pickup", true)
+    .order("placed_at_pickup_at",{ascending:false});
 
-  const fetchPurchases = async (ids=null)=>{
-    let q = sb.from("purchases")
-      .select("order_id, pickup_point, picked_up, paid_price, price");
-    if(Array.isArray(ids) && ids.length){
-      q = q.in("order_id", ids);
-    }
-    return await q;
-  };
-
-  const { data: purchaseRows, error: pErr } = await fetchPurchases();
-  if(pErr){ console.error(pErr); return; }
-
-  let auraPurchases = (purchaseRows || []).filter(p=>isAuraPickup(p.pickup_point));
-  let orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
-
-  if(!orderIds.length){
-    const { data: strictOrders, error: soErr } = await sb
-      .from("orders")
-      .select("id")
-      .eq("arrived", true)
-      .eq("placed_at_pickup", true);
-    if(soErr){ console.error(soErr); return; }
-    const ids = (strictOrders || []).map(o=>o.id);
-    if(ids.length){
-      const { data: p2, error: p2Err } = await fetchPurchases(ids);
-      if(p2Err){ console.error(p2Err); return; }
-      auraPurchases = (p2 || []).filter(p=>isAuraPickup(p.pickup_point));
-      orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
-    }
-  }
-
-  if(!orderIds.length){
-    orders = [];
-    ordersListEl.innerHTML = "";
-    ordersEmptyEl.style.display = "";
-    ordersCountEl.textContent = "0";
-    return;
-  }
-
-  const { data: orderRows, error: oErr } = await fetchOrders(orderIds);
   if(oErr){ console.error(oErr); return; }
 
-  const ordersMap = new Map((orderRows || []).map(o=>[o.id, { ...o, purchases: [] }]));
+  if(!orderRows || !orderRows.length){
+    const fallback = await sb
+      .from("orders")
+      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
+      .order("created_at",{ascending:false});
+    if(fallback.error){ console.error(fallback.error); return; }
+    orderRows = fallback.data || [];
+  }
+
+  const orderIds = orderRows.map(o=>o.id);
+  let auraPurchases = [];
+  if(orderIds.length){
+    const { data: pRows, error: pErr } = await sb
+      .from("purchases")
+      .select("order_id, pickup_point, picked_up, paid_price, price")
+      .in("order_id", orderIds);
+    if(pErr){ console.error(pErr); return; }
+    auraPurchases = (pRows || []).filter(p=>isAuraPickup(p.pickup_point));
+  }
+
+  const map = new Map();
   auraPurchases.forEach(p=>{
-    const ord = ordersMap.get(p.order_id);
-    if(ord) ord.purchases.push(p);
+    if(!map.has(p.order_id)) map.set(p.order_id, []);
+    map.get(p.order_id).push(p);
   });
 
-  let all = [...ordersMap.values()].filter(o=> (o.purchases || []).length);
-  const strict = all.filter(o=> o.arrived && o.placed_at_pickup);
-  orders = strict.length ? strict : all;
+  orders = (orderRows || []).map(o=>({ ...o, purchases: map.get(o.id) || [] }))
+    .filter(o=> (o.purchases || []).length);
+
   if(isLaaura){
     orders = orders.filter(o=> (o.purchases || []).some(p=>!p.picked_up));
   }
