@@ -1139,7 +1139,18 @@ function renderCustomerSuggestions(listEl, customers, inputEl, clearBtn, opts={}
   addBtn.type = "button";
   addBtn.className = "autoAdd";
   addBtn.textContent = "+ إضافة زبون جديد";
-  addBtn.onclick = ()=>{ window.location.href = "./customers.html"; };
+  addBtn.onclick = ()=>{
+    if(typeof showTab === "function"){
+      showTab("customers");
+      try{
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", "customers");
+        history.replaceState(null, "", url);
+      } catch {}
+      return;
+    }
+    window.location.href = "./index.html?tab=customers";
+  };
   listEl.appendChild(addBtn);
 }
 
