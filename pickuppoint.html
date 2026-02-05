@@ -549,34 +549,30 @@ function formatDateTime(iso){
 }
 
 async function loadPickupOrders(){
-  let { data: orderRows, error: oErr } = await sb
+  const { data: pRows, error: pErr } = await sb
+    .from("purchases")
+    .select("order_id, pickup_point, picked_up, paid_price, price");
+
+  if(pErr){ console.error(pErr); return; }
+
+  const auraPurchases = (pRows || []).filter(p=>isAuraPickup(p.pickup_point));
+  const orderIds = [...new Set(auraPurchases.map(p=>p.order_id))];
+
+  if(!orderIds.length){
+    orders = [];
+    ordersListEl.innerHTML = "";
+    ordersEmptyEl.style.display = "";
+    ordersCountEl.textContent = "0";
+    return;
+  }
+
+  const { data: orderRows, error: oErr } = await sb
     .from("orders")
     .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
-    .eq("arrived", true)
-    .eq("placed_at_pickup", true)
-    .order("placed_at_pickup_at",{ascending:false});
+    .in("id", orderIds)
+    .order("created_at",{ascending:false});
 
   if(oErr){ console.error(oErr); return; }
-
-  if(!orderRows || !orderRows.length){
-    const fallback = await sb
-      .from("orders")
-      .select("id, order_name, order_date, placed_at_pickup_at, created_at, arrived, placed_at_pickup")
-      .order("created_at",{ascending:false});
-    if(fallback.error){ console.error(fallback.error); return; }
-    orderRows = fallback.data || [];
-  }
-
-  const orderIds = orderRows.map(o=>o.id);
-  let auraPurchases = [];
-  if(orderIds.length){
-    const { data: pRows, error: pErr } = await sb
-      .from("purchases")
-      .select("order_id, pickup_point, picked_up, paid_price, price")
-      .in("order_id", orderIds);
-    if(pErr){ console.error(pErr); return; }
-    auraPurchases = (pRows || []).filter(p=>isAuraPickup(p.pickup_point));
-  }
 
   const map = new Map();
   auraPurchases.forEach(p=>{
