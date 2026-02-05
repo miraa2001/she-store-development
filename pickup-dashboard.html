@@ -12,6 +12,7 @@
     .muted{color:#666;font-size:13px}
 
     .menuBtn{border:1px solid #e7e7e7;background:#fff;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .menuBtn.danger{border-color:#f2c2c2;color:#b00020}
     .sidebarOverlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;z-index:50}
     .sidebar{
       position:fixed;top:0;right:0;height:100vh;width:min(280px,82vw);
@@ -248,6 +249,14 @@ async function guard(){
     if(tabCollectionsBtn) tabCollectionsBtn.style.display = "none";
     showTab("home");
   } else {
+    sidebar.style.display = "none";
+    overlay.style.display = "none";
+    openBtn.textContent = "تسجيل خروج";
+    openBtn.classList.add("danger");
+    openBtn.onclick = async ()=>{
+      await sb.auth.signOut();
+      window.location.href="./login.html";
+    };
     tabsEl.style.display = "none";
     if(tabCollectionsBtn) tabCollectionsBtn.style.display = "none";
     if(tabHomeBtn) tabHomeBtn.style.display = "none";
