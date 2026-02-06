@@ -2712,7 +2712,7 @@ function viewBuildWhatsappMessage(pickupPoint, price, customerName){
       "📍كافيه la aura سوق الذهب",
       "⏰ بفتحوا من ال٨ صباحاً لل١٠ مساءً",
       `📦 حسابك: ${priceText} شيكل`
-    ].join("\\n");
+    ].join("\n");
   }
   if(pickupPoint === "من البيت"){
     return [
@@ -2720,13 +2720,13 @@ function viewBuildWhatsappMessage(pickupPoint, price, customerName){
       "طلبك جاهز عندي بالبيت",
       "خبريني قبل بوقت وينتا رح تستلمي💌",
       `📦حسابك: ${priceText} شيكل`
-    ].join("\\n");
+    ].join("\n");
   }
   return [
     greeting,
     `طلبك جاهز للاستلام (${pickupPoint || "—"})`,
     `📦 حسابك: ${priceText} شيكل`
-  ].join("\\n");
+  ].join("\n");
 }
 
 async function openViewWhatsappForPurchase(purchaseId){
