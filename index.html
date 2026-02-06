@@ -357,11 +357,6 @@
 
           <div class="orderContent" id="addPurchaseSection">
             <b>إضافة مشترى</b>
-            <div class="row" style="margin-top:8px;align-items:center;gap:8px">
-              <span class="muted" style="min-width:90px">Gemini API</span>
-              <input id="geminiKey" type="password" placeholder="Gemini API Key" style="flex:1;min-width:220px">
-            </div>
-            <div class="muted" id="geminiKeyHint" style="margin-top:6px">أضيفي المفتاح لتحليل الأسعار من الصور.</div>
         <div class="row">
           <div class="autoWrap">
             <input id="customer" placeholder="اسم الزبون" autocomplete="off">
@@ -635,6 +630,7 @@ function formatILS(n){
   const fixed = x.toFixed(2);
   return fixed.endsWith(".00") ? String(Math.round(x)) : fixed;
 }
+const GEMINI_API_KEY = "__GEMINI_API_KEY__";
 const GEMINI_MODEL_ID = "gemini-3-flash-preview";
 const GEMINI_PROMPT = [
   "You are analyzing a shopping cart screenshot (like SHEIN).",
@@ -644,6 +640,11 @@ const GEMINI_PROMPT = [
   "Reasoning: Explain why you chose certain numbers and ignored others.",
   "Return JSON that matches the provided schema."
 ].join("\\n");
+
+function getGeminiKey(){
+  if(!GEMINI_API_KEY || GEMINI_API_KEY.includes("__GEMINI_API_KEY__")) return "";
+  return GEMINI_API_KEY;
+}
 
 let genaiModulePromise = null;
 async function loadGenAI(){
@@ -996,7 +997,6 @@ const qty = document.getElementById("qty");
 const pickupPoint = document.getElementById("pickupPoint");
 const bagSize = document.getElementById("bagSize");
 const note = document.getElementById("note");
-const geminiKey = document.getElementById("geminiKey");
 const images = document.getElementById("images");
 const linksWrap = document.getElementById("links");
 const addBtn = document.getElementById("addBtn");
@@ -1514,16 +1514,16 @@ function addFiles(files){
   updatePreview();
 }
 
-function setAiStatus(msg, isError){
-  if(!aiStatus) return;
-  aiStatus.textContent = msg || "";
-  aiStatus.style.color = isError ? "#b00020" : "#666";
-}
-
 function setAddStatus(msg, isError){
   if(!addStatus) return;
   addStatus.textContent = msg || "";
   addStatus.style.color = isError ? "#b00020" : "#666";
+}
+
+function setAiStatus(msg, isError){
+  if(!aiStatus) return;
+  aiStatus.textContent = msg || "";
+  aiStatus.style.color = isError ? "#b00020" : "#666";
 }
 
 function setEditAiStatus(purchaseId, msg, isError){
@@ -1618,9 +1618,9 @@ function applyRoundedPriceToEditRow(purchaseId, value){
 let aiRunning = false;
 async function analyzeNewPurchaseImages(){
   if(aiRunning) return;
-  const apiKey = (geminiKey?.value || "").trim();
+  const apiKey = getGeminiKey();
   if(!apiKey){
-    setAiStatus("أضيفي مفتاح Gemini أولاً.", true);
+    setAiStatus("مفتاح Gemini غير مضبوط بعد النشر.", true);
     return;
   }
   if(!selectedImages.length){
@@ -1650,6 +1650,59 @@ async function analyzeNewPurchaseImages(){
   }finally{
     aiRunning = false;
     if(analyzeImagesBtn) analyzeImagesBtn.disabled = false;
+  }
+}
+
+async function analyzeEditImages(purchaseId){
+  const row = tbody?.querySelector ? tbody.querySelector(`tr[data-edit-row="${purchaseId}"]`) : null;
+  if(!row) return;
+  const state = editImageState.get(purchaseId);
+  if(!state) return;
+
+  if(state.newFiles.length === 0 && state.deleteImgIds.size === 0){
+    setEditAiStatus(purchaseId, "لم يتم تعديل الصور.", true);
+    return;
+  }
+
+  const apiKey = getGeminiKey();
+  if(!apiKey){
+    setEditAiStatus(purchaseId, "مفتاح Gemini غير مضبوط بعد النشر.", true);
+    return;
+  }
+
+  const existingUrls = Array.from(row.querySelectorAll(`[data-existing-thumb="${purchaseId}"]`))
+    .filter(el=>!el.classList.contains("removing"))
+    .map(el=>el.querySelector("img")?.src)
+    .filter(Boolean);
+
+  const files = state.newFiles.slice();
+  if(!files.length && !existingUrls.length){
+    setEditAiStatus(purchaseId, "لا توجد صور للتحليل.", true);
+    return;
+  }
+
+  const btn = row.querySelector(`[data-ai-analyze="${purchaseId}"]`);
+  if(btn) btn.disabled = true;
+  setEditAiStatus(purchaseId, "جاري التحليل...", false);
+
+  try{
+    const result = await runGeminiAnalysis({
+      files,
+      urls: existingUrls,
+      apiKey,
+      onProgress: (msg)=> setEditAiStatus(purchaseId, msg, false)
+    });
+    const total = resolveTotalFromResult(result);
+    if(!Number.isFinite(total) || total <= 0){
+      throw new Error("لم يتم العثور على أسعار واضحة. جربي صوراً أوضح.");
+    }
+    const rounded = Math.round(total);
+    applyRoundedPriceToEditRow(purchaseId, rounded);
+    setEditAiStatus(purchaseId, `تم احتساب السعر: ${rounded}`, false);
+  }catch(err){
+    setEditAiStatus(purchaseId, err?.message || "فشل التحليل.", true);
+  }finally{
+    if(btn) btn.disabled = false;
   }
 }
 pickImagesBtn.onclick=()=>images.click();
@@ -2168,59 +2221,6 @@ function addEditFiles(purchaseId, files){
   renderNewPreview(purchaseId);
   updateEditCounts(purchaseId);
   setEditAiStatus(purchaseId, "");
-}
-
-async function analyzeEditImages(purchaseId){
-  const row = tbody?.querySelector ? tbody.querySelector(`tr[data-edit-row="${purchaseId}"]`) : null;
-  if(!row) return;
-  const state = editImageState.get(purchaseId);
-  if(!state) return;
-
-  if(state.newFiles.length === 0 && state.deleteImgIds.size === 0){
-    setEditAiStatus(purchaseId, "لم يتم تعديل الصور.", true);
-    return;
-  }
-
-  const apiKey = (geminiKey?.value || "").trim();
-  if(!apiKey){
-    setEditAiStatus(purchaseId, "أضيفي مفتاح Gemini أولاً.", true);
-    return;
-  }
-
-  const existingUrls = Array.from(row.querySelectorAll(`[data-existing-thumb="${purchaseId}"]`))
-    .filter(el=>!el.classList.contains("removing"))
-    .map(el=>el.querySelector("img")?.src)
-    .filter(Boolean);
-
-  const files = state.newFiles.slice();
-  if(!files.length && !existingUrls.length){
-    setEditAiStatus(purchaseId, "لا توجد صور للتحليل.", true);
-    return;
-  }
-
-  const btn = row.querySelector(`[data-ai-analyze="${purchaseId}"]`);
-  if(btn) btn.disabled = true;
-  setEditAiStatus(purchaseId, "جاري التحليل...", false);
-
-  try{
-    const result = await runGeminiAnalysis({
-      files,
-      urls: existingUrls,
-      apiKey,
-      onProgress: (msg)=> setEditAiStatus(purchaseId, msg, false)
-    });
-    const total = resolveTotalFromResult(result);
-    if(!Number.isFinite(total) || total <= 0){
-      throw new Error("لم يتم العثور على أسعار واضحة. جربي صوراً أوضح.");
-    }
-    const rounded = Math.round(total);
-    applyRoundedPriceToEditRow(purchaseId, rounded);
-    setEditAiStatus(purchaseId, `تم احتساب السعر: ${rounded}`, false);
-  }catch(err){
-    setEditAiStatus(purchaseId, err?.message || "فشل التحليل.", true);
-  }finally{
-    if(btn) btn.disabled = false;
-  }
 }
 
 function closeAllEditRows(){ tbody.querySelectorAll('tr[data-edit-row]').forEach(r=>r.style.display="none"); }
