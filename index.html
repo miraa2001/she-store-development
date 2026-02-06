@@ -423,6 +423,7 @@
 
         <div class="row" style="margin-top:6px">
           <button class="btn primary" id="addBtn">إضافة</button>
+          <span class="muted" id="addStatus"></span>
         </div>
       </div>
 
@@ -999,6 +1000,7 @@ const geminiKey = document.getElementById("geminiKey");
 const images = document.getElementById("images");
 const linksWrap = document.getElementById("links");
 const addBtn = document.getElementById("addBtn");
+const addStatus = document.getElementById("addStatus");
 const deleteOrderBtn = document.getElementById("deleteOrderBtn");
 const duplicateWarning = document.getElementById("duplicateWarning");
 
@@ -1516,6 +1518,12 @@ function setAiStatus(msg, isError){
   if(!aiStatus) return;
   aiStatus.textContent = msg || "";
   aiStatus.style.color = isError ? "#b00020" : "#666";
+}
+
+function setAddStatus(msg, isError){
+  if(!addStatus) return;
+  addStatus.textContent = msg || "";
+  addStatus.style.color = isError ? "#b00020" : "#666";
 }
 
 function setEditAiStatus(purchaseId, msg, isError){
@@ -2769,6 +2777,12 @@ async function undoDeletePurchase(){
       images.map(img=>({ id: img.id, purchase_id: purchase.id, storage_path: img.storage_path }))
     );
   }
+  msgEl.textContent = "تم✅";
+  setTimeout(()=>{
+    const rowNow = tbody?.querySelector?.(`tr[data-edit-row="${purchaseId}"]`);
+    const msgNow = rowNow?.querySelector?.(`[data-msg="${purchaseId}"]`);
+    if(msgNow && msgNow.textContent === "تم✅") msgNow.textContent = "";
+  }, 2000);
   await loadPurchases();
   lastDeletedPurchase = null;
 }
@@ -2803,10 +2817,12 @@ async function deletePurchase(id){
 /* ===== Add new purchase ===== */
 addBtn.onclick = async ()=>{
   if(!activeOrder) return;
+  setAddStatus("");
 
   const customerId = customer.dataset.customerId;
   if(!customerId){
     alert("اختاري الزبون من القائمة.");
+    setAddStatus("اختاري الزبون من القائمة.", true);
     return;
   }
 
@@ -2814,50 +2830,66 @@ addBtn.onclick = async ()=>{
   const hasDuplicate = activePurchases.some(p => normalizeName(p.customer_name) === normalizedName);
   if(normalizedName && hasDuplicate){
     showDuplicateWarning();
+    setAddStatus("يوجد مشترى بنفس الاسم.", true);
     return;
   }
 
-  const { data:p, error:pErr } = await sb.from("purchases")
-    .insert({
-      order_id: activeOrder.id,
-      customer_id: customerId,
-      customer_name: customer.value,
-      qty: Number(qty.value),
-      price: Number(price.value),
-      paid_price: Number(price.value),
-      bag_size: bagSize.value,
-      pickup_point: pickupPoint.value,
-      note: note.value.trim()
-    })
-    .select()
-    .single();
+  addBtn.disabled = true;
+  setAddStatus("جاري الإضافة...", false);
+  try{
+    const { data:p, error:pErr } = await sb.from("purchases")
+      .insert({
+        order_id: activeOrder.id,
+        customer_id: customerId,
+        customer_name: customer.value,
+        qty: Number(qty.value),
+        price: Number(price.value),
+        paid_price: Number(price.value),
+        bag_size: bagSize.value,
+        pickup_point: pickupPoint.value,
+        note: note.value.trim()
+      })
+      .select()
+      .single();
 
-  if(pErr){ console.error(pErr); alert("فشل إضافة المشترى"); return; }
+    if(pErr){ console.error(pErr); throw new Error("فشل إضافة المشترى"); }
 
-  const urls=[...linksWrap.querySelectorAll("input")].map(i=>i.value).filter(Boolean);
-  if(urls.length) await sb.from("purchase_links").insert(urls.map(u=>({purchase_id:p.id,url:u})));
+    const urls=[...linksWrap.querySelectorAll("input")].map(i=>i.value).filter(Boolean);
+    if(urls.length){
+      const { error: linkErr } = await sb.from("purchase_links").insert(urls.map(u=>({purchase_id:p.id,url:u})));
+      if(linkErr) console.error(linkErr);
+    }
 
-  for(const f of selectedImages){
-    const safeName = `${Date.now()}-${f.name}`.replace(/\s+/g,"_");
-    const path = `${activeOrder.id}/${p.id}/${safeName}`;
+    for(const f of selectedImages){
+      const safeName = `${Date.now()}-${f.name}`.replace(/\s+/g,"_");
+      const path = `${activeOrder.id}/${p.id}/${safeName}`;
 
-    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, f);
-    if(upErr){ console.error(upErr); alert("فشل رفع صورة."); continue; }
+      const { error: upErr } = await sb.storage.from(BUCKET).upload(path, f);
+      if(upErr){ console.error(upErr); alert("فشل رفع صورة."); continue; }
 
-    await sb.from("purchase_images").insert({ purchase_id: p.id, storage_path: path });
+      await sb.from("purchase_images").insert({ purchase_id: p.id, storage_path: path });
+    }
+
+    clearCustomerSelection(customer, customerClearBtn);
+    price.value=""; qty.value=1;
+    pickupPoint.value="من نقطة الاستلام";
+    bagSize.value="كيس صغير";
+    note.value="";
+    images.value="";
+    linksWrap.querySelectorAll("input").forEach(i=>i.value="");
+    selectedImages=[]; updatePreview();
+    clearDuplicateWarning();
+
+    await loadPurchases();
+    setAddStatus("تم✅", false);
+    setTimeout(()=>{ if(addStatus && addStatus.textContent==="تم✅") addStatus.textContent=""; }, 2000);
+  }catch(err){
+    console.error(err);
+    alert("فشل إضافة المشترى");
+    setAddStatus(err?.message || "فشل إضافة المشترى", true);
+  }finally{
+    addBtn.disabled = false;
   }
-
-  clearCustomerSelection(customer, customerClearBtn);
-  price.value=""; qty.value=1;
-  pickupPoint.value="من نقطة الاستلام";
-  bagSize.value="كيس صغير";
-  note.value="";
-  images.value="";
-  linksWrap.querySelectorAll("input").forEach(i=>i.value="");
-  selectedImages=[]; updatePreview();
-  clearDuplicateWarning();
-
-  await loadPurchases();
 };
 
 /* ===== View panel ===== */
