@@ -2701,11 +2701,13 @@ function viewIsValidPhone(value){
   return /^(970|972)\d{8,9}$/.test(phone);
 }
 
-function viewBuildWhatsappMessage(pickupPoint, price){
+function viewBuildWhatsappMessage(pickupPoint, price, customerName){
   const priceText = formatILS(price);
+  const name = (customerName || "").trim();
+  const greeting = name ? `مرحبا ${name}💖` : "مرحبا حبيبتي💖";
   if(pickupPoint === "من نقطة الاستلام"){
     return [
-      "مرحبا حبيبتي💖",
+      greeting,
       "طلبك جاهز بنقطة الاستلام",
       "📍كافيه la aura سوق الذهب",
       "⏰ بفتحوا من ال٨ صباحاً لل١٠ مساءً",
@@ -2714,14 +2716,14 @@ function viewBuildWhatsappMessage(pickupPoint, price){
   }
   if(pickupPoint === "من البيت"){
     return [
-      "مرحبا حبيبتي💖",
+      greeting,
       "طلبك جاهز عندي بالبيت",
       "خبريني قبل بوقت وينتا رح تستلمي💌",
       `📦حسابك: ${priceText} شيكل`
     ].join("\\n");
   }
   return [
-    "مرحبا حبيبتي💖",
+    greeting,
     `طلبك جاهز للاستلام (${pickupPoint || "—"})`,
     `📦 حسابك: ${priceText} شيكل`
   ].join("\\n");
@@ -2731,7 +2733,7 @@ async function openViewWhatsappForPurchase(purchaseId){
   try{
     const { data: purchase, error: purchaseErr } = await sb
       .from("purchases")
-      .select("id, order_id, price, pickup_point, customer_id")
+      .select("id, order_id, price, pickup_point, customer_id, customer_name")
       .eq("id", purchaseId)
       .maybeSingle();
 
@@ -2763,7 +2765,7 @@ async function openViewWhatsappForPurchase(purchaseId){
 
     const { data: customer, error: customerErr } = await sb
       .from("customers")
-      .select("phone")
+      .select("phone, name")
       .eq("id", purchase.customer_id)
       .maybeSingle();
 
@@ -2778,7 +2780,8 @@ async function openViewWhatsappForPurchase(purchaseId){
       return;
     }
 
-    const message = viewBuildWhatsappMessage(purchase.pickup_point, purchase.price);
+    const name = (customer?.name || purchase.customer_name || "").trim();
+    const message = viewBuildWhatsappMessage(purchase.pickup_point, purchase.price, name);
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     window.open(url, "_blank");
   } catch (err){
