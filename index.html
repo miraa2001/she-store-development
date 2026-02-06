@@ -21,13 +21,14 @@
     .muted{color:var(--color-muted);font-size:13px}
 
     .menuBtn{
-      border:1px solid var(--color-border);background:var(--color-card);padding:10px 12px;border-radius:10px;cursor:pointer
+      border:1px solid var(--color-border);background:var(--color-card);padding:10px 12px;border-radius:var(--radius-lg);cursor:pointer
     }
     .tabs{
-      display:flex;gap:6px;background:#111;padding:6px;border-radius:12px;margin:8px 0 14px
+      display:flex;gap:6px;background:var(--color-card);padding:6px;border-radius:var(--radius-lg);
+      margin:8px 0 14px;border:1px solid var(--color-border)
     }
     .tabLink{
-      border:none;background:#222;color:#eaeaea;padding:10px 16px;border-radius:10px;
+      border:none;background:transparent;color:var(--color-muted);padding:10px 16px;border-radius:var(--radius-lg);
       cursor:pointer;font-weight:600;font-family:inherit;text-decoration:none;display:inline-block
     }
     .tabLink.active{background:var(--brand);color:#fff}
@@ -36,15 +37,15 @@
     /* ===== View panel ===== */
     .viewNav{display:flex;justify-content:space-between;align-items:center;margin:12px 0;gap:10px}
     .viewPanel .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
-    .viewPanel .thumbs img{width:96px;height:96px;object-fit:cover;border-radius:12px;border:1px solid var(--color-border);cursor:pointer}
+    .viewPanel .thumbs img{width:96px;height:96px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border);cursor:pointer}
     .viewContent{font-size:18px;line-height:1.7}
     .viewContent b{font-size:19px}
     .listTable{width:100%;border-collapse:collapse;margin-top:12px}
     .listTable th,.listTable td{border-bottom:1px solid var(--color-border);padding:10px;text-align:right;vertical-align:top}
     .listTable th{color:var(--color-muted);font-size:13px}
     .listThumbs{display:flex;gap:6px;flex-wrap:wrap}
-    .listThumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--color-border);cursor:pointer}
-    #viewListView{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+    .listThumbs img{width:64px;height:64px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border);cursor:pointer}
+    #viewListView{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:var(--space-2)}
     #viewListView .listTable{min-width:720px}
     .toggleRow{display:flex;gap:10px;align-items:center;margin-top:8px}
     .toggleRow input{width:18px;height:18px}
@@ -55,7 +56,7 @@
     .waBtn:hover{border-color:var(--color-text)}
     .bagField{display:inline-flex;flex-direction:column;gap:6px}
     .bagDisplay{display:flex;align-items:center;gap:8px}
-    .bagValue{display:inline-flex;align-items:center;border:1px solid var(--color-border);border-radius:10px;padding:8px 10px;background:var(--color-card);font-size:14px}
+    .bagValue{display:inline-flex;align-items:center;border:1px solid var(--color-border);border-radius:var(--radius-md);padding:8px 10px;background:var(--color-card);font-size:14px}
     .bagEditor{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
     .bagActions{display:flex;gap:8px;align-items:center}
     .bagMsg{font-size:13px;color:#2e7d32}
@@ -66,7 +67,7 @@
       display:none;z-index:50;pointer-events:none
     }
     .sidebar{
-      position:fixed;top:0;right:0;height:100vh;width:min(280px, 82vw);
+      position:fixed;top:0;right:0;height:100vh;width:min(220px, 82vw);
       background:var(--color-card);border-left:1px solid var(--color-border);z-index:60;
       transform:translateX(100%);transition:transform .2s ease;
       display:flex;flex-direction:column;
@@ -89,7 +90,7 @@
       display:block;
       text-align:right;
       border:1px solid var(--color-border);background:var(--color-card);
-      padding:10px 12px;border-radius:10px;cursor:pointer;
+      padding:10px 12px;border-radius:var(--radius-md);cursor:pointer;
       margin-top:8px;
       font-family:inherit;
       font-size:14px;
@@ -109,7 +110,7 @@
       padding:8px 6px;min-height:200px
     }
     .listCollapsed .miniBtn{
-      width:44px;height:44px;border-radius:14px;border:1px solid var(--color-border);
+      width:44px;height:44px;border-radius:var(--radius-md);border:1px solid var(--color-border);
       background:var(--color-card);display:flex;align-items:center;justify-content:center;
       font-size:20px;cursor:pointer
     }
@@ -132,7 +133,7 @@
     .actionCell{position:relative}
     .actionMenu{
       position:absolute;inset-inline-end:0;top:36px;min-width:160px;
-      background:var(--color-card);border:1px solid var(--color-border);border-radius:12px;
+      background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-md);
       box-shadow:0 8px 16px rgba(0,0,0,.08);padding:6px;display:none;z-index:20
     }
     .actionMenu.open{display:block}
@@ -143,12 +144,12 @@
     .actionMenu button:hover{background:var(--table-row-hover)}
     .actionMenu .danger{color:#b00020}
 
-    .card{background:var(--color-card);border:1px solid var(--color-border);border-radius:14px;padding:12px}
-    .btn{border:1px solid var(--color-border);background:var(--color-card);padding:10px 12px;border-radius:10px;cursor:pointer}
+    .card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:12px}
+    .btn{border:1px solid var(--color-border);background:var(--color-card);padding:10px 14px;border-radius:var(--radius-lg);cursor:pointer}
     .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
     .btn.danger{border-color:#f2c2c2;color:#b00020}
     .dangerText{color:#b00020;font-size:13px}
-    input, select, textarea{padding:10px;border:1px solid var(--color-border);border-radius:10px;font-family:inherit}
+    input, select, textarea{padding:10px;border:1px solid var(--color-border);border-radius:var(--radius-md);font-family:inherit}
     input[readonly]{background:#f4f4f4;color:var(--color-muted)}
     textarea{width:100%;min-height:84px;resize:vertical;box-sizing:border-box}
     .tableWrap{
@@ -162,7 +163,7 @@
       overflow-x:auto;overflow-y:hidden;
       max-width:100%;width:100%;
       height:12px;margin:0 0 6px;
-      border:1px solid var(--color-border);border-radius:10px;
+      border:1px solid var(--color-border);border-radius:var(--radius-md);
       background:var(--color-bg)
     }
     .tableScrollTop .tableScrollInner{height:1px}
@@ -174,8 +175,8 @@
     td a{word-break:break-all;overflow-wrap:anywhere}
     th{color:var(--color-muted);font-size:13px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .orderItem{border:1px solid var(--color-border);border-radius:12px;padding:10px;cursor:pointer;display:flex;justify-content:space-between}
-    .orderItem.active{border-color:#111}
+    .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
+    .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
     .thumbs img{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border);cursor:pointer}
     .editThumb img{cursor:pointer}
     #lightbox{
@@ -204,35 +205,35 @@
       .lightboxCount{top:12px;left:12px;font-size:12px}
     }
 
-    .pill{display:inline-block;padding:4px 8px;border:1px solid var(--color-border);border-radius:999px;font-size:12px}
-    .countPill{background:#f8fafc;color:#374151;font-weight:600;min-width:44px;text-align:center}
+    .pill{display:inline-block;padding:6px 10px;border:1px solid var(--color-border);border-radius:999px;font-size:12px;background:#f1f4f2;color:var(--color-text)}
+    .countPill{background:#f1f4f2;color:var(--color-text);font-weight:600;min-width:44px;text-align:center}
     .searchBox{width:100%;max-width:420px}
-    .searchResults{margin-top:8px;border:1px solid var(--color-border);border-radius:12px;overflow:hidden}
+    .searchResults{margin-top:8px;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden}
     .searchResults button{
       width:100%;text-align:right;background:var(--color-card);border:none;padding:10px;cursor:pointer;border-bottom:1px solid var(--color-border);
       font-family:inherit
     }
     .searchResults button:last-child{border-bottom:none}
     .searchResults button:hover{background:var(--color-bg)}
-    .highlight{background:#fff8d6;padding:6px 8px;border-radius:10px}
+    .highlight{background:#fff8d6;padding:6px 8px;border-radius:var(--radius-md)}
     tr.highlight td{background:#fff8d6}
 
     .dropZone{
-      border:2px dashed var(--color-border);border-radius:14px;padding:12px;background:var(--color-card);outline:none;
+      border:2px dashed var(--color-border);border-radius:var(--radius-lg);padding:12px;background:var(--color-card);outline:none;
     }
     .dropZone.dragover{border-color:#111;background:#f4f4f4}
     .preview{display:flex;gap:8px;flex-wrap:wrap}
     .preview .thumb{
-      width:70px;height:70px;border-radius:12px;border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg);
+      width:70px;height:70px;border-radius:var(--radius-md);border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg);
     }
     .preview .thumb img{width:100%;height:100%;object-fit:cover;display:block}
     .preview .thumb button{
       position:absolute;top:6px;left:6px;border:none;background:rgba(0,0,0,.55);color:#fff;
-      width:26px;height:26px;border-radius:10px;cursor:pointer;
+      width:26px;height:26px;border-radius:var(--radius-sm);cursor:pointer;
     }
     .autoWrap{position:relative;display:flex;align-items:center;gap:6px;flex:1;min-width:220px}
     .autoList{
-      position:absolute;top:100%;right:0;left:0;background:var(--color-card);border:1px solid var(--color-border);border-radius:12px;
+      position:absolute;top:100%;right:0;left:0;background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-md);
       box-shadow:0 6px 18px rgba(0,0,0,.08);z-index:20;max-height:220px;overflow:auto;display:none
     }
     .autoList button{
@@ -244,26 +245,26 @@
     .autoAdd{color:#0f5adb;font-weight:600}
 
     .inlineEditRow td{ background:#fcfcfc; }
-    .inlineEditBox{border:1px solid var(--color-border);border-radius:12px;padding:10px}
+    .inlineEditBox{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px}
     .editImgsRow{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
-    .editThumb{width:78px;height:78px;border-radius:12px;border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg)}
+    .editThumb{width:78px;height:78px;border-radius:var(--radius-md);border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg)}
     .editThumb img{width:100%;height:100%;object-fit:cover;display:block}
     .editThumb button{
       position:absolute;top:6px;left:6px;border:none;background:rgba(0,0,0,.55);color:#fff;
-      width:26px;height:26px;border-radius:10px;cursor:pointer
+      width:26px;height:26px;border-radius:var(--radius-sm);cursor:pointer
     }
     .editThumb.removing{opacity:.35;filter:grayscale(1)}
-    .miniDropZone{border:2px dashed var(--color-border);border-radius:12px;padding:10px;background:var(--color-card);outline:none;flex:1;min-width:240px}
+    .miniDropZone{border:2px dashed var(--color-border);border-radius:var(--radius-md);padding:10px;background:var(--color-card);outline:none;flex:1;min-width:240px}
     .miniDropZone.dragover{border-color:#111;background:#f4f4f4}
     .miniPreview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-    .miniPreview .thumb{width:70px;height:70px;border-radius:12px;border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg)}
+    .miniPreview .thumb{width:70px;height:70px;border-radius:var(--radius-md);border:1px solid var(--color-border);overflow:hidden;position:relative;background:var(--color-bg)}
     .miniPreview .thumb img{width:100%;height:100%;object-fit:cover}
     .miniPreview .thumb button{
-      position:absolute;top:6px;left:6px;border:none;background:rgba(0,0,0,.55);color:#fff;width:26px;height:26px;border-radius:10px;cursor:pointer
+      position:absolute;top:6px;left:6px;border:none;background:rgba(0,0,0,.55);color:#fff;width:26px;height:26px;border-radius:var(--radius-sm);cursor:pointer
     }
   </style>
 </head>
-<body>
+<body data-page="index">
 
 <div class="sidebarOverlay" id="sidebarOverlay"></div>
 <aside class="sidebar" id="sidebar">
