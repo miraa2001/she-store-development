@@ -2677,11 +2677,28 @@ function viewCanShowWhatsapp(){
 }
 
 function viewNormalizePhone(value){
-  return String(value || "").replace(/\\s+/g, "").replace(/^\\+/, "");
+  const s = (value || "")
+    .replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
+    .replace(/[۰-۹]/g, d => String("۰۱۲۳۴۵۶۷۸۹".indexOf(d)));
+  return s.replace(/[^\d]/g, "");
+}
+
+function viewToWhatsappPhone(value){
+  let phone = viewNormalizePhone(value);
+  if(!phone) return "";
+  if(phone.startsWith("00")) phone = phone.slice(2);
+  if(phone.startsWith("970") || phone.startsWith("972")) return phone;
+  if(phone.startsWith("0")){
+    const local = phone.slice(1);
+    if(local.startsWith("59") || local.startsWith("56")) return `970${local}`;
+    if(local.startsWith("5")) return `972${local}`;
+  }
+  return phone;
 }
 
 function viewIsValidPhone(value){
-  return /^(970|972)\\d{7,9}$/.test(value);
+  const phone = viewToWhatsappPhone(value);
+  return /^(970|972)\d{8,9}$/.test(phone);
 }
 
 function viewBuildWhatsappMessage(pickupPoint, price){
@@ -2755,7 +2772,7 @@ async function openViewWhatsappForPurchase(purchaseId){
       return;
     }
 
-    const phone = viewNormalizePhone(customer.phone);
+    const phone = viewToWhatsappPhone(customer.phone);
     if(!viewIsValidPhone(phone)){
       alert("رقم الهاتف غير صالح.");
       return;
@@ -3337,3 +3354,4 @@ function applyCustomerPrefill(){
 </script>
 </body>
 </html>
+
