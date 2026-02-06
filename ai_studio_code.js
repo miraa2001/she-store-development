@@ -8,14 +8,9 @@ const reasoningEl = document.getElementById("reasoning");
 const itemsEl = document.getElementById("items");
 const totalEl = document.getElementById("total");
 const ambiguitiesEl = document.getElementById("ambiguities");
+const apiKeyInput = document.getElementById("apiKey");
 
 const MODEL_ID = "gemini-3-flash-preview";
-
-if (!globalThis.process) {
-  globalThis.process = { env: {} };
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const responseSchema = {
   type: Type.OBJECT,
@@ -49,6 +44,10 @@ const prompt = [
   "Reasoning: Explain why you chose certain numbers and ignored others.",
   "Return JSON that matches the provided schema.",
 ].join("\n");
+
+const getApiKey = () => apiKeyInput?.value?.trim() || "";
+
+const createClient = (apiKey) => new GoogleGenAI({ apiKey });
 
 const setStatus = (message, isError = false) => {
   statusEl.textContent = message || "";
@@ -127,8 +126,9 @@ const analyzeImage = async () => {
     setStatus("Please select an image to analyze.", true);
     return;
   }
-  if (!process.env.API_KEY) {
-    setStatus("Missing API key. Set process.env.API_KEY before loading this page.", true);
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    setStatus("Please enter your Gemini API key.", true);
     return;
   }
 
@@ -137,6 +137,7 @@ const analyzeImage = async () => {
   setStatus("Analyzing image...", false);
 
   try {
+    const ai = createClient(apiKey);
     const base64 = await fileToBase64(file);
     const response = await ai.models.generateContent({
       model: MODEL_ID,
