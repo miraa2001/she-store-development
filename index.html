@@ -1514,6 +1514,44 @@ function addFiles(files){
   updatePreview();
 }
 
+function formatUploadErrors(errors){
+  if(!errors.length) return "";
+  return errors.map(e=>`- ${e.file}: ${e.message}`).join("\\n");
+}
+
+async function uploadImagesForPurchase({ files, orderId, purchaseId, onProgress }){
+  const limit = 3;
+  const uploadedPaths = [];
+  const errors = [];
+  let done = 0;
+
+  const uploadOne = async (file)=>{
+    const rand = Math.random().toString(36).slice(2,8);
+    const safeName = `${Date.now()}-${rand}-${file.name}`.replace(/\\s+/g,"_");
+    const path = `${orderId}/${purchaseId}/${safeName}`;
+    const { error: upErr } = await sb.storage.from(BUCKET).upload(path, file);
+    if(upErr) throw new Error(upErr.message || "Upload failed");
+    return path;
+  };
+
+  for(let i=0;i<files.length;i+=limit){
+    const batch = files.slice(i, i + limit);
+    const results = await Promise.allSettled(batch.map(uploadOne));
+    results.forEach((res, idx)=>{
+      done += 1;
+      onProgress?.(done, files.length);
+      if(res.status === "fulfilled"){
+        uploadedPaths.push(res.value);
+      }else{
+        const file = batch[idx];
+        errors.push({ file: file?.name || `image-${i + idx + 1}`, message: res.reason?.message || "Upload failed" });
+      }
+    });
+  }
+
+  return { uploadedPaths, errors };
+}
+
 function setAddStatus(msg, isError){
   if(!addStatus) return;
   addStatus.textContent = msg || "";
@@ -2441,21 +2479,37 @@ async function saveInlineEdit(purchaseId){
       if(delErr) console.error(delErr);
     }
 
-    for(const f of state.newFiles){
-      const safeName = `${Date.now()}-${f.name}`.replace(/\s+/g,"_");
-      const path = `${activeOrder.id}/${purchaseId}/${safeName}`;
+    let uploadErrors = [];
+    if(state.newFiles.length){
+      msgEl.textContent = `جاري رفع الصور 0/${state.newFiles.length}...`;
+      const result = await uploadImagesForPurchase({
+        files: state.newFiles,
+        orderId: activeOrder.id,
+        purchaseId,
+        onProgress: (done, total)=>{ msgEl.textContent = `جاري رفع الصور ${done}/${total}...`; }
+      });
+      uploadErrors = result.errors.slice();
 
-      const { error: upImgErr } = await sb.storage.from(BUCKET).upload(path, f);
-      if(upImgErr){ console.error(upImgErr); continue; }
-
-      const { error: metaErr } = await sb.from("purchase_images").insert({ purchase_id: purchaseId, storage_path: path });
-      if(metaErr) console.error(metaErr);
+      if(result.uploadedPaths.length){
+        const rows = result.uploadedPaths.map(path=>({ purchase_id: purchaseId, storage_path: path }));
+        const { error: metaErr } = await sb.from("purchase_images").insert(rows);
+        if(metaErr){
+          console.error(metaErr);
+          uploadErrors.push({ file: "purchase_images", message: "فشل حفظ بيانات الصور." });
+        }
+      }
     }
 
     editImageState.delete(purchaseId);
   }
 
-  msgEl.textContent="تم ✅";
+  if(uploadErrors.length){
+    const details = formatUploadErrors(uploadErrors);
+    alert(`تم الحفظ لكن حدثت أخطاء في الصور:\\n${details}`);
+    msgEl.textContent="تم✅ مع أخطاء في الصور";
+  }else{
+    msgEl.textContent="تم ✅";
+  }
   await loadPurchases();
   closeAllEditRows();
 }
@@ -2860,14 +2914,25 @@ addBtn.onclick = async ()=>{
       if(linkErr) console.error(linkErr);
     }
 
-    for(const f of selectedImages){
-      const safeName = `${Date.now()}-${f.name}`.replace(/\s+/g,"_");
-      const path = `${activeOrder.id}/${p.id}/${safeName}`;
+    let uploadErrors = [];
+    if(selectedImages.length){
+      setAddStatus(`جاري رفع الصور 0/${selectedImages.length}...`, false);
+      const result = await uploadImagesForPurchase({
+        files: selectedImages,
+        orderId: activeOrder.id,
+        purchaseId: p.id,
+        onProgress: (done, total)=> setAddStatus(`جاري رفع الصور ${done}/${total}...`, false)
+      });
+      uploadErrors = result.errors.slice();
 
-      const { error: upErr } = await sb.storage.from(BUCKET).upload(path, f);
-      if(upErr){ console.error(upErr); alert("فشل رفع صورة."); continue; }
-
-      await sb.from("purchase_images").insert({ purchase_id: p.id, storage_path: path });
+      if(result.uploadedPaths.length){
+        const rows = result.uploadedPaths.map(path=>({ purchase_id: p.id, storage_path: path }));
+        const { error: metaErr } = await sb.from("purchase_images").insert(rows);
+        if(metaErr){
+          console.error(metaErr);
+          uploadErrors.push({ file: "purchase_images", message: "فشل حفظ بيانات الصور." });
+        }
+      }
     }
 
     clearCustomerSelection(customer, customerClearBtn);
@@ -2881,8 +2946,14 @@ addBtn.onclick = async ()=>{
     clearDuplicateWarning();
 
     await loadPurchases();
-    setAddStatus("تم✅", false);
-    setTimeout(()=>{ if(addStatus && addStatus.textContent==="تم✅") addStatus.textContent=""; }, 2000);
+    if(uploadErrors.length){
+      const details = formatUploadErrors(uploadErrors);
+      alert(`تمت الإضافة لكن حدثت أخطاء في الصور:\\n${details}`);
+      setAddStatus("تم✅ مع أخطاء في الصور", true);
+    }else{
+      setAddStatus("تم✅", false);
+      setTimeout(()=>{ if(addStatus && addStatus.textContent==="تم✅") addStatus.textContent=""; }, 2000);
+    }
   }catch(err){
     console.error(err);
     alert("فشل إضافة المشترى");
