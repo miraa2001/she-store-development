@@ -4,9 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>AI Cart Total Tester</title>
-  <link rel="stylesheet" href="assets/tokens.css">
-  <link rel="stylesheet" href="assets/base.css">
-  <script src="assets/ui.js" defer></script>
   <style>
     :root{
       --bg:#f6f7fb;
@@ -16,7 +13,7 @@
       --muted:#6b7280;
       --accent:#2b6cb0;
       --accent-2:#2563eb;
-      --danger:#c2410c;
+      --danger:#b91c1c;
       --success:#059669;
     }
     *{box-sizing:border-box}
@@ -92,20 +89,42 @@
       background:#f8fafc;color:#374151;
     }
     .warn{color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;padding:6px 10px;border-radius:8px}
+    .err{color:var(--danger)}
     .resultsHeader{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
-    .snippet{color:#6b7280}
-    .conf{color:#0f766e}
-    .ignored{color:#9ca3af;text-decoration:line-through}
-    .err{color:#b91c1c}
-    .controls{display:flex;gap:10px;flex-wrap:wrap}
+    .controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .space{height:6px}
     .inline{display:inline-flex;align-items:center;gap:6px}
     input[type="checkbox"]{transform:scale(1.1)}
+    .field{display:flex;flex-direction:column;gap:6px;max-width:520px}
+    .field label{font-weight:600}
+    .field input[type="password"]{
+      width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:14px;
+      background:#fff;color:var(--text);
+    }
+    .debugBlock{
+      margin-top:12px;border:1px dashed var(--border);border-radius:10px;padding:10px;background:#fbfbfd;
+      max-height:260px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;
+      font-size:12px;white-space:pre-wrap;
+    }
+    .hidden{display:none}
   </style>
 </head>
 <body>
   <header>AI Cart Total Tester</header>
   <div class="wrap">
+    <section class="card">
+      <div class="field">
+        <label for="apiKey">Gemini API Key</label>
+        <input id="apiKey" type="password" placeholder="Paste your Gemini API key">
+      </div>
+      <div class="space"></div>
+      <label class="inline">
+        <input id="rememberKey" type="checkbox">
+        Remember in this browser
+      </label>
+      <div class="muted small">Your key is stored locally only when this is checked.</div>
+    </section>
+
     <section class="card">
       <div id="dropzone" class="dropzone">
         <div>Paste images (Ctrl+V), drag &amp; drop, or choose files</div>
@@ -124,16 +143,11 @@
       <div class="controls">
         <button id="calcBtn" class="primary">Calculate Total</button>
         <button id="clearBtn">Clear</button>
-        <label class="inline">
-          <input id="preprocessToggle" type="checkbox">
-          Use preprocessing (OpenCV threshold)
-        </label>
+        <span class="pill">Max 6 images per run</span>
       </div>
       <div class="space"></div>
       <div class="statusLine muted" id="statusText"></div>
       <div class="progressWrap"><div id="progressBar" class="progressBar"></div></div>
-      <div class="space"></div>
-      <div class="muted small" id="opencvStatus"></div>
     </section>
 
     <section class="card">
@@ -141,16 +155,22 @@
         <div class="total">Total: <span id="totalValue">0.00</span> ILS</div>
         <div class="row">
           <button id="copyBtn">Copy total</button>
-          <span class="warn small">OCR is imperfect — verify.</span>
+          <label class="inline small">
+            <input id="debugToggle" type="checkbox">
+            Show raw model response (debug)
+          </label>
         </div>
       </div>
       <div class="space"></div>
+      <div class="muted small">Model total: <span id="modelTotal">—</span> ILS</div>
+      <div class="space"></div>
+      <div id="warningsWrap"></div>
+      <div class="space"></div>
       <div id="resultsWrap"></div>
+      <div id="debugWrap" class="debugBlock hidden"></div>
     </section>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <script src="https://docs.opencv.org/4.x/opencv.js" async></script>
   <script>
     const dropzone = document.getElementById("dropzone");
     const fileInput = document.getElementById("fileInput");
@@ -158,42 +178,93 @@
     const imageCount = document.getElementById("imageCount");
     const calcBtn = document.getElementById("calcBtn");
     const clearBtn = document.getElementById("clearBtn");
-    const preprocessToggle = document.getElementById("preprocessToggle");
     const statusText = document.getElementById("statusText");
     const progressBar = document.getElementById("progressBar");
     const resultsWrap = document.getElementById("resultsWrap");
     const totalValue = document.getElementById("totalValue");
     const copyBtn = document.getElementById("copyBtn");
-    const opencvStatus = document.getElementById("opencvStatus");
+    const apiKeyInput = document.getElementById("apiKey");
+    const rememberKey = document.getElementById("rememberKey");
+    const warningsWrap = document.getElementById("warningsWrap");
+    const debugToggle = document.getElementById("debugToggle");
+    const debugWrap = document.getElementById("debugWrap");
+    const modelTotal = document.getElementById("modelTotal");
 
+    const MAX_IMAGES = 6;
+    const STORAGE_KEY = "geminiApiKey";
     let images = [];
-    let worker = null;
-    let ocrRunning = false;
-    let opencvReady = false;
+    let running = false;
+    let currentItems = [];
+    let lastRawResponse = "";
 
-    function updateOpenCVStatus(){
-      if(opencvReady){
-        opencvStatus.textContent = "OpenCV loaded. Preprocessing is available.";
-        preprocessToggle.checked = true;
-      }else{
-        opencvStatus.textContent = "OpenCV not ready. Preprocessing will be disabled.";
-        preprocessToggle.checked = false;
+    const PROMPT_BASE = [
+      "These images are SHEIN cart/list screenshots.",
+      "Many numbers appear that are NOT prices (time, battery, cart count, discounts, percentages).",
+      "Extract ONLY the current item prices.",
+      "Ignore: percentages (e.g. -25%), old/strikethrough prices, time, battery, cart badge numbers.",
+      "If both old and sale prices appear for an item, choose the LOWER price.",
+      "Currency is ILS (₪).",
+      "Return STRICT JSON ONLY. No markdown, no explanation.",
+      "Required JSON schema:",
+      "{",
+      "  \"currency\": \"ILS\",",
+      "  \"items\": [",
+      "    { \"name\": \"string\", \"price\": 0.0, \"notes\": \"optional\" }",
+      "  ],",
+      "  \"total\": 0.0,",
+      "  \"warnings\": [\"string\"]",
+      "}"
+    ].join("\n");
+
+    function buildPrompt(isStrict){
+      if(isStrict){
+        return PROMPT_BASE + "\nReturn valid JSON ONLY. No text outside JSON.";
       }
-      preprocessToggle.disabled = !opencvReady;
+      return PROMPT_BASE;
     }
 
-    if(window.cv){
-      opencvReady = true;
-      updateOpenCVStatus();
-    }else{
-      window.Module = {
-        onRuntimeInitialized() {
-          opencvReady = true;
-          updateOpenCVStatus();
-        }
-      };
-      updateOpenCVStatus();
+    function setStatus(message, isError){
+      statusText.textContent = message || "";
+      statusText.classList.toggle("err", Boolean(isError));
+      statusText.classList.toggle("muted", !isError);
     }
+
+    function updateProgress(pct){
+      progressBar.style.width = `${Math.max(0, Math.min(100, pct))}%`;
+    }
+
+    function loadSavedKey(){
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        apiKeyInput.value = saved;
+        rememberKey.checked = true;
+      }
+    }
+
+    function maybePersistKey(){
+      if(rememberKey.checked){
+        const val = apiKeyInput.value.trim();
+        if(val){
+          localStorage.setItem(STORAGE_KEY, val);
+        }
+      }
+    }
+
+    rememberKey.addEventListener("change", () => {
+      if(!rememberKey.checked){
+        localStorage.removeItem(STORAGE_KEY);
+      }else{
+        maybePersistKey();
+      }
+    });
+
+    apiKeyInput.addEventListener("input", () => {
+      if(rememberKey.checked){
+        maybePersistKey();
+      }
+    });
+
+    loadSavedKey();
 
     function loadImageFromUrl(url){
       return new Promise((resolve, reject) => {
@@ -203,18 +274,6 @@
         img.onerror = reject;
         img.src = url;
       });
-    }
-
-    async function buildFullCanvasFromUrl(url){
-      const img = await loadImageFromUrl(url);
-      const width = img.naturalWidth || img.width;
-      const height = img.naturalHeight || img.height;
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0);
-      return canvas;
     }
 
     async function buildRoiCanvasFromFile(file, url){
@@ -234,7 +293,7 @@
 
       const cropTop = Math.round(height * 0.14);
       const cropBottom = Math.round(height * 0.14);
-      const cropLeft = Math.round(width * 0.00);
+      const cropLeft = 0;
       const cropRight = Math.round(width * 0.22);
       const roiWidth = Math.max(1, width - cropLeft - cropRight);
       const roiHeight = Math.max(1, height - cropTop - cropBottom);
@@ -307,13 +366,13 @@
           roiWrap.className = "roiWrap";
           const roiLabel = document.createElement("div");
           roiLabel.className = "roiLabel";
-          roiLabel.textContent = "OCR crop";
+          roiLabel.textContent = "ROI crop";
           const roiBox = document.createElement("div");
           roiBox.className = "roiBox";
           const roiPreview = document.createElement("img");
           roiPreview.className = "roiPreview";
           roiPreview.src = img.roiUrl;
-          roiPreview.title = "OCR ROI preview";
+          roiPreview.title = "Gemini ROI preview";
           roiBox.appendChild(roiPreview);
           roiWrap.appendChild(roiLabel);
           roiWrap.appendChild(roiBox);
@@ -336,146 +395,162 @@
     }
 
     function resetUI(){
-      statusText.textContent = "";
-      progressBar.style.width = "0%";
+      setStatus("", false);
+      updateProgress(0);
       resultsWrap.innerHTML = "";
+      warningsWrap.innerHTML = "";
       totalValue.textContent = "0.00";
+      modelTotal.textContent = "—";
+      debugWrap.textContent = "";
+      lastRawResponse = "";
     }
 
-    async function ensureWorker(){
-      if(worker) return worker;
-      worker = await Tesseract.createWorker("eng");
-      return worker;
+    function canvasToJpegBase64(canvas){
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      return dataUrl.split(",")[1] || "";
     }
 
-    async function preprocessCanvasOpenCV(canvas){
-      if(!opencvReady) return canvas;
+    function extractModelText(apiResponse){
+      const parts = apiResponse?.candidates?.[0]?.content?.parts || [];
+      const text = parts.map(part => part.text).filter(Boolean).join("").trim();
+      return text;
+    }
+
+    function extractFirstJsonBlock(text){
+      const start = text.indexOf("{");
+      if(start === -1) return null;
+      let depth = 0;
+      for(let i = start; i < text.length; i++){
+        const ch = text[i];
+        if(ch === "{") depth += 1;
+        if(ch === "}"){
+          depth -= 1;
+          if(depth === 0){
+            return text.slice(start, i + 1);
+          }
+        }
+      }
+      return null;
+    }
+
+    function tryParseJson(text){
+      if(!text) return { ok:false, error: "Empty response" };
       try{
-        const src = cv.imread(canvas);
-        const gray = new cv.Mat();
-        cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-        const dst = new cv.Mat();
-        cv.threshold(gray, dst, 0, 255, cv.THRESH_BINARY + cv.THRESH_OTSU);
-        const out = document.createElement("canvas");
-        out.width = canvas.width;
-        out.height = canvas.height;
-        cv.imshow(out, dst);
-        src.delete(); gray.delete(); dst.delete();
-        return out;
+        return { ok:true, data: JSON.parse(text) };
       }catch(err){
-        console.error(err);
-        return canvas;
+        const block = extractFirstJsonBlock(text);
+        if(block){
+          try{
+            return { ok:true, data: JSON.parse(block) };
+          }catch(parseErr){
+            return { ok:false, error: parseErr?.message || "Invalid JSON" };
+          }
+        }
+        return { ok:false, error: err?.message || "Invalid JSON" };
       }
     }
 
-    async function ocrCanvas(canvas){
-      const w = await ensureWorker();
-      const { data } = await w.recognize(canvas);
-      return data.text || "";
-    }
-
-    function normalizePriceToken(token){
-      let s = token.replace(/[,]/g, ".").replace(/[^\d.]/g, "");
-      if(!s) return null;
-      if(s.split(".").length > 2) return null;
-      const num = Number(s);
-      if(!isFinite(num)) return null;
-      return num;
-    }
-
-    function extractPricesFromText(text, imageIndex){
-      const lines = text.split(/\n+/).map(l => l.trim()).filter(Boolean);
-      const results = [];
-      const seen = new Set();
-
-      const currencyLine = /₪|ILS/i;
-      const patterns = [
-        /₪\s*([0-9]+[.,][0-9]{1,2})/g,
-        /([0-9]+[.,][0-9]{1,2})\s*₪/g,
-        /\bILS\s*([0-9]+[.,][0-9]{1,2})/gi,
-        /([0-9]+[.,][0-9]{1,2})\s*ILS\b/gi
-      ];
-
-      lines.forEach(line => {
-        if(!currencyLine.test(line)) return;
-        if(/%/.test(line)) return;
-        if(/:/.test(line)) return;
-
-        const matches = [];
-        patterns.forEach((re) => {
-          re.lastIndex = 0;
-          let match;
-          while((match = re.exec(line)) !== null){
-            const val = normalizePriceToken(match[1]);
-            if(val === null) continue;
-            matches.push({ value: val, raw: match[0] });
-          }
-        });
-
-        if(!matches.length) return;
-
-        matches.forEach(match => {
-          const key = `${imageIndex}:${match.value.toFixed(2)}:${line}`;
-          if(seen.has(key)) return;
-          seen.add(key);
-          results.push({
-            value: match.value,
-            currency: "ILS",
-            imageIndex,
-            raw: line,
-            confidence: 0.65
-          });
-        });
+    async function callGemini({ apiKey, imageParts, strict }){
+      const parts = [{ text: buildPrompt(strict) }, ...imageParts];
+      const body = {
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          temperature: 0.1,
+          maxOutputTokens: 1024
+        }
+      };
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
       });
-
-      return results;
+      const payload = await res.json().catch(() => null);
+      if(!res.ok){
+        const msg = payload?.error?.message || `Gemini request failed (${res.status})`;
+        throw new Error(msg);
+      }
+      const text = extractModelText(payload);
+      if(!text){
+        throw new Error("Gemini returned an empty response.");
+      }
+      return { text, payload };
     }
 
-    function buildResultsUI(items){
-      if(!items.length){
-        resultsWrap.innerHTML = "<div class='muted'>No prices detected.</div>";
+    function renderWarnings(warnings){
+      warningsWrap.innerHTML = "";
+      if(!Array.isArray(warnings) || !warnings.length) return;
+      warnings.forEach(warn => {
+        const div = document.createElement("div");
+        div.className = "warn small";
+        div.textContent = warn;
+        warningsWrap.appendChild(div);
+      });
+    }
+
+    function renderResults(data){
+      const items = Array.isArray(data?.items) ? data.items : [];
+      currentItems = items.map(item => ({
+        name: typeof item?.name === "string" ? item.name : "",
+        price: Number(item?.price),
+        notes: typeof item?.notes === "string" ? item.notes : ""
+      }));
+
+      if(Number.isFinite(Number(data?.total))){
+        modelTotal.textContent = Number(data.total).toFixed(2);
+      }else{
+        modelTotal.textContent = "—";
+      }
+
+      renderWarnings(Array.isArray(data?.warnings) ? data.warnings : []);
+
+      if(!currentItems.length){
+        resultsWrap.innerHTML = "<div class='muted'>No items detected.</div>";
+        totalValue.textContent = "0.00";
         return;
       }
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Include</th>
-            <th>Value</th>
-            <th>Currency</th>
-            <th>Image</th>
-            <th>Snippet</th>
-            <th>Confidence</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-      const tbody = table.querySelector("tbody");
 
-      items.forEach((item, idx) => {
+      const table = document.createElement("table");
+      const thead = document.createElement("thead");
+      thead.innerHTML = `
+        <tr>
+          <th>Include</th>
+          <th>Item</th>
+          <th>Price (ILS)</th>
+          <th>Notes</th>
+        </tr>
+      `;
+      table.appendChild(thead);
+      const tbody = document.createElement("tbody");
+
+      currentItems.forEach((item, idx) => {
         const tr = document.createElement("tr");
+        const includeCell = document.createElement("td");
         const cb = document.createElement("input");
         cb.type = "checkbox";
         cb.checked = true;
-        cb.dataset.index = idx;
+        cb.dataset.index = String(idx);
         cb.addEventListener("change", computeTotal);
+        includeCell.appendChild(cb);
 
-        const ignoredText = item.ignoredOldPrices?.length
-          ? `<div class="small ignored">ignored: ${item.ignoredOldPrices.join(", ")}</div>`
-          : "";
+        const nameCell = document.createElement("td");
+        nameCell.textContent = item.name || `Item ${idx + 1}`;
 
-        tr.innerHTML = `
-          <td></td>
-          <td>${item.value.toFixed(2)}</td>
-          <td>${item.currency}</td>
-          <td>#${item.imageIndex + 1}</td>
-          <td class="snippet">${item.raw}${ignoredText}</td>
-          <td class="conf">${Math.round(item.confidence * 100)}%</td>
-        `;
-        tr.children[0].appendChild(cb);
+        const priceCell = document.createElement("td");
+        const price = Number(item.price);
+        priceCell.textContent = Number.isFinite(price) ? price.toFixed(2) : "0.00";
+
+        const notesCell = document.createElement("td");
+        notesCell.textContent = item.notes || "";
+
+        tr.appendChild(includeCell);
+        tr.appendChild(nameCell);
+        tr.appendChild(priceCell);
+        tr.appendChild(notesCell);
         tbody.appendChild(tr);
       });
 
+      table.appendChild(tbody);
       resultsWrap.innerHTML = "";
       resultsWrap.appendChild(table);
       computeTotal();
@@ -486,9 +561,10 @@
       let sum = 0;
       checks.forEach(cb => {
         if(cb.checked){
-          const row = cb.closest("tr");
-          const val = Number(row.children[1].textContent);
-          if(isFinite(val)) sum += val;
+          const idx = Number(cb.dataset.index);
+          const item = currentItems[idx];
+          const val = Number(item?.price);
+          if(Number.isFinite(val)) sum += val;
         }
       });
       totalValue.textContent = sum.toFixed(2);
@@ -496,68 +572,87 @@
     }
 
     async function processImages(){
-      if(ocrRunning) return;
+      if(running) return;
+      const apiKey = apiKeyInput.value.trim();
+      if(!apiKey){
+        setStatus("Please enter your Gemini API key.", true);
+        return;
+      }
       if(!images.length){
         resultsWrap.innerHTML = "<div class='muted'>Add images first.</div>";
         return;
       }
-      ocrRunning = true;
+
+      running = true;
       calcBtn.disabled = true;
+      clearBtn.disabled = true;
       resetUI();
 
-      const allResults = [];
-      for(let i=0; i<images.length; i++){
-        statusText.textContent = `Processing image ${i+1}/${images.length}...`;
-        progressBar.style.width = `${Math.round((i / images.length) * 100)}%`;
+      const runImages = images.slice(0, MAX_IMAGES);
+      if(images.length > MAX_IMAGES){
+        setStatus(`Only the first ${MAX_IMAGES} images will be processed this run.`, false);
+      }else{
+        setStatus("Preparing images...", false);
+      }
+      updateProgress(10);
 
-        const img = images[i];
-        let inputCanvas = img.roiCanvas;
-        if(!inputCanvas){
-          try{
+      const imageParts = [];
+      try{
+        for(let i = 0; i < runImages.length; i++){
+          const img = runImages[i];
+          if(!img.roiCanvas){
             const roi = await buildRoiCanvasFromFile(img.file, img.url);
-            inputCanvas = roi.roiCanvas;
+            img.roiCanvas = roi.roiCanvas;
             if(!img.roiUrl){
               img.roiUrl = roi.roiUrl;
               renderThumbnails();
             }
-          }catch(err){
-            console.error("ROI build failed", err);
           }
-        }
-        if(!inputCanvas){
-          const fallbackImg = await loadImageFromUrl(img.url);
-          const fallback = document.createElement("canvas");
-          const width = fallbackImg.naturalWidth || fallbackImg.width;
-          const height = fallbackImg.naturalHeight || fallbackImg.height;
-          fallback.width = width;
-          fallback.height = height;
-          const ctx = fallback.getContext("2d");
-          ctx.drawImage(fallbackImg, 0, 0);
-          inputCanvas = fallback;
+          const base64 = canvasToJpegBase64(img.roiCanvas);
+          if(!base64){
+            throw new Error(`Failed to prepare image ${i + 1}.`);
+          }
+          imageParts.push({
+            inline_data: { mime_type: "image/jpeg", data: base64 }
+          });
+          updateProgress(10 + Math.round(((i + 1) / runImages.length) * 40));
         }
 
-        if(preprocessToggle.checked && opencvReady){
-          inputCanvas = await preprocessCanvasOpenCV(inputCanvas);
+        setStatus("Sending to Gemini...", false);
+        updateProgress(60);
+
+        let response = await callGemini({ apiKey, imageParts, strict: false });
+        lastRawResponse = response.text;
+        let parsed = tryParseJson(response.text);
+
+        if(!parsed.ok){
+          setStatus("Trying a stricter prompt...", false);
+          updateProgress(70);
+          response = await callGemini({ apiKey, imageParts, strict: true });
+          lastRawResponse = response.text;
+          parsed = tryParseJson(response.text);
         }
-        try{
-          const text = await ocrCanvas(inputCanvas);
-          let prices = extractPricesFromText(text, i);
-          if(!prices.length){
-            const fullCanvas = await buildFullCanvasFromUrl(img.url);
-            const fullText = await ocrCanvas(fullCanvas);
-            prices = extractPricesFromText(fullText, i);
-          }
-          allResults.push(...prices);
-        }catch(err){
-          console.error(err);
-          resultsWrap.innerHTML += `<div class="err small">OCR failed for image ${i+1}.</div>`;
+
+        if(!parsed.ok){
+          throw new Error("Gemini returned invalid JSON even after retry.");
         }
+
+        updateProgress(90);
+        renderResults(parsed.data);
+        debugWrap.textContent = lastRawResponse;
+        if(debugToggle.checked){
+          debugWrap.classList.remove("hidden");
+        }
+        setStatus("Done.", false);
+        updateProgress(100);
+      }catch(err){
+        console.error(err);
+        setStatus(err?.message || "Something went wrong.", true);
+      }finally{
+        calcBtn.disabled = false;
+        clearBtn.disabled = false;
+        running = false;
       }
-      progressBar.style.width = "100%";
-      statusText.textContent = "Done.";
-      buildResultsUI(allResults);
-      calcBtn.disabled = false;
-      ocrRunning = false;
     }
 
     function clearAll(){
@@ -571,11 +666,20 @@
       const val = totalValue.textContent;
       try{
         await navigator.clipboard.writeText(val);
-        statusText.textContent = "Total copied.";
+        setStatus("Total copied.", false);
       }catch(err){
-        statusText.textContent = "Copy failed.";
+        setStatus("Copy failed.", true);
       }
     };
+
+    debugToggle.addEventListener("change", () => {
+      if(debugToggle.checked){
+        debugWrap.textContent = lastRawResponse || "(no response yet)";
+        debugWrap.classList.remove("hidden");
+      }else{
+        debugWrap.classList.add("hidden");
+      }
+    });
 
     calcBtn.onclick = processImages;
     clearBtn.onclick = clearAll;
