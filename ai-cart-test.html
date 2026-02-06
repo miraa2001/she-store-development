@@ -291,28 +291,7 @@
         URL.revokeObjectURL(sourceUrl);
       }
 
-      const cropTop = Math.round(height * 0.14);
-      const cropBottom = Math.round(height * 0.14);
-      const cropLeft = 0;
-      const cropRight = Math.round(width * 0.22);
-      const roiWidth = Math.max(1, width - cropLeft - cropRight);
-      const roiHeight = Math.max(1, height - cropTop - cropBottom);
-
-      const roiCanvas = document.createElement("canvas");
-      roiCanvas.width = roiWidth;
-      roiCanvas.height = roiHeight;
-      const roiCtx = roiCanvas.getContext("2d");
-      roiCtx.drawImage(
-        baseCanvas,
-        cropLeft,
-        cropTop,
-        roiWidth,
-        roiHeight,
-        0,
-        0,
-        roiWidth,
-        roiHeight
-      );
+      const roiCanvas = baseCanvas;
 
       return {
         roiCanvas,
@@ -366,13 +345,13 @@
           roiWrap.className = "roiWrap";
           const roiLabel = document.createElement("div");
           roiLabel.className = "roiLabel";
-          roiLabel.textContent = "ROI crop";
+          roiLabel.textContent = "Preview";
           const roiBox = document.createElement("div");
           roiBox.className = "roiBox";
           const roiPreview = document.createElement("img");
           roiPreview.className = "roiPreview";
           roiPreview.src = img.roiUrl;
-          roiPreview.title = "Gemini ROI preview";
+          roiPreview.title = "Gemini preview";
           roiBox.appendChild(roiPreview);
           roiWrap.appendChild(roiLabel);
           roiWrap.appendChild(roiBox);
