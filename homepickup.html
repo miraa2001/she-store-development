@@ -281,6 +281,7 @@ function renderSidebar(){
   if(myEmail === EMAIL_RAHAF){
     link("إدارة الطلبات", "./index.html?tab=orders");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
+    link("الأرشيف", "./archive.html");
     link("المالية", "./finance.html");
   }
 
@@ -613,9 +614,29 @@ function renderPurchases(){
 }
 
 async function loadOrders(){
+  const { data: pRows, error: pErr } = await sb
+    .from("purchases")
+    .select("order_id, pickup_point, collected")
+    .eq("pickup_point", HOME_PICKUP_VALUE)
+    .eq("collected", false);
+
+  if(pErr){ console.error(pErr); return; }
+
+  const orderIds = [...new Set((pRows || []).map(p=>p.order_id))];
+  if(!orderIds.length){
+    orders = [];
+    ordersCountEl.textContent = "0";
+    ordersListEl.innerHTML = "";
+    ordersEmptyEl.style.display = "";
+    activeOrder = null;
+    showMain(false);
+    return;
+  }
+
   const { data, error } = await sb
     .from("orders")
     .select("*")
+    .in("id", orderIds)
     .eq("arrived", true)
     .order("created_at",{ascending:false});
 
@@ -633,6 +654,11 @@ async function loadOrders(){
     div.onclick = () => selectOrder(o);
     ordersListEl.appendChild(div);
   });
+
+  if(activeOrder && !orders.find(o=>o.id === activeOrder.id)){
+    activeOrder = null;
+    showMain(false);
+  }
 }
 
 if(ordersRefreshBtn) ordersRefreshBtn.onclick = loadOrders;
@@ -649,6 +675,7 @@ async function selectOrder(order){
     .select("id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, purchase_images(storage_path), collected")
     .eq("order_id", order.id)
     .eq("pickup_point", HOME_PICKUP_VALUE)
+    .eq("collected", false)
     .order("created_at", { ascending: true });
 
   if(error){ console.error(error); return; }
@@ -703,6 +730,7 @@ if(collectHomeBtn){
       .select("id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, purchase_images(storage_path), collected")
       .eq("order_id", activeOrder.id)
       .eq("pickup_point", HOME_PICKUP_VALUE)
+      .eq("collected", false)
       .order("created_at", { ascending: true });
     if(reloadErr){
       console.error(reloadErr);
@@ -711,6 +739,7 @@ if(collectHomeBtn){
       renderPurchases();
     }
 
+    await loadOrders();
     collectHomeBtn.disabled = false;
   };
 }
@@ -731,10 +760,15 @@ async function runSearch(){
   const q = (searchInput.value || "").trim();
   if(q.length < 2){ clearSearchUI(); return; }
 
+  const orderIds = orders.map(o=>o.id);
+  if(!orderIds.length){ clearSearchUI(); return; }
+
   const { data, error } = await sb
     .from("purchases")
     .select("id, order_id, customer_name, price, pickup_point, created_at")
+    .in("order_id", orderIds)
     .eq("pickup_point", HOME_PICKUP_VALUE)
+    .eq("collected", false)
     .ilike("customer_name", `%${q}%`)
     .order("created_at",{ascending:false})
     .limit(50);
