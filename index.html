@@ -397,6 +397,21 @@
     }
     .actionMenu button:hover{background:var(--table-row-hover)}
     .actionMenu .danger{color:#b00020}
+    .orderHeadActions #deleteOrderBtn{
+      border-color:#efc5c5;
+      color:#a63434;
+      background:#fff6f6;
+    }
+    .orderHeadActions #deleteOrderBtn:hover{
+      border-color:#e3a9af;
+      background:#fff0f0;
+    }
+    .orderHeadActions #deleteOrderBtn:disabled{
+      opacity:.55;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
 
     .card{background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:12px}
     .btn{border:1px solid var(--color-border);background:var(--color-card);padding:10px 14px;border-radius:var(--radius-lg);cursor:pointer}
@@ -577,7 +592,6 @@
           </div>
           <div class="row">
             <input id="orderNameInput" placeholder="اسم الطلبية" />
-            <button class="btn danger" id="deleteOrderBtn" disabled>حذف الطلبية</button>
             <button class="btn primary" id="newOrderBtn">+ إنشاء طلبية</button>
           </div>
         </div>
@@ -603,8 +617,9 @@
                 <b id="orderTitle"></b>
                 <span class="pill" id="orderStats">—</span>
               </div>
-              <div class="row" style="gap:8px;align-items:center">
+              <div class="row orderHeadActions" style="gap:8px;align-items:center">
                 <button class="icon-btn" id="editOrderBtn" title="تعديل اسم الطلبية" aria-label="تعديل اسم الطلبية">✏️</button>
+                <button class="icon-btn" id="deleteOrderBtn" title="حذف الطلبية" aria-label="حذف الطلبية" disabled>🗑️</button>
               </div>
             </div>
 
