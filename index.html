@@ -139,7 +139,7 @@
 
     /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
-    .grid.list-collapsed{grid-template-columns:64px 1fr}
+    .grid.list-collapsed{grid-template-columns:56px 1fr}
     .grid.list-collapsed .listFull{display:none}
     .grid.list-collapsed .listCollapsed{display:flex}
     #ordersGrid.list-collapsed > aside.card,
@@ -241,8 +241,8 @@
       align-items:center;
       justify-content:flex-start;
       gap:7px;
-      padding:8px 4px;
-      min-height:150px;
+      padding:8px 3px;
+      min-height:138px;
       border:1px solid #d4e0db;
       border-radius:999px;
       background:linear-gradient(180deg, #ffffff 0%, #f4f9f7 100%);
@@ -251,39 +251,39 @@
         0 12px 18px rgba(15,23,42,.08);
     }
     .listCollapsed .miniBtn{
-      width:30px;height:30px;border-radius:999px;border:1px solid #cddcd6;
-      background:#f7fbf9;display:flex;align-items:center;justify-content:center;
-      font-size:13px;cursor:pointer;color:#2d5b4f;
-      box-shadow:0 6px 10px rgba(15,23,42,.08)
+      width:18px;height:18px;border:none;border-radius:0;
+      background:transparent;display:flex;align-items:center;justify-content:center;
+      font-size:14px;cursor:pointer;color:#2d5b4f;
+      box-shadow:none;padding:0;
     }
     .collapsedGlyph{
-      width:30px;
-      height:30px;
-      border-radius:999px;
-      border:1px solid #cfe0d9;
-      background:linear-gradient(180deg,#f8fcfa 0%,#eef6f3 100%);
+      width:18px;
+      height:14px;
+      border-radius:0;
+      border:none;
+      background:transparent;
       position:relative;
-      box-shadow:0 6px 10px rgba(15,23,42,.06);
+      box-shadow:none;
     }
     .collapsedGlyph::before,
     .collapsedGlyph::after{
       content:"";
       position:absolute;
-      inset-inline:7px;
-      height:3px;
+      inset-inline:0;
+      height:2px;
       border-radius:999px;
       background:#87aa9f;
     }
-    .collapsedGlyph::before{top:9px}
-    .collapsedGlyph::after{top:15px}
+    .collapsedGlyph::before{top:4px}
+    .collapsedGlyph::after{top:9px}
     .collapsedGlyph i{
       position:absolute;
-      width:4px;
-      height:4px;
+      width:3px;
+      height:3px;
       border-radius:999px;
       background:#4f8a7b;
-      right:7px;
-      top:4px;
+      right:0;
+      top:0;
     }
     .listCollapsed .miniLabel{
       font-size:10px;
@@ -362,17 +362,23 @@
       #ordersGrid.list-collapsed .listCollapsed .miniBtn,
       #viewGrid.list-collapsed .listCollapsed .miniBtn{
         flex:0 0 auto;
-        width:32px;
-        height:32px;
+        width:18px;
+        height:18px;
         font-size:14px;
-        border-radius:9px;
+        border-radius:0;
+        border:none;
+        background:transparent;
+        box-shadow:none;
       }
       #ordersGrid.list-collapsed .listCollapsed .collapsedGlyph,
       #viewGrid.list-collapsed .listCollapsed .collapsedGlyph{
         flex:0 0 auto;
-        width:32px;
-        height:32px;
-        border-radius:10px;
+        width:18px;
+        height:14px;
+        border-radius:0;
+        border:none;
+        background:transparent;
+        box-shadow:none;
       }
       #ordersGrid.list-collapsed .listCollapsed .miniLabel,
       #viewGrid.list-collapsed .listCollapsed .miniLabel{
