@@ -142,6 +142,13 @@
     .grid.list-collapsed{grid-template-columns:96px 1fr}
     .grid.list-collapsed .listFull{display:none}
     .grid.list-collapsed .listCollapsed{display:flex}
+    #ordersGrid.list-collapsed > aside.card,
+    #viewGrid.list-collapsed > aside.card{
+      border:none;
+      background:transparent;
+      box-shadow:none;
+      padding:0;
+    }
     .listFull{
       display:flex;
       flex-direction:column;
@@ -332,7 +339,10 @@
       .grid.list-collapsed{grid-template-columns:1fr}
       #ordersGrid.list-collapsed > aside.card,
       #viewGrid.list-collapsed > aside.card{
-        padding:8px;
+        border:none;
+        background:transparent;
+        box-shadow:none;
+        padding:0;
       }
       #ordersGrid.list-collapsed .listCollapsed,
       #viewGrid.list-collapsed .listCollapsed{
