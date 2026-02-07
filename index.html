@@ -139,7 +139,7 @@
 
     /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
-    .grid.list-collapsed{grid-template-columns:56px 1fr}
+    .grid.list-collapsed{grid-template-columns:46px 1fr}
     .grid.list-collapsed .listFull{display:none}
     .grid.list-collapsed .listCollapsed{display:flex}
     #ordersGrid.list-collapsed > aside.card,
@@ -241,7 +241,7 @@
       align-items:center;
       justify-content:flex-start;
       gap:7px;
-      padding:8px 3px;
+      padding:7px 2px;
       min-height:138px;
       border:1px solid #d4e0db;
       border-radius:999px;
@@ -286,11 +286,7 @@
       top:0;
     }
     .listCollapsed .miniLabel{
-      font-size:10px;
-      color:#60716b;
-      text-align:center;
-      font-weight:700;
-      letter-spacing:.03em;
+      display:none;
     }
     .collapsedStat{
       min-width:30px;
