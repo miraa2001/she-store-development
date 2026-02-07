@@ -279,14 +279,14 @@ function renderSidebar(){
   };
 
   if(myEmail === EMAIL_RAHAF){
-    link("إدارة الطلبات", "./index.html?tab=orders");
+    link("الطلبيات", "./index.html");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
     link("الأرشيف", "./archive.html");
     link("المالية", "./finance.html");
   }
 
   if(myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND){
-    link("إدارة الطلبات", "./index.html?tab=view");
+    link("الطلبيات", "./index.html");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
 
@@ -820,3 +820,4 @@ async function runSearch(){
 </script>
 </body>
 </html>
+

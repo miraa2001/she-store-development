@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>إدارة الطلبات</title>
+  <title>الطلبيات</title>
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/8863/8863863.png" />
   <link rel="stylesheet" href="assets/tokens.css">
   <link rel="stylesheet" href="assets/base.css">
@@ -16,7 +16,7 @@
     /* ===== Image Lightbox ===== */
 
 /* ===== Sidebar ===== */
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
     .brand b{font-size:20px}
     .muted{color:var(--color-muted);font-size:13px}
 
@@ -27,6 +27,8 @@
       display:flex;gap:6px;background:var(--color-card);padding:6px;border-radius:var(--radius-lg);
       margin:8px 0 14px;border:1px solid var(--color-border)
     }
+    #navTabs.merged .tabLink[data-tab="view"]{display:none}
+    #navTabs.merged{justify-content:flex-start}
     .tabLink{
       border:none;background:transparent;color:var(--color-muted);padding:10px 16px;border-radius:var(--radius-lg);
       cursor:pointer;font-weight:600;font-family:inherit;text-decoration:none;display:inline-block
@@ -36,6 +38,37 @@
 
     /* ===== View panel ===== */
     .viewNav{display:flex;justify-content:space-between;align-items:center;margin:12px 0;gap:10px}
+    .modeSwitch{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:var(--color-card);
+      border:1px solid var(--color-border);
+      padding:4px;
+      border-radius:999px;
+    }
+    .modeBtn{
+      border:none;
+      background:transparent;
+      padding:8px 14px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      color:var(--color-muted);
+      font-family:inherit;
+    }
+    .modeBtn.active{background:var(--brand);color:#fff}
+    .filtersPanel{
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-lg);
+      padding:var(--space-2);
+      background:var(--color-card);
+      margin:12px 0;
+    }
+    .filtersHeader{display:flex;justify-content:space-between;align-items:center;gap:10px}
+    .filtersBody{margin-top:12px;display:none}
+    .filtersRow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .filtersRow label{font-size:12px;color:var(--color-muted)}
     .viewPanel .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
     .viewPanel .thumbs img{width:96px;height:96px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-border);cursor:pointer}
     .viewContent{font-size:18px;line-height:1.7}
@@ -177,6 +210,18 @@
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
+    .orderGroupLabel{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 8px;
+      margin:10px 0 6px;
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-md);
+      background:var(--color-bg);
+      color:var(--color-muted);
+      font-size:12px;
+      font-weight:600;
+    }
     .thumbs img{width:44px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--color-border);cursor:pointer}
     .editThumb img{cursor:pointer}
     #lightbox{
@@ -278,14 +323,18 @@
 <div class="wrap">
   <div class="topbar">
     <div class="brand">
-      <b>إدارة الطلبات</b>
-      <div class="muted">إضافة / حذف / تعديل</div>
+      <b>الطلبيات</b>
+      <div class="muted">عرض / تعديل / إضافة</div>
+    </div>
+    <div class="modeSwitch" id="modeSwitch" style="display:none">
+      <button class="modeBtn active" type="button" id="modeEditBtn" data-mode="edit">تعديل / إضافة</button>
+      <button class="modeBtn" type="button" id="modeViewBtn" data-mode="view">عرض فقط</button>
     </div>
     <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
 
   <div class="tabs" id="navTabs" style="display:none">
-    <button class="tabLink active" type="button" data-tab="orders">إدارة الطلبات</button>
+    <button class="tabLink active" type="button" data-tab="orders">الطلبيات</button>
     <button class="tabLink" type="button" data-tab="view">عرض الطلبيات</button>
     <button class="tabLink" type="button" data-tab="customers">العملاء</button>
   </div>
@@ -424,6 +473,37 @@
       </div>
 
         <hr>
+
+        <div class="filtersPanel" id="filtersPanel">
+          <div class="filtersHeader">
+            <b>فلاتر المشتريات</b>
+            <button class="btn" id="filtersToggleBtn" type="button">إظهار الفلاتر</button>
+          </div>
+          <div class="filtersBody" id="filtersBody">
+            <div class="filtersRow">
+              <label for="filterPickup">مكان الاستلام</label>
+              <select id="filterPickup">
+                <option value="all">الكل</option>
+                <option value="من البيت">من البيت</option>
+                <option value="توصيل">توصيل</option>
+                <option value="من نقطة الاستلام">من نقطة الاستلام</option>
+              </select>
+
+              <label for="sortSelect">ترتيب حسب</label>
+              <select id="sortSelect">
+                <option value="default">الترتيب الافتراضي</option>
+                <option value="name_asc">الاسم (أ-ي)</option>
+                <option value="name_desc">الاسم (ي-أ)</option>
+                <option value="qty_asc">العدد (تصاعدي)</option>
+                <option value="qty_desc">العدد (تنازلي)</option>
+                <option value="price_asc">السعر (تصاعدي)</option>
+                <option value="price_desc">السعر (تنازلي)</option>
+              </select>
+
+              <button class="btn" id="filtersResetBtn" type="button">إعادة ضبط</button>
+            </div>
+          </div>
+        </div>
 
         <div class="tableScrollTop" id="ordersTableScrollTop"><div class="tableScrollInner" id="ordersTableScrollInner"></div></div>
         <div class="tableWrap" id="ordersTableWrap">
@@ -904,13 +984,13 @@ function renderSidebar(){
   };
 
   if(myEmail === EMAIL_RAHAF){
-    link("إدارة الطلبات", "./index.html?tab=orders");
+    link("الطلبيات", "./index.html");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
     link("الأرشيف", "./archive.html");
     link("المالية", "./finance.html");
   }
   if(myEmail === EMAIL_REEM || myEmail === EMAIL_RAWAND){
-    link("عرض الطلبيات", "./index.html?tab=view");
+    link("الطلبيات", "./index.html");
     link("الاستلام والتحصيل", "./pickup-dashboard.html");
   }
 
@@ -926,6 +1006,20 @@ const tabButtons = Array.from(document.querySelectorAll(".tabLink"));
 const ordersPanel = document.getElementById("ordersPanel");
 const viewPanel = document.getElementById("viewPanel");
 const customersPanel = document.getElementById("customersPanel");
+const modeSwitch = document.getElementById("modeSwitch");
+const modeEditBtn = document.getElementById("modeEditBtn");
+const modeViewBtn = document.getElementById("modeViewBtn");
+const filtersPanel = document.getElementById("filtersPanel");
+const filtersToggleBtn = document.getElementById("filtersToggleBtn");
+const filtersBody = document.getElementById("filtersBody");
+const filterPickup = document.getElementById("filterPickup");
+const sortSelect = document.getElementById("sortSelect");
+const filtersResetBtn = document.getElementById("filtersResetBtn");
+let currentRole = "";
+let currentMode = "edit";
+let filtersOpen = false;
+let filterPickupValue = "all";
+let sortMode = "default";
 
 function showTab(tab){
   const isOrders = tab === "orders";
@@ -937,22 +1031,72 @@ function showTab(tab){
   tabButtons.forEach(btn=>{
     btn.classList.toggle("active", btn.dataset.tab === tab);
   });
+  if(modeSwitch){
+    modeSwitch.style.display = (currentRole === "rahaf" && !isCustomers) ? "inline-flex" : "none";
+  }
+  if(isOrders){
+    currentMode = "edit";
+    if(modeEditBtn) modeEditBtn.classList.add("active");
+    if(modeViewBtn) modeViewBtn.classList.remove("active");
+    document.body.dataset.mode = "edit";
+  }
+  if(isView){
+    currentMode = "view";
+    if(modeViewBtn) modeViewBtn.classList.add("active");
+    if(modeEditBtn) modeEditBtn.classList.remove("active");
+    document.body.dataset.mode = "view";
+  }
+}
+
+function setMode(mode){
+  currentMode = mode;
+  if(modeEditBtn) modeEditBtn.classList.toggle("active", mode === "edit");
+  if(modeViewBtn) modeViewBtn.classList.toggle("active", mode === "view");
+  showTab(mode === "edit" ? "orders" : "view");
+}
+
+function setFiltersOpen(open){
+  filtersOpen = !!open;
+  if(filtersBody) filtersBody.style.display = filtersOpen ? "" : "none";
+  if(filtersToggleBtn) filtersToggleBtn.textContent = filtersOpen ? "إخفاء الفلاتر" : "إظهار الفلاتر";
 }
 
 function setupTabs(role){
+  currentRole = role || "";
   if(role === "reem"){
     if(navTabs) navTabs.style.display = "none";
-    showTab("view");
+    setMode("view");
     return;
   }
-  if(navTabs) navTabs.style.display = "flex";
+  if(navTabs){
+    navTabs.style.display = "flex";
+    navTabs.classList.add("merged");
+  }
   const param = new URLSearchParams(window.location.search).get("tab");
-  const initial = ["orders","view","customers"].includes(param) ? param : "orders";
-  showTab(initial);
+  if(param === "customers"){
+    showTab("customers");
+  }else{
+    setMode("edit");
+  }
 }
 
 tabButtons.forEach(btn=>{
   btn.addEventListener("click", ()=> showTab(btn.dataset.tab));
+});
+if(modeEditBtn) modeEditBtn.addEventListener("click", ()=> setMode("edit"));
+if(modeViewBtn) modeViewBtn.addEventListener("click", ()=> setMode("view"));
+if(filtersToggleBtn) filtersToggleBtn.addEventListener("click", ()=> setFiltersOpen(!filtersOpen));
+if(filterPickup) filterPickup.addEventListener("change", ()=>{
+  filterPickupValue = filterPickup.value || "all";
+  renderPurchasesTableWith(getFilteredPurchases());
+});
+if(sortSelect) sortSelect.addEventListener("change", ()=>{
+  sortMode = sortSelect.value || "default";
+  renderPurchasesTableWith(getFilteredPurchases());
+});
+if(filtersResetBtn) filtersResetBtn.addEventListener("click", ()=>{
+  resetPurchaseFilters();
+  renderPurchasesTableWith(getFilteredPurchases());
 });
 const ordersList = document.getElementById("ordersList");
 const newOrderBtn = document.getElementById("newOrderBtn");
@@ -2059,7 +2203,24 @@ async function loadOrders(){
 
   orders = data || [];
   ordersList.innerHTML="";
+  let lastGroup = "";
+  const monthLabel = (iso)=>{
+    if(!iso) return "—";
+    const d = new Date(iso);
+    if(Number.isNaN(d.getTime())) return "—";
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yyyy = d.getFullYear();
+    return `${mm}/${yyyy}`;
+  };
   orders.forEach(o=>{
+    const group = monthLabel(o.created_at);
+    if(group !== lastGroup){
+      const label = document.createElement("div");
+      label.className = "orderGroupLabel";
+      label.textContent = group;
+      ordersList.appendChild(label);
+      lastGroup = group;
+    }
     const div=document.createElement("div");
     div.className="orderItem"+(activeOrder?.id===o.id?" active":"");
     div.innerHTML = `<span>${escapeHtml(o.order_name || "")}</span><span class="pill">فتح</span>`;
@@ -2087,6 +2248,8 @@ async function selectOrder(o){
     exportPdfBtn.onclick = ()=> exportOrderPdf(activeOrder.id, exportPdfBtn);
   }
   clearDuplicateWarning();
+  resetPurchaseFilters();
+  setFiltersOpen(false);
 
   // important: on mobile, close sidebar if open so it doesn't cover orders
   if(isMobile()) closeSidebar();
@@ -2516,28 +2679,46 @@ async function saveInlineEdit(purchaseId){
 }
 
 /* ===== Purchases table + inline edit UI ===== */
-async function loadPurchases(){
-  if(!activeOrder) return;
+function resetPurchaseFilters(){
+  filterPickupValue = "all";
+  sortMode = "default";
+  if(filterPickup) filterPickup.value = "all";
+  if(sortSelect) sortSelect.value = "default";
+}
 
-  const { data, error } = await sb
-    .from("purchases")
-    .select("*,purchase_links(url),purchase_images(id,storage_path)")
-    .eq("order_id", activeOrder.id)
-    .order("created_at", { ascending:false });
+function getFilteredPurchases(){
+  let list = Array.isArray(activePurchases) ? [...activePurchases] : [];
+  const pickup = filterPickup ? (filterPickup.value || "all") : filterPickupValue;
+  if(pickup !== "all"){
+    list = list.filter(p=> (p.pickup_point || "من نقطة الاستلام") === pickup);
+  }
 
-  if(error){ console.error(error); return; }
+  const mode = sortSelect ? (sortSelect.value || "default") : sortMode;
+  const byNameAsc = (a,b)=> String(a.customer_name||"").localeCompare(String(b.customer_name||""), "ar");
+  const byNameDesc = (a,b)=> -byNameAsc(a,b);
+  const byQtyAsc = (a,b)=> (Number(a.qty||0) - Number(b.qty||0));
+  const byQtyDesc = (a,b)=> (Number(b.qty||0) - Number(a.qty||0));
+  const byPriceAsc = (a,b)=> (parsePrice(a.price) - parsePrice(b.price));
+  const byPriceDesc = (a,b)=> (parsePrice(b.price) - parsePrice(a.price));
 
-  activePurchases = data || [];
+  switch(mode){
+    case "name_asc": list.sort(byNameAsc); break;
+    case "name_desc": list.sort(byNameDesc); break;
+    case "qty_asc": list.sort(byQtyAsc); break;
+    case "qty_desc": list.sort(byQtyDesc); break;
+    case "price_asc": list.sort(byPriceAsc); break;
+    case "price_desc": list.sort(byPriceDesc); break;
+    default: break;
+  }
+  return list;
+}
 
-  // ✅ restore totals per order
-  const purchasesCount = (data||[]).length;
-  const totalItems = (data||[]).reduce((sum,p)=> sum + Number(p.qty || 0), 0);
-  const totalPrice = (data||[]).reduce((sum,p)=> sum + parsePrice(p.price), 0);
-  orderStats.textContent = `عدد المشتريات: ${purchasesCount} — مجموع القطع: ${totalItems} — مجموع الأسعار: ${formatILS(totalPrice)} ₪`;
-
+function renderPurchasesTableWith(list){
+  if(!tbody) return;
+  const dataList = Array.isArray(list) ? list : [];
   tbody.innerHTML="";
 
-  (data||[]).forEach(p=>{
+  dataList.forEach(p=>{
     const imgs=(p.purchase_images||[]).map(i=>{
       const url=sb.storage.from(BUCKET).getPublicUrl(i.storage_path).data.publicUrl;
       return `<img src="${escapeAttr(url)}" alt="صورة" data-customer="${escapeAttr(p.customer_name || "")}">`;
@@ -2624,69 +2805,64 @@ async function loadPurchases(){
               <span class="muted" style="min-width:90px">المدفوع</span>
               <input data-f="paid" type="number" step="0.01" min="0" placeholder="المدفوع" value="${escapeAttr(p.paid_price ?? p.price ?? "")}" style="flex:1">
             </div>
-          </div>
 
-          <div class="row" style="margin-top:10px">
-            <span class="muted">حجم الكيس</span>
-            <select data-f="bag">
-              <option value="كيس كبير" ${sel(p.bag_size || "كيس صغير","كيس كبير")}>كيس كبير</option>
-              <option value="كيس صغير" ${sel(p.bag_size || "كيس صغير","كيس صغير")}>كيس صغير</option>
-            </select>
-          </div>
+            <div class="row" style="align-items:center; gap:8px">
+              <span class="muted" style="min-width:90px">حجم الكيس</span>
+              <select data-f="bag">
+                <option value="كيس كبير" ${sel(p.bag_size,'كيس كبير')}>كيس كبير</option>
+                <option value="كيس صغير" ${sel(p.bag_size,'كيس صغير')}>كيس صغير</option>
+              </select>
+            </div>
 
-          <div class="row" style="margin-top:10px">
-            <input data-l="1" placeholder="رابط 1" value="${escapeAttr(links[0])}">
-            <input data-l="2" placeholder="رابط 2" value="${escapeAttr(links[1])}">
-            <input data-l="3" placeholder="رابط 3" value="${escapeAttr(links[2])}">
-            <input data-l="4" placeholder="رابط 4" value="${escapeAttr(links[3])}">
-            <input data-l="5" placeholder="رابط 5" value="${escapeAttr(links[4])}">
-          </div>
+            <div class="row" style="margin-top:10px">
+              <input data-l="1" placeholder="رابط 1" value="${escapeAttr(links[0])}">
+              <input data-l="2" placeholder="رابط 2" value="${escapeAttr(links[1])}">
+              <input data-l="3" placeholder="رابط 3" value="${escapeAttr(links[2])}">
+              <input data-l="4" placeholder="رابط 4" value="${escapeAttr(links[3])}">
+              <input data-l="5" placeholder="رابط 5" value="${escapeAttr(links[4])}">
+            </div>
 
-          <div class="row" style="margin-top:10px">
-            <span class="muted">مكان الاستلام</span>
-            <select data-f="pickup">
-              <option value="من البيت" ${sel(pickupTxt,'من البيت')}>من البيت</option>
-              <option value="توصيل" ${sel(pickupTxt,'توصيل')}>توصيل</option>
-              <option value="من نقطة الاستلام" ${sel(pickupTxt,'من نقطة الاستلام')}>من نقطة الاستلام</option>
-            </select>
-          </div>
+            <div class="row" style="margin-top:10px">
+              <span class="muted">مكان الاستلام</span>
+              <select data-f="pickup">
+                <option value="من البيت" ${sel(pickupTxt,'من البيت')}>من البيت</option>
+                <option value="توصيل" ${sel(pickupTxt,'توصيل')}>توصيل</option>
+                <option value="من نقطة الاستلام" ${sel(pickupTxt,'من نقطة الاستلام')}>من نقطة الاستلام</option>
+              </select>
+            </div>
 
-          <div class="editImgsRow">
-            <div style="flex:1;min-width:260px">
-              <div class="muted">الصور الحالية (اضغطي 🗑 للتحديد/التراجع)</div>
-              <div class="editImgsRow" style="margin-top:8px">
-                ${existingThumbs || `<div class="muted">لا يوجد صور</div>`}
+            <div class="editImgsRow">
+              <div style="flex:1;min-width:260px">
+                <div class="muted">الصور الحالية (اضغطي 🗑 للتحديد/التراجع)</div>
+                <div class="editImgsRow" style="margin-top:8px">
+                  ${existingThumbs || `<div class="muted">لا يوجد صور</div>`}
+                </div>
+              </div>
+
+              <div class="miniDropZone" data-mini-drop="${p.id}" tabindex="0" title="اسحبي/الصقي الصور هنا">
+                <b>إضافة صور</b>
+                <div class="muted" style="margin-top:6px">سحب/إفلات أو لصق (Ctrl+V) أو اختيار ملفات</div>
+                <div class="row" style="margin-top:8px">
+                  <button class="btn" type="button" data-mini-pick="${p.id}">اختيار صور</button>
+                  <span class="pill">حد أقصى 10</span>
+                </div>
+                <input type="file" accept="image/*" multiple style="display:none" data-mini-file="${p.id}">
+                <div class="miniPreview" data-new-preview="${p.id}"></div>
               </div>
             </div>
 
-            <div class="miniDropZone" data-mini-drop="${p.id}" tabindex="0" title="اسحبي/الصقي الصور هنا">
-              <b>إضافة صور</b>
-              <div class="muted" style="margin-top:6px">سحب/إفلات أو لصق (Ctrl+V) أو اختيار ملفات</div>
-              <div class="row" style="margin-top:8px">
-                <button class="btn" type="button" data-mini-pick="${p.id}">اختيار صور</button>
-                <span class="pill">حد أقصى 10</span>
+            <div style="margin-top:10px">
+              <div class="muted" style="margin-bottom:6px">ملاحظة</div>
+              <textarea data-f="note" placeholder="اكتبي أي ملاحظة...">${escapeHtml(noteTxt)}</textarea>
+            </div>
+
+            <div class="row" style="margin-top:10px;justify-content:space-between">
+              <div class="row">
+                <button class="btn primary" data-save="${p.id}" type="button">حفظ</button>
+                <button class="btn" data-cancel="${p.id}" type="button">إلغاء</button>
               </div>
-              <input type="file" accept="image/*" multiple style="display:none" data-mini-file="${p.id}">
-              <div class="miniPreview" data-new-preview="${p.id}"></div>
+              <span class="muted" data-msg="${p.id}"></span>
             </div>
-          </div>
-
-          <div class="row" style="margin-top:10px;align-items:center;gap:8px">
-            <button class="btn" type="button" data-ai-analyze="${p.id}">تحليل الأسعار من الصور</button>
-            <span class="muted" data-ai-status="${p.id}"></span>
-          </div>
-
-          <div style="margin-top:10px">
-            <div class="muted" style="margin-bottom:6px">ملاحظة</div>
-            <textarea data-f="note" placeholder="اكتبي أي ملاحظة...">${escapeHtml(noteTxt)}</textarea>
-          </div>
-
-          <div class="row" style="margin-top:10px;justify-content:space-between">
-            <div class="row">
-              <button class="btn primary" data-save="${p.id}" type="button">حفظ</button>
-              <button class="btn" data-cancel="${p.id}" type="button">إلغاء</button>
-            </div>
-            <span class="muted" data-msg="${p.id}"></span>
           </div>
         </div>
       </td>
@@ -2715,11 +2891,7 @@ async function loadPurchases(){
   });
 
   bindActionMenuHandlers();
-  tbody.querySelectorAll("button[data-cancel]").forEach(btn=> btn.onclick=()=>{
-    const id = btn.dataset.cancel;
-    resetEditRow(id);
-    closeEditRow(id);
-  });
+  tbody.querySelectorAll("button[data-cancel]").forEach(btn=> btn.onclick=()=>{ const id = btn.dataset.cancel; resetEditRow(id); closeEditRow(id); });
   tbody.querySelectorAll("button[data-save]").forEach(btn=> btn.onclick=()=>saveInlineEdit(btn.dataset.save));
 
   tbody.querySelectorAll('tr[data-edit-row]').forEach(row=>{
@@ -2729,41 +2901,44 @@ async function loadPurchases(){
         e.preventDefault();
         resetEditRow(id);
         closeEditRow(id);
-      } else if(e.key === "Enter" && e.target.tagName !== "TEXTAREA"){
-        e.preventDefault();
-        saveInlineEdit(id);
       }
     };
   });
 
-  tbody.querySelectorAll("[data-existing-thumb]").forEach(thumb=>{
-    const purchaseId=thumb.dataset.existingThumb;
-    const imgId=thumb.dataset.imgid;
-    const path=thumb.dataset.path;
-    const btn=thumb.querySelector("button[data-toggle-del]");
-    if(!btn) return;
-    btn.onclick=()=>{
-      const state=editImageState.get(purchaseId);
-      if(!state) return;
-      const already=state.deleteImgIds.has(imgId);
-      if(already){ state.deleteImgIds.delete(imgId); state.deletePaths.delete(path); thumb.classList.remove("removing"); }
-      else { state.deleteImgIds.add(imgId); state.deletePaths.add(path); thumb.classList.add("removing"); }
-      updateEditCounts(purchaseId);
-      setEditAiStatus(purchaseId, "");
+  tbody.querySelectorAll("input[data-f='paid']").forEach(input=>{
+    input.addEventListener("input", ()=>{ input.dataset.manual = "1"; });
+  });
+
+  tbody.querySelectorAll("[data-toggle-del]").forEach(btn=>{
+    btn.onclick = ()=>{
+      const id = btn.dataset.toggleDel;
+      const imgId = btn.closest("[data-existing-thumb]")?.dataset.imgid;
+      const path = btn.closest("[data-existing-thumb]")?.dataset.path;
+      if(!id || !imgId) return;
+      toggleDeleteExistingImage(id, imgId, path);
     };
   });
 
-  tbody.querySelectorAll("[data-mini-pick]").forEach(btn=>{
-    const purchaseId=btn.dataset.miniPick;
-    btn.onclick=()=>{ const fileInput=tbody.querySelector(`[data-mini-file="${purchaseId}"]`); if(fileInput) fileInput.click(); };
+  tbody.querySelectorAll("[data-mini-file]").forEach(input=>{
+    input.addEventListener("change", ()=>{
+      const purchaseId = input.dataset.miniFile;
+      if(!purchaseId) return;
+      addEditFiles(purchaseId, input.files);
+      input.value="";
+    });
   });
-  tbody.querySelectorAll("[data-mini-file]").forEach(inp=>{
-    const purchaseId=inp.dataset.miniFile;
-    inp.onchange=()=>{ addEditFiles(purchaseId, inp.files); inp.value=""; };
+
+  tbody.querySelectorAll("[data-mini-pick]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const purchaseId = btn.dataset.miniPick;
+      const fileInput = tbody.querySelector(`[data-mini-file="${purchaseId}"]`);
+      if(fileInput) fileInput.click();
+    });
   });
 
   tbody.querySelectorAll("[data-mini-drop]").forEach(zone=>{
-    const purchaseId=zone.dataset.miniDrop;
+    const purchaseId = zone.dataset.miniDrop;
+    if(!purchaseId) return;
     ["dragenter","dragover"].forEach(evt=>{
       zone.addEventListener(evt,(e)=>{ e.preventDefault(); e.stopPropagation(); zone.classList.add("dragover"); });
     });
@@ -2775,7 +2950,7 @@ async function loadPurchases(){
     zone.addEventListener("click",()=>{ activeEditPasteTarget=purchaseId; });
   });
 
-  (data||[]).forEach(p=>updateEditCounts(p.id));
+  dataList.forEach(p=>updateEditCounts(p.id));
 
   if(highlightPurchaseId){
     const row = tbody.querySelector(`tr[data-purchase-id="${highlightPurchaseId}"]`);
@@ -2790,6 +2965,26 @@ async function loadPurchases(){
   }
 
   syncOrdersTableScroll();
+}
+async function loadPurchases(){
+  if(!activeOrder) return;
+
+  const { data, error } = await sb
+    .from("purchases")
+    .select("*,purchase_links(url),purchase_images(id,storage_path)")
+    .eq("order_id", activeOrder.id)
+    .order("created_at", { ascending:false });
+
+  if(error){ console.error(error); return; }
+
+  activePurchases = data || [];
+
+  // ✅ restore totals per order
+  const purchasesCount = (data||[]).length;
+  const totalItems = (data||[]).reduce((sum,p)=> sum + Number(p.qty || 0), 0);
+  const totalPrice = (data||[]).reduce((sum,p)=> sum + parsePrice(p.price), 0);
+  orderStats.textContent = `عدد المشتريات: ${purchasesCount} — مجموع القطع: ${totalItems} — مجموع الأسعار: ${formatILS(totalPrice)} ₪`;
+  renderPurchasesTableWith(getFilteredPurchases());
 }
 
 document.addEventListener("paste",(e)=>{
@@ -3777,4 +3972,5 @@ function applyCustomerPrefill(){
 </script>
 </body>
 </html>
+
 

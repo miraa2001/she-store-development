@@ -169,7 +169,7 @@ tbody tr:hover{background:var(--table-row-hover)}
 .sidebar a{position:relative;padding-inline-end:18px}
 .sidebar a.is-active,
 .sidebar a[aria-current="page"],
-body[data-page="index"] .sidebar a[href*="index.html?tab="],
+body[data-page="index"] .sidebar a[href*="index.html"],
 body[data-page="pickup-dashboard"] .sidebar a[href*="pickup-dashboard.html"],
 body[data-page="homepickup"] .sidebar a[href*="homepickup.html"],
 body[data-page="pickuppoint"] .sidebar a[href*="pickuppoint.html"],
@@ -181,7 +181,7 @@ body[data-page="finance"] .sidebar a[href*="finance.html"]{
 }
 .sidebar a.is-active::after,
 .sidebar a[aria-current="page"]::after,
-body[data-page="index"] .sidebar a[href*="index.html?tab="]::after,
+body[data-page="index"] .sidebar a[href*="index.html"]::after,
 body[data-page="pickup-dashboard"] .sidebar a[href*="pickup-dashboard.html"]::after,
 body[data-page="homepickup"] .sidebar a[href*="homepickup.html"]::after,
 body[data-page="pickuppoint"] .sidebar a[href*="pickuppoint.html"]::after,
