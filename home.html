@@ -1,0 +1,986 @@
+﻿<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>She-Store | الصفحة الرئيسية</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/8863/8863863.png" />
+  <link rel="stylesheet" href="assets/tokens.css">
+  <link rel="stylesheet" href="assets/base.css">
+  <script src="assets/ui.js" defer></script>
+  <style>
+    :root{
+      --cute-pink:#F472B6;
+      --cute-pink-soft:#FCE7F3;
+      --cute-purple:#A78BFA;
+      --cute-purple-soft:#EDE9FE;
+      --cute-ink:#1F2937;
+      --cute-muted:#6B7280;
+      --cute-card:#FFFFFF;
+      --cute-bg:#FFF7FB;
+      --cute-ring:0 0 0 3px rgba(244,114,182,.25);
+    }
+
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Tahoma,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
+      color:var(--cute-ink);
+      background:
+        radial-gradient(900px 420px at 90% -10%, rgba(167,139,250,.25), transparent 65%),
+        radial-gradient(700px 360px at 0% 0%, rgba(244,114,182,.18), transparent 70%),
+        linear-gradient(180deg, #FFF7FB 0%, #FDF2F8 55%, #F8F5FF 100%);
+    }
+
+    .page{
+      max-width:1100px;
+      margin:auto;
+      padding:0 16px 56px;
+    }
+
+    .sticky-header{
+      position:sticky;
+      top:0;
+      z-index:100;
+      background:rgba(255,255,255,.9);
+      backdrop-filter:blur(10px);
+      border-bottom:1px solid #f1d7ea;
+      padding:10px 0 8px;
+    }
+
+    .hero{
+      position:relative;
+      padding:32px 0 18px;
+      overflow:hidden;
+    }
+
+    .hero-card{
+      background:var(--cute-card);
+      border:1px solid #f2d6e9;
+      border-radius:28px;
+      padding:24px;
+      box-shadow:0 18px 36px rgba(31,41,55,.08);
+      position:relative;
+    }
+
+    .hero-title{
+      font-size:28px;
+      font-weight:800;
+      margin:0 0 6px 0;
+    }
+
+    .hero-sub{
+      color:var(--cute-muted);
+      margin:0 0 14px 0;
+      line-height:1.7;
+    }
+
+    .hero-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .cta-btn{
+      border:none;
+      background:linear-gradient(135deg, var(--cute-pink), var(--cute-purple));
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow:0 10px 18px rgba(244,114,182,.25);
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .ghost-btn{
+      border:1px solid #f1cfe3;
+      background:#fff;
+      color:#6b3b7b;
+      padding:10px 16px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:700;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+
+    .hero-blobs{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+    }
+
+    .blob{
+      position:absolute;
+      border-radius:999px;
+      filter:blur(0.2px);
+      opacity:.6;
+    }
+
+    .blob.one{width:180px;height:180px;background:var(--cute-pink-soft);top:-40px;right:-30px;}
+    .blob.two{width:140px;height:140px;background:var(--cute-purple-soft);bottom:-30px;left:-20px;}
+    .blob.three{width:90px;height:90px;background:#ffe4f1;top:40px;left:40%;}
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      overflow-x:auto;
+      padding:8px 16px;
+      margin:8px auto 0;
+      scrollbar-width:none;
+      background:#fff;
+      border-radius:999px;
+      border:1px solid #f2d6e9;
+      box-shadow:0 10px 20px rgba(31,41,55,.08);
+      max-width:1100px;
+    }
+    .tabs::-webkit-scrollbar{display:none}
+
+    .tab-btn{
+      border:none;
+      background:#fff;
+      color:#6b7280;
+      padding:8px 14px;
+      border-radius:999px;
+      font-weight:700;
+      cursor:pointer;
+      white-space:nowrap;
+      transition:all .2s ease;
+    }
+
+    .tab-btn.active{
+      background:linear-gradient(135deg, #FCE7F3, #EDE9FE);
+      color:#5b2b77;
+      box-shadow:inset 0 0 0 1px #f1cfe3;
+    }
+
+    section{
+      padding:28px 0;
+      scroll-margin-top:120px;
+    }
+
+    .section-title{
+      font-size:22px;
+      font-weight:800;
+      margin:0 0 12px 0;
+    }
+
+    .section-sub{
+      color:var(--cute-muted);
+      margin:0 0 16px 0;
+    }
+
+    .card{
+      background:var(--cute-card);
+      border:1px solid #f1d7ea;
+      border-radius:22px;
+      padding:18px;
+      box-shadow:0 12px 24px rgba(31,41,55,.06);
+    }
+
+    .grid{
+      display:grid;
+      gap:14px;
+    }
+
+    .grid.two{grid-template-columns:repeat(2,1fr)}
+    .grid.three{grid-template-columns:repeat(3,1fr)}
+
+    @media(max-width:900px){
+      .grid.two,.grid.three{grid-template-columns:1fr}
+      .tabs{margin:8px 12px 0}
+    }
+
+    /* Wizard */
+    .wizard{
+      background:var(--cute-card);
+      border:1px solid #f1d7ea;
+      border-radius:26px;
+      padding:18px;
+      box-shadow:0 18px 28px rgba(31,41,55,.08);
+    }
+
+    .progress{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-bottom:14px;
+    }
+
+    .progress-dot{
+      width:10px;height:10px;border-radius:999px;
+      background:#f3d8ea;
+      border:1px solid #f0cfe3;
+    }
+    .progress-dot.active{background:linear-gradient(135deg,var(--cute-pink),var(--cute-purple));border-color:transparent}
+
+    .step{display:none}
+    .step.active{display:block}
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    .field label{font-weight:700;font-size:13px}
+
+    input,select,textarea{
+      padding:10px 12px;
+      border:1px solid #e8d5ea;
+      border-radius:14px;
+      font-family:inherit;
+      background:#fff;
+      color:var(--cute-ink);
+    }
+
+    input:focus,select:focus,textarea:focus{
+      outline:none;
+      border-color:var(--cute-pink);
+      box-shadow:var(--cute-ring);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .field-error{
+      color:#b42318;
+      font-size:12px;
+      min-height:16px;
+    }
+
+    .wizard-nav{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      margin-top:12px;
+    }
+
+    .btn-primary{
+      border:none;
+      background:linear-gradient(135deg, var(--cute-pink), var(--cute-purple));
+      color:#fff;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:0 10px 18px rgba(244,114,182,.25);
+    }
+
+    .btn-secondary{
+      border:1px solid #f1cfe3;
+      background:#fff;
+      color:#6b3b7b;
+      padding:10px 16px;
+      border-radius:999px;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    .upload-box{
+      border:2px dashed #f3cce4;
+      background:#fff;
+      border-radius:18px;
+      padding:14px;
+      text-align:center;
+    }
+
+    .preview-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(90px,1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+
+    .preview-item{
+      position:relative;
+      border:1px solid #f1d7ea;
+      border-radius:14px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    .preview-item img{width:100%;height:90px;object-fit:cover;display:block}
+
+    .remove-btn{
+      position:absolute;top:6px;right:6px;
+      border:none;background:rgba(0,0,0,.6);color:#fff;
+      width:22px;height:22px;border-radius:999px;cursor:pointer;
+    }
+
+    .success-box{
+      margin-top:12px;
+      padding:12px;
+      border-radius:18px;
+      background:linear-gradient(135deg,#FCE7F3,#EDE9FE);
+      border:1px solid #f1cfe3;
+      color:#5b2b77;
+      font-weight:700;
+      display:none;
+    }
+
+    .note{
+      font-size:12px;
+      color:#7c4b8f;
+      margin-top:8px;
+    }
+
+    /* Feedback */
+    .feedback-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+    .feedback-card{position:relative}
+    .feedback-card::before{content:"💬";position:absolute;top:10px;right:10px}
+    @media(max-width:900px){
+      .feedback-grid{
+        display:flex;
+        overflow-x:auto;
+        gap:12px;
+        padding-bottom:6px;
+        scroll-snap-type:x mandatory;
+      }
+      .feedback-card{min-width:240px;scroll-snap-align:start}
+    }
+
+    /* FAQ */
+    .faq-search{margin-bottom:12px}
+    .faq-group{margin-bottom:14px}
+    .faq-group-title{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 10px;
+      border-radius:999px;
+      background:linear-gradient(135deg,#FCE7F3,#EDE9FE);
+      border:1px solid #f1cfe3;
+      font-weight:800;
+      color:#5b2b77;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    .faq-item{
+      border:1px solid #f1d7ea;
+      border-radius:16px;
+      padding:12px;
+      background:#fff;
+      transition:all .2s ease;
+    }
+    .faq-item button{
+      border:none;background:none;width:100%;text-align:right;
+      font-weight:700;cursor:pointer;font-size:14px;
+    }
+    .faq-item .answer{
+      max-height:0;overflow:hidden;transition:max-height .25s ease;
+      color:#6b7280;line-height:1.7;
+    }
+    .faq-item.open .answer{max-height:220px;margin-top:6px}
+    @media(max-width:900px){.faq-grid{grid-template-columns:1fr}}
+
+    /* How */
+    .how-card{display:flex;gap:12px;align-items:flex-start}
+    .how-icon{
+      width:44px;height:44px;border-radius:16px;
+      background:linear-gradient(135deg,#FCE7F3,#EDE9FE);
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;
+    }
+
+    /* About */
+    .about-card{line-height:1.8}
+
+    .cute-divider{
+      height:1px;background:linear-gradient(90deg, transparent, #f3cce4, transparent);
+      margin:12px 0;
+    }
+
+    @media(max-width:700px){
+      .hero-title{font-size:24px}
+      .hero-card{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <header class="sticky-header">
+    <div class="tabs" id="tabBar" role="tablist" aria-label="الأقسام">
+      <button class="tab-btn active" data-target="#order">اطلبّي الآن</button>
+      <button class="tab-btn" data-target="#how">كيف بنطلب؟</button>
+      <button class="tab-btn" data-target="#feedback">آراء الزباين</button>
+      <button class="tab-btn" data-target="#faq">الأسئلة الشائعة</button>
+      <button class="tab-btn" data-target="#about">عنّا</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero" id="hero">
+      <div class="hero-card">
+        <div class="hero-blobs">
+          <div class="blob one"></div>
+          <div class="blob two"></div>
+          <div class="blob three"></div>
+        </div>
+        <h1 class="hero-title">تسوّقي من شي إن… والباقي علينا</h1>
+        <p class="hero-sub">استقبلي طلبك بطريقة لطيفة وسهلة. احكي إلنا التفاصيل، وبننسّق معك خطوة بخطوة.</p>
+        <div class="hero-actions">
+          <a class="cta-btn" href="#order">ابدئي الطلب 💗</a>
+          <a class="ghost-btn" href="#how">شوفي كيف بنطلب</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="order" data-tab="order">
+      <h2 class="section-title">اطلبّي الآن</h2>
+      <p class="section-sub">ثلاث خطوات بسيطة وبنوصلك كل التفاصيل.</p>
+
+      <div class="wizard" id="orderWizard">
+        <div class="progress" id="progressDots">
+          <div class="progress-dot active" data-step="1"></div>
+          <div class="progress-dot" data-step="2"></div>
+          <div class="progress-dot" data-step="3"></div>
+        </div>
+
+        <div class="step active" data-step="1">
+          <div class="grid two">
+            <div class="field">
+              <label for="fullName">الاسم الكامل</label>
+              <input id="fullName" type="text" placeholder="مثال: سارة أحمد" />
+              <div class="field-error" id="errName"></div>
+            </div>
+            <div class="field">
+              <label>رقم الواتساب</label>
+              <div class="row">
+                <select id="countryCode" style="min-width:90px">
+                  <option value="970">+970</option>
+                  <option value="972">+972</option>
+                </select>
+                <input id="phoneDigits" type="text" inputmode="numeric" placeholder="رقمك بدون كود" />
+              </div>
+              <div class="field-error" id="errPhone"></div>
+            </div>
+            <div class="field">
+              <label for="city">المدينة</label>
+              <select id="city">
+                <option value="">اختاري المدينة</option>
+                <option>القدس</option>
+                <option>رام الله</option>
+                <option>نابلس</option>
+                <option>الخليل</option>
+                <option>بيت لحم</option>
+                <option>جنين</option>
+                <option>طولكرم</option>
+                <option>قلقيلية</option>
+                <option>سلفيت</option>
+                <option>أريحا</option>
+                <option>غزة</option>
+                <option>خان يونس</option>
+                <option>رفح</option>
+                <option>دير البلح</option>
+              </select>
+              <div class="field-error" id="errCity"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="2">
+          <div class="grid two">
+            <div class="field">
+              <label for="cartUrl">رابط سلة شي إن</label>
+              <input id="cartUrl" type="url" placeholder="انسخي رابط السلة هنا" />
+              <div class="field-error" id="errUrl"></div>
+            </div>
+            <div class="field">
+              <label for="pickup">طريقة الاستلام</label>
+              <select id="pickup">
+                <option value="">اختاري الطريقة</option>
+                <option>من البيت</option>
+                <option>من نقطة الاستلام</option>
+              </select>
+              <div class="field-error" id="errPickup"></div>
+            </div>
+            <div class="field">
+              <label for="qty">عدد القطع</label>
+              <input id="qty" type="number" min="1" max="200" placeholder="مثال: 6" />
+              <div class="field-error" id="errQty"></div>
+            </div>
+            <div class="field" style="grid-column:1/-1">
+              <label for="notes">ملاحظات (اختياري)</label>
+              <textarea id="notes" placeholder="إذا في قطع مكررة اكتبي شو هي (مثال: تيشيرت أبيض مرتين – مقاس M)."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="step" data-step="3">
+          <div class="field">
+            <label>صور السلة (اختياري)</label>
+            <div class="upload-box">
+              <div>اختاري حتى 5 صور (حد أقصى 4MB للصورة)</div>
+              <input id="images" type="file" accept="image/*" multiple style="margin-top:8px" />
+              <div class="preview-grid" id="previewGrid"></div>
+            </div>
+          </div>
+
+          <div class="row" style="justify-content:space-between;margin-top:12px">
+            <div class="note">💕 شكرًا لثقتك فينا — رح يتم التواصل معك قريبًا لتأكيد الطلب</div>
+            <button class="btn-primary" id="submitBtn" type="button">إرسال الطلب</button>
+          </div>
+
+          <div class="success-box" id="successBox">تم إرسال الطلب بنجاح! رح نتواصل معك قريبًا لتأكيد التفاصيل.</div>
+          <div class="field-error" id="errSubmit"></div>
+        </div>
+
+        <div class="wizard-nav">
+          <button class="btn-secondary" id="prevBtn" type="button" disabled>رجوع</button>
+          <button class="btn-primary" id="nextBtn" type="button">التالي</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" data-tab="how">
+      <h2 class="section-title">كيف بنطلب؟</h2>
+      <p class="section-sub">خطوات بسيطة ولطيفة من أول رابط لحد الاستلام.</p>
+      <div class="grid three">
+        <div class="card how-card">
+          <div class="how-icon">🛍️</div>
+          <div>
+            <b>انسخي رابط السلة</b>
+            <div class="muted">من شي إن بعد ما تكملي اختيارك.</div>
+          </div>
+        </div>
+        <div class="card how-card">
+          <div class="how-icon">✨</div>
+          <div>
+            <b>ابعتيلنا التفاصيل</b>
+            <div class="muted">الاسم، المدينة، وعدد القطع.</div>
+          </div>
+        </div>
+        <div class="card how-card">
+          <div class="how-icon">💗</div>
+          <div>
+            <b>بنراجع الطلب</b>
+            <div class="muted">وبنحكيلك أي توضيحات بسرعة.</div>
+          </div>
+        </div>
+        <div class="card how-card">
+          <div class="how-icon">📦</div>
+          <div>
+            <b>تنسيق الاستلام</b>
+            <div class="muted">من البيت أو من نقطة الاستلام.</div>
+          </div>
+        </div>
+        <div class="card how-card">
+          <div class="how-icon">✅</div>
+          <div>
+            <b>تأكيد نهائي</b>
+            <div class="muted">كل التفاصيل قبل التنفيذ.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="feedback" data-tab="feedback">
+      <h2 class="section-title">آراء الزباين</h2>
+      <p class="section-sub">كلمات لطيفة من زباين حقيقيين.</p>
+      <div class="feedback-grid">
+        <div class="card feedback-card">“كل شي مرتب وسريع، والتواصل كتير لطيف.”</div>
+        <div class="card feedback-card">“الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.”</div>
+        <div class="card feedback-card">“كتير ارتحت بالطريقة، كل خطوة واضحة.”</div>
+        <div class="card feedback-card">“أفضل تجربة طلب من شي إن صراحة.”</div>
+        <div class="card feedback-card">“الردود سريعة والتسليم كان سهل.”</div>
+        <div class="card feedback-card">“الخدمة بناتي وكتير راقية.”</div>
+        <div class="card feedback-card">“ما توقعت يكون في متابعة لطيفة هيك.”</div>
+        <div class="card feedback-card">“تعامل هادي ومريح جدًا.”</div>
+      </div>
+    </section>
+
+    <section id="faq" data-tab="faq">
+      <h2 class="section-title">الأسئلة الشائعة</h2>
+      <p class="section-sub">فتّشي بسرعة عن جواب سؤالك.</p>
+
+      <div class="faq-search">
+        <input id="faqSearch" type="text" placeholder="ابحثي عن سؤال...">
+      </div>
+
+      <div id="faqList">
+        <div class="faq-group" data-category="الطلب">
+          <div class="faq-group-title">الطلب</div>
+          <div class="faq-grid">
+            <div class="faq-item" data-category="الطلب" data-text="كم مدة تجهيز الطلب؟">
+              <button type="button">كم مدة تجهيز الطلب؟</button>
+              <div class="answer">بنأكد معك التفاصيل أولًا، وبعدها بنبدأ مباشرة.</div>
+            </div>
+            <div class="faq-item" data-category="الطلب" data-text="هل في حد أدنى للقطع؟">
+              <button type="button">هل في حد أدنى للقطع؟</button>
+              <div class="answer">الحد الأدنى قطعة واحدة، والحد الأعلى 200 قطعة.</div>
+            </div>
+            <div class="faq-item" data-category="الطلب" data-text="كيف أعرف أن طلبي تم استلامه؟">
+              <button type="button">كيف أعرف أن طلبي تم استلامه؟</button>
+              <div class="answer">بنرسل لك رسالة تأكيد مباشرة بعد مراجعة الطلب.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-group" data-category="الدفع">
+          <div class="faq-group-title">الدفع</div>
+          <div class="faq-grid">
+            <div class="faq-item" data-category="الدفع" data-text="كيف يتم الدفع؟">
+              <button type="button">كيف يتم الدفع؟</button>
+              <div class="answer">بننسق معك التفاصيل وقت التأكيد، وما في دفع عبر الصفحة.</div>
+            </div>
+            <div class="faq-item" data-category="الدفع" data-text="هل في رسوم إضافية؟">
+              <button type="button">هل في رسوم إضافية؟</button>
+              <div class="answer">بنوضح لك أي رسوم قبل التنفيذ بشكل واضح.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-group" data-category="التوصيل/الاستلام">
+          <div class="faq-group-title">التوصيل/الاستلام</div>
+          <div class="faq-grid">
+            <div class="faq-item" data-category="التوصيل/الاستلام" data-text="شو فرق الاستلام من البيت ونقطة الاستلام؟">
+              <button type="button">شو فرق الاستلام من البيت ونقطة الاستلام؟</button>
+              <div class="answer">اختاري الأنسب إلك، وبنرتب كل شيء بسهولة.</div>
+            </div>
+            <div class="faq-item" data-category="التوصيل/الاستلام" data-text="في أي مدن متاحة الخدمة؟">
+              <button type="button">في أي مدن متاحة الخدمة؟</button>
+              <div class="answer">الخدمة متاحة في معظم مدن فلسطين، اختاري مدينتك.</div>
+            </div>
+            <div class="faq-item" data-category="التوصيل/الاستلام" data-text="هل في وقت محدد للتسليم؟">
+              <button type="button">هل في وقت محدد للتسليم؟</button>
+              <div class="answer">بنتفق على الوقت الأنسب لإلك عند التأكيد.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-group" data-category="الروابط/السلة">
+          <div class="faq-group-title">الروابط/السلة</div>
+          <div class="faq-grid">
+            <div class="faq-item" data-category="الروابط/السلة" data-text="كيف أجيب رابط السلة؟">
+              <button type="button">كيف أجيب رابط السلة؟</button>
+              <div class="answer">من شي إن: افتحي السلة واضغطي مشاركة الرابط.</div>
+            </div>
+            <div class="faq-item" data-category="الروابط/السلة" data-text="شو إذا الرابط ما كان شغال؟">
+              <button type="button">شو إذا الرابط ما كان شغال؟</button>
+              <div class="answer">ابعتيلنا لقطة شاشة للسلة ضمن الصور.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" data-tab="about">
+      <h2 class="section-title">عنّا</h2>
+      <div class="card about-card">
+        She-Store منصة لطيفة لمساعدتك تطلبي من شي إن بسهولة. بنستقبل طلبك، بنراجع التفاصيل، وبنتواصل معك للتأكيد. الاستلام متاح من البيت أو من نقطة الاستلام حسب ما يناسبك، وما في أي دفع عبر الموقع.
+        <div class="cute-divider"></div>
+        هدفنا نخلي التجربة ناعمة وواضحة من أول خطوة لحد الاستلام.
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+    const sections = Array.from(document.querySelectorAll('section[data-tab]'));
+    const header = document.querySelector('.sticky-header');
+
+    function setActiveTab(id){
+      tabs.forEach(btn=>btn.classList.toggle('active', btn.dataset.target === `#${id}`));
+    }
+
+    tabs.forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const target = document.querySelector(btn.dataset.target);
+        if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+    });
+
+    const observer = new IntersectionObserver((entries)=>{
+      entries.forEach(entry=>{
+        if(entry.isIntersecting){
+          setActiveTab(entry.target.id);
+        }
+      });
+    },{rootMargin:'-40% 0px -50% 0px', threshold:0.01});
+
+    sections.forEach(sec=>observer.observe(sec));
+
+    function updateScrollMargin(){
+      const offset = header ? header.offsetHeight + 16 : 100;
+      document.documentElement.style.setProperty('--scroll-offset', `${offset}px`);
+      sections.forEach(sec=>sec.style.scrollMarginTop = `${offset}px`);
+    }
+    updateScrollMargin();
+    window.addEventListener('resize', updateScrollMargin);
+
+    const wizard = document.getElementById('orderWizard');
+    const steps = Array.from(wizard.querySelectorAll('.step'));
+    const dots = Array.from(document.querySelectorAll('.progress-dot'));
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const successBox = document.getElementById('successBox');
+    const errSubmit = document.getElementById('errSubmit');
+
+    const fields = {
+      fullName: document.getElementById('fullName'),
+      countryCode: document.getElementById('countryCode'),
+      phoneDigits: document.getElementById('phoneDigits'),
+      city: document.getElementById('city'),
+      cartUrl: document.getElementById('cartUrl'),
+      pickup: document.getElementById('pickup'),
+      qty: document.getElementById('qty'),
+      notes: document.getElementById('notes')
+    };
+
+    const errors = {
+      name: document.getElementById('errName'),
+      phone: document.getElementById('errPhone'),
+      city: document.getElementById('errCity'),
+      url: document.getElementById('errUrl'),
+      pickup: document.getElementById('errPickup'),
+      qty: document.getElementById('errQty')
+    };
+
+    let currentStep = 1;
+
+    function showStep(step){
+      currentStep = step;
+      steps.forEach(s=>s.classList.toggle('active', Number(s.dataset.step) === step));
+      dots.forEach(d=>d.classList.toggle('active', Number(d.dataset.step) <= step));
+      prevBtn.disabled = step === 1;
+      nextBtn.style.display = step === 3 ? 'none' : 'inline-flex';
+    }
+
+    function setError(el, msg){
+      if(el) el.textContent = msg || '';
+    }
+
+    function normalizeUrl(url){
+      const trimmed = url.trim();
+      if(!trimmed) return '';
+      if(/^https?:\/\//i.test(trimmed)) return trimmed;
+      return `https://${trimmed}`;
+    }
+
+    function validateStep1(){
+      let ok = true;
+      const name = fields.fullName.value.trim();
+      const code = fields.countryCode.value;
+      const digits = fields.phoneDigits.value.trim();
+      const city = fields.city.value.trim();
+
+      setError(errors.name, '');
+      setError(errors.phone, '');
+      setError(errors.city, '');
+
+      if(!name){ setError(errors.name, 'الاسم مطلوب.'); ok = false; }
+      if(!digits || !/^\d+$/.test(digits)){
+        setError(errors.phone, 'رقم الواتساب لازم يكون أرقام فقط.'); ok = false;
+      }else{
+        const full = `+${code}${digits}`;
+        if(!(full.startsWith('+970') || full.startsWith('+972'))){
+          setError(errors.phone, 'الكود لازم يكون 970 أو 972.'); ok = false;
+        }
+        if(digits.length < 7 || digits.length > 12){
+          setError(errors.phone, 'الرقم قصير جدًا أو طويل جدًا.'); ok = false;
+        }
+      }
+      if(!city){ setError(errors.city, 'اختاري المدينة.'); ok = false; }
+      return ok;
+    }
+
+    function validateStep2(){
+      let ok = true;
+      const urlRaw = fields.cartUrl.value;
+      const url = normalizeUrl(urlRaw);
+      const pickup = fields.pickup.value.trim();
+      const qty = Number(fields.qty.value);
+
+      setError(errors.url, '');
+      setError(errors.pickup, '');
+      setError(errors.qty, '');
+
+      if(!url){ setError(errors.url, 'رابط السلة مطلوب.'); ok = false; }
+      else{
+        try{ new URL(url); }
+        catch{ setError(errors.url, 'الرابط غير صحيح.'); ok = false; }
+      }
+      if(!pickup){ setError(errors.pickup, 'اختاري طريقة الاستلام.'); ok = false; }
+      if(!Number.isInteger(qty) || qty < 1 || qty > 200){
+        setError(errors.qty, 'العدد بين 1 و 200.'); ok = false;
+      }
+      if(url && url !== urlRaw) fields.cartUrl.value = url;
+      return ok;
+    }
+
+    function validateAll(){
+      const s1 = validateStep1();
+      const s2 = validateStep2();
+      return { ok: s1 && s2 };
+    }
+
+    nextBtn.addEventListener('click', ()=>{
+      if(currentStep === 1) validateStep1();
+      if(currentStep === 2) validateStep2();
+      showStep(Math.min(3, currentStep + 1));
+    });
+
+    prevBtn.addEventListener('click', ()=>{
+      showStep(Math.max(1, currentStep - 1));
+    });
+
+    const imagesInput = document.getElementById('images');
+    const previewGrid = document.getElementById('previewGrid');
+    let selectedFiles = [];
+
+    function renderPreviews(){
+      previewGrid.innerHTML = '';
+      selectedFiles.forEach((file, idx)=>{
+        const wrap = document.createElement('div');
+        wrap.className = 'preview-item';
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        const btn = document.createElement('button');
+        btn.className = 'remove-btn';
+        btn.type = 'button';
+        btn.textContent = '×';
+        btn.onclick = ()=>{
+          selectedFiles.splice(idx,1);
+          renderPreviews();
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        previewGrid.appendChild(wrap);
+      });
+    }
+
+    imagesInput.addEventListener('change', ()=>{
+      const files = Array.from(imagesInput.files || []);
+      const valid = [];
+      files.forEach(f=>{
+        if(!f.type.startsWith('image/')) return;
+        if(f.size > 4 * 1024 * 1024) return;
+        valid.push(f);
+      });
+      selectedFiles = [...selectedFiles, ...valid].slice(0,5);
+      renderPreviews();
+      imagesInput.value = '';
+    });
+
+    function rateLimited(){
+      const key = 'home_submit_timestamps';
+      const now = Date.now();
+      const tenMin = 10 * 60 * 1000;
+      const raw = localStorage.getItem(key);
+      const list = raw ? JSON.parse(raw) : [];
+      const filtered = list.filter(ts => now - ts < tenMin);
+      if(filtered.length >= 3){
+        localStorage.setItem(key, JSON.stringify(filtered));
+        return true;
+      }
+      filtered.push(now);
+      localStorage.setItem(key, JSON.stringify(filtered));
+      return false;
+    }
+
+    submitBtn.addEventListener('click', ()=>{
+      errSubmit.textContent = '';
+      successBox.style.display = 'none';
+
+      const honeypot = document.getElementById('website');
+      if(honeypot && honeypot.value.trim()) return; // silent reject
+
+      if(rateLimited()){
+        errSubmit.textContent = 'صار في عدد محاولات كثير خلال وقت قصير. جربي بعد شوي.';
+        return;
+      }
+
+      const validation = validateAll();
+      if(!validation.ok){
+        showStep(1);
+        if(!validateStep1()) showStep(1);
+        else showStep(2);
+        errSubmit.textContent = 'يرجى إكمال الحقول المطلوبة.';
+        return;
+      }
+
+      const payload = {
+        full_name: fields.fullName.value.trim(),
+        phone_e164: `+${fields.countryCode.value}${fields.phoneDigits.value.trim()}`,
+        city: fields.city.value,
+        cart_url: normalizeUrl(fields.cartUrl.value),
+        pickup_method: fields.pickup.value,
+        qty: Number(fields.qty.value),
+        notes: fields.notes.value.trim(),
+        images: selectedFiles
+      };
+
+      // TODO: Insert into database + upload images (stub only)
+      // await insertOrder(payload)
+      // await uploadImages(payload.images)
+
+      successBox.style.display = 'block';
+
+      // reset
+      fields.fullName.value = '';
+      fields.phoneDigits.value = '';
+      fields.city.value = '';
+      fields.cartUrl.value = '';
+      fields.pickup.value = '';
+      fields.qty.value = '';
+      fields.notes.value = '';
+      selectedFiles = [];
+      renderPreviews();
+      showStep(1);
+    });
+
+    // inline honeypot
+    const hp = document.createElement('input');
+    hp.type = 'text';
+    hp.id = 'website';
+    hp.name = 'website';
+    hp.tabIndex = -1;
+    hp.autocomplete = 'off';
+    hp.style.position = 'absolute';
+    hp.style.left = '-9999px';
+    document.body.appendChild(hp);
+
+    // FAQ accordion + search
+    const faqSearch = document.getElementById('faqSearch');
+    const faqItems = Array.from(document.querySelectorAll('.faq-item'));
+    const faqGroups = Array.from(document.querySelectorAll('.faq-group'));
+
+    faqItems.forEach(item=>{
+      const btn = item.querySelector('button');
+      if(btn){
+        btn.addEventListener('click', ()=> item.classList.toggle('open'));
+      }
+    });
+
+    function filterFaq(){
+      const q = (faqSearch?.value || '').trim().toLowerCase();
+      faqItems.forEach(item=>{
+        const text = `${item.dataset.text || ''} ${(item.querySelector('.answer')?.textContent || '')}`.toLowerCase();
+        const match = !q || text.includes(q);
+        item.style.display = match ? '' : 'none';
+      });
+      faqGroups.forEach(group=>{
+        const anyVisible = Array.from(group.querySelectorAll('.faq-item')).some(it=>it.style.display !== 'none');
+        group.style.display = anyVisible ? '' : 'none';
+      });
+    }
+
+    if(faqSearch) faqSearch.addEventListener('input', filterFaq);
+    filterFaq();
+
+    showStep(1);
+  </script>
+</body>
+</html>
