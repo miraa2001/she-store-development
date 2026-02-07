@@ -613,6 +613,344 @@
         border-radius:14px;
       }
     }
+
+    /* ===== Bold Editorial V2 (drastic shape + component changes) ===== */
+    body[data-page="index"] .wrap{
+      max-width:none;
+      padding:20px 28px 28px;
+    }
+    body[data-page="index"] .topbar{
+      margin-bottom:18px;
+      border-radius:34px 12px 34px 12px;
+      padding:18px 20px;
+      background:
+        linear-gradient(135deg, rgba(79,138,123,.2) 0%, rgba(255,255,255,.95) 45%, rgba(17,17,17,.02) 100%);
+      border:1px solid rgba(17,17,17,.1);
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.9) inset,
+        0 22px 40px rgba(11,17,14,.12);
+    }
+    body[data-page="index"] .brand b{
+      font-size:29px;
+      font-weight:900;
+      letter-spacing:.012em;
+    }
+    body[data-page="index"] .tabs{
+      border-radius:20px 10px 20px 10px;
+      padding:8px;
+      border:1px solid rgba(17,17,17,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(247,250,248,.95));
+    }
+    body[data-page="index"] .tabLink{
+      border-radius:12px 6px 12px 6px;
+      font-size:14px;
+    }
+    body[data-page="index"] .tabLink.active{
+      background:linear-gradient(135deg, #4f8a7b 0%, #2f5f54 100%);
+      box-shadow:0 12px 20px rgba(79,138,123,.35);
+    }
+    body[data-page="index"] .modeSwitch{
+      border-radius:999px;
+      padding:6px;
+      background:#fff;
+    }
+    body[data-page="index"] .modeBtn{
+      padding:10px 18px;
+      border-radius:999px;
+    }
+    body[data-page="index"] .grid{
+      grid-template-columns:360px 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    body[data-page="index"] .grid.list-collapsed{
+      grid-template-columns:86px 1fr;
+    }
+    body[data-page="index"] #ordersGrid > aside.card{
+      position:sticky;
+      top:104px;
+      border-radius:28px 10px 28px 10px;
+      padding:14px;
+      color:#edf4f1;
+      border:1px solid rgba(255,255,255,.08);
+      background:
+        radial-gradient(200px 160px at 80% -10%, rgba(79,138,123,.45), transparent 70%),
+        linear-gradient(180deg, #1d2724 0%, #111917 100%);
+      box-shadow:0 18px 34px rgba(10,13,12,.36);
+    }
+    body[data-page="index"] #ordersGrid > aside.card .muted{
+      color:rgba(226,241,234,.72);
+    }
+    body[data-page="index"] #ordersGrid > aside.card .btn{
+      border-color:rgba(255,255,255,.18);
+      background:rgba(255,255,255,.05);
+      color:#f5fbf8;
+      box-shadow:none;
+    }
+    body[data-page="index"] #ordersGrid > aside.card .btn:hover{
+      border-color:rgba(255,255,255,.35);
+      background:rgba(255,255,255,.09);
+      transform:none;
+      box-shadow:none;
+    }
+    body[data-page="index"] #ordersGrid > aside.card .btn.primary{
+      border-color:#6cc1ad;
+      background:linear-gradient(135deg, #4f8a7b 0%, #2e6458 100%);
+      color:#fff;
+    }
+    body[data-page="index"] #ordersGrid > aside.card input{
+      border-color:rgba(255,255,255,.24);
+      background:rgba(255,255,255,.07);
+      color:#fff;
+    }
+    body[data-page="index"] #ordersGrid > aside.card input::placeholder{
+      color:rgba(228,243,236,.72);
+    }
+    body[data-page="index"] .orderGroupLabel{
+      background:rgba(255,255,255,.09);
+      border-color:rgba(255,255,255,.2);
+      color:#d9ece5;
+      letter-spacing:.06em;
+      border-radius:999px;
+      text-transform:none;
+      margin-top:14px;
+    }
+    body[data-page="index"] .orderItem{
+      position:relative;
+      border-radius:18px 6px 18px 6px;
+      border:1px solid rgba(255,255,255,.23);
+      background:linear-gradient(180deg, rgba(255,255,255,.1), rgba(255,255,255,.04));
+      color:#f4fbf8;
+      padding:12px 12px 12px 16px;
+      overflow:hidden;
+      box-shadow:none;
+    }
+    body[data-page="index"] .orderItem::before{
+      content:"";
+      position:absolute;
+      top:0;
+      right:0;
+      bottom:0;
+      width:5px;
+      background:rgba(255,255,255,.35);
+    }
+    body[data-page="index"] .orderItem::after{
+      content:"";
+      position:absolute;
+      left:-8px;
+      top:50%;
+      transform:translateY(-50%);
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:#111917;
+      border:1px solid rgba(255,255,255,.2);
+    }
+    body[data-page="index"] .orderItem:hover{
+      transform:none;
+      border-color:rgba(255,255,255,.35);
+      box-shadow:0 10px 20px rgba(0,0,0,.25);
+    }
+    body[data-page="index"] .orderItem.active{
+      border-color:#7cd7c2;
+      background:linear-gradient(180deg, rgba(124,215,194,.24), rgba(124,215,194,.08));
+      box-shadow:0 0 0 1px rgba(124,215,194,.3);
+    }
+    body[data-page="index"] .listCollapsed .miniBtn{
+      border-radius:14px 6px 14px 6px;
+      background:rgba(255,255,255,.09);
+      color:#fff;
+      border-color:rgba(255,255,255,.22);
+    }
+    body[data-page="index"] #ordersGrid > main.card{
+      position:relative;
+      border-radius:34px 12px 34px 12px;
+      border:1px solid #d3e0da;
+      padding:18px;
+      background:
+        radial-gradient(420px 220px at -12% 0%, rgba(79,138,123,.12), transparent 75%),
+        #fbfdfc;
+      box-shadow:
+        0 1px 0 rgba(255,255,255,.95) inset,
+        0 20px 40px rgba(12,20,16,.08);
+    }
+    body[data-page="index"] #ordersGrid > main.card::before{
+      content:"";
+      position:absolute;
+      width:130px;
+      height:130px;
+      top:-24px;
+      left:28px;
+      border-radius:28px;
+      background:linear-gradient(140deg, rgba(79,138,123,.2), rgba(79,138,123,.04));
+      transform:rotate(12deg);
+      pointer-events:none;
+    }
+    body[data-page="index"] .orderSticky{
+      padding:10px 10px 12px;
+      border:1px solid #dbe6e1;
+      border-radius:20px;
+      background:#ffffffd9;
+      backdrop-filter:blur(4px);
+    }
+    body[data-page="index"] .filtersPanel{
+      border-radius:20px 10px 20px 10px;
+      border:1px solid #d8e4de;
+      padding:14px;
+      background:#fff;
+      box-shadow:0 10px 18px rgba(12,20,16,.05);
+    }
+    body[data-page="index"] .filtersHeader b{
+      font-size:15px;
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+    body[data-page="index"] .filtersRow{
+      gap:14px;
+      padding:4px 0;
+    }
+    body[data-page="index"] .filtersRow label{
+      font-size:11px;
+      letter-spacing:.03em;
+      text-transform:uppercase;
+    }
+    body[data-page="index"] .tableScrollTop{
+      border-radius:999px;
+      background:#eaf1ee;
+      border:1px solid #d5e0db;
+      height:10px;
+    }
+    body[data-page="index"] .tableWrap{
+      border:none;
+      background:transparent;
+      padding:0;
+      box-shadow:none;
+    }
+    body[data-page="index"] .tableWrap table{
+      min-width:980px;
+      border-collapse:separate;
+      border-spacing:0 12px;
+    }
+    body[data-page="index"] .tableWrap thead th{
+      position:static;
+      background:transparent;
+      border-bottom:none;
+      font-size:11px;
+      letter-spacing:.07em;
+      text-transform:uppercase;
+      color:#6e7974;
+      padding:0 10px 2px;
+      font-weight:800;
+    }
+    body[data-page="index"] .tableWrap tbody td{
+      background:#fff;
+      border-top:1px solid #d7e2dd;
+      border-bottom:1px solid #d7e2dd;
+      border-left:none;
+      border-right:none;
+      padding:12px 10px;
+      vertical-align:middle;
+    }
+    body[data-page="index"] .tableWrap tbody td:first-child{
+      border-right:1px solid #d7e2dd;
+      border-radius:0 18px 18px 0;
+      font-weight:700;
+    }
+    body[data-page="index"] .tableWrap tbody td:last-child{
+      border-left:1px solid #d7e2dd;
+      border-radius:18px 0 0 18px;
+    }
+    body[data-page="index"] .tableWrap tbody tr:hover td{
+      background:#f3faf7;
+      border-top-color:#bfd6cc;
+      border-bottom-color:#bfd6cc;
+    }
+    body[data-page="index"] .pill{
+      border-radius:999px;
+      border:1px dashed #bfd0c8;
+      background:#f9fcfb;
+      color:#28423a;
+      padding:6px 11px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.01em;
+    }
+    body[data-page="index"] #orderStats{
+      background:#eaf6f2;
+      border-style:solid;
+      border-color:#9fc6ba;
+      color:#285d51;
+    }
+    body[data-page="index"] .btn{
+      border-radius:18px 8px 18px 8px;
+      padding:10px 15px;
+    }
+    body[data-page="index"] .btn.iconBtn{
+      border-radius:14px 6px 14px 6px;
+    }
+    body[data-page="index"] input,
+    body[data-page="index"] select,
+    body[data-page="index"] textarea{
+      border-radius:14px 8px 14px 8px;
+      border:1px solid #cfdcd6;
+      background:#fff;
+    }
+    body[data-page="index"] textarea{
+      min-height:94px;
+    }
+    body[data-page="index"] .searchResults,
+    body[data-page="index"] .autoList{
+      border-radius:16px;
+      border:1px solid #d3dfd9;
+      box-shadow:0 18px 28px rgba(12,20,16,.14);
+      background:#fff;
+    }
+    body[data-page="index"] .dropZone,
+    body[data-page="index"] .miniDropZone{
+      border:2px dashed #b8cbc3;
+      border-radius:18px 10px 18px 10px;
+      background:linear-gradient(180deg, #f9fcfb, #f3f8f6);
+    }
+    body[data-page="index"] .dropZone.dragover,
+    body[data-page="index"] .miniDropZone.dragover{
+      background:#e8f4f0;
+      border-color:#4f8a7b;
+    }
+    body[data-page="index"] #lightbox img{
+      border-radius:24px;
+      box-shadow:0 20px 36px rgba(0,0,0,.45);
+    }
+    body[data-page="index"] .sidebar{
+      border-radius:0 0 0 24px;
+      border-left:1px solid rgba(17,17,17,.12);
+    }
+    @media(max-width:1100px){
+      body[data-page="index"] .grid{
+        grid-template-columns:1fr;
+      }
+      body[data-page="index"] #ordersGrid > aside.card{
+        position:static;
+      }
+    }
+    @media(max-width:700px){
+      body[data-page="index"] .wrap{
+        padding:12px;
+      }
+      body[data-page="index"] .topbar{
+        border-radius:20px 10px 20px 10px;
+        padding:12px;
+      }
+      body[data-page="index"] #ordersGrid > main.card{
+        border-radius:22px 10px 22px 10px;
+        padding:12px;
+      }
+      body[data-page="index"] #ordersGrid > main.card::before{
+        display:none;
+      }
+      body[data-page="index"] .tableWrap table{
+        min-width:860px;
+      }
+    }
   </style>
 </head>
 <body data-page="index">
