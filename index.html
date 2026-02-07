@@ -1057,7 +1057,7 @@ function setMode(mode){
 
 function setFiltersOpen(open){
   filtersOpen = !!open;
-  if(filtersBody) filtersBody.style.display = filtersOpen ? "" : "none";
+  if(filtersBody) filtersBody.style.display = filtersOpen ? "block" : "none";
   if(filtersToggleBtn) filtersToggleBtn.textContent = filtersOpen ? "إخفاء الفلاتر" : "إظهار الفلاتر";
 }
 
