@@ -644,10 +644,12 @@
        ========================= */
     .fb-section{
       padding: 28px 0 10px;
+      overflow-x: hidden;
     }
 
     .fb-header{
       max-width: 980px;
+      width: 100%;
       margin: 0 auto 12px;
       padding: 0 16px;
       text-align: center;
@@ -667,6 +669,7 @@
     /* Wrapper with nav buttons */
     .fb-wrap{
       max-width: 980px;
+      width: 100%;
       margin: 18px auto 0;
       padding: 0 10px;
       display: grid;
@@ -701,7 +704,7 @@
       gap: 16px;
       scroll-snap-type: x mandatory;
       overflow-x: auto;
-      padding: 10px 6px 18px;
+      padding: 10px 0 18px;
       scrollbar-width: none;
     }
     .fb-track::-webkit-scrollbar{ display:none; }
@@ -709,7 +712,7 @@
     /* Each slide is narrower than viewport to reveal peeks */
     .fb-slide{
       scroll-snap-align: center;
-      flex: 0 0 min(78%, 520px); /* ~80% viewport = peeks */
+      flex: 0 0 min(74%, 520px); /* slightly smaller to avoid overpowering */
       position: relative;
       padding: 18px 0; /* space for bubble shadow */
       transform-origin: center;
@@ -821,10 +824,11 @@
 
     /* Responsive tweaks */
     @media (max-width: 520px){
-      .fb-wrap{ grid-template-columns: 36px 1fr 36px; }
-      .fb-nav{ width: 36px; height: 36px; font-size: 22px; }
-      .fb-bubble{ inset: 12px 14px 6px 6px; }
-      .fb-bubble::after{ right: 44px; }
+      .fb-wrap{ grid-template-columns: 32px 1fr 32px; padding: 0 6px; gap: 6px; }
+      .fb-nav{ width: 32px; height: 32px; font-size: 20px; }
+      .fb-slide{ flex-basis: min(70%, 420px); }
+      .fb-bubble{ inset: 12px 12px 6px 6px; }
+      .fb-bubble::after{ right: 38px; }
     }
     </style>
 
@@ -843,10 +847,12 @@
       const dotsWrap = document.querySelector('.fb-dots');
       const btnPrev = document.querySelector('.fb-prev');
       const btnNext = document.querySelector('.fb-next');
+      const section = document.querySelector('.fb-section');
 
       let idx = 0;
       let timer = null;
       let paused = false;
+      let inView = true;
 
       // Create dots
       const dots = slides.map((_, i) => {
@@ -898,7 +904,7 @@
 
       // Autoplay
       function start(){
-        stop();
+        if(timer) return;
         timer = setInterval(() => {
           if(!paused) next();
         }, 2000);
@@ -914,6 +920,20 @@
       viewport?.addEventListener('mouseleave', () => paused = false);
       viewport?.addEventListener('touchstart', () => paused = true, {passive:true});
       viewport?.addEventListener('touchend', () => paused = false, {passive:true});
+
+      if(section){
+        const io = new IntersectionObserver((entries)=>{
+          entries.forEach(entry=>{
+            inView = entry.isIntersecting;
+            if(inView){
+              start();
+            }else{
+              stop();
+            }
+          });
+        }, {threshold: 0.4});
+        io.observe(section);
+      }
 
       // Init
       setActive(0);
