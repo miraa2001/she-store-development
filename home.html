@@ -390,26 +390,20 @@
       border-radius:40px;
       padding:22px 26px;
       z-index:0;
+      background:transparent;
+      box-shadow:none;
+      min-height:150px;
     }
     .feedback-card.cloud::before{
       content:"";
       position:absolute;
       inset:-6px -4px;
       border-radius:48px;
-      background:
-        radial-gradient(circle at 12% 30%, #FDE2F3 18px, transparent 19px),
-        radial-gradient(circle at 30% 10%, #FDE2F3 22px, transparent 23px),
-        radial-gradient(circle at 55% 6%, #EDE7FF 24px, transparent 25px),
-        radial-gradient(circle at 78% 18%, #EDE7FF 22px, transparent 23px),
-        radial-gradient(circle at 92% 42%, #FDE2F3 18px, transparent 19px),
-        radial-gradient(circle at 90% 70%, #EDE7FF 20px, transparent 21px),
-        radial-gradient(circle at 68% 92%, #FDE2F3 22px, transparent 23px),
-        radial-gradient(circle at 36% 94%, #EDE7FF 20px, transparent 21px),
-        radial-gradient(circle at 10% 70%, #FDE2F3 18px, transparent 19px),
-        linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
+      background:url('assets/communication.png') center/contain no-repeat;
       z-index:-1;
-      filter:drop-shadow(0 12px 18px rgba(31,41,55,.12));
+      filter:drop-shadow(0 10px 16px rgba(31,41,55,.16));
     }
+    .feedback-card.cloud::after{display:none}
     .feedback-card.is-active{
       transform:scale(1.02);
       opacity:1;
