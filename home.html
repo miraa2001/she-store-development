@@ -334,112 +334,7 @@
       margin-top:8px;
     }
 
-    /* Feedback carousel */
-    #feedback{background:transparent}
-    #feedback::before{content:none}
-    .feedback-track{
-      display:flex;
-      gap:14px;
-      overflow-x:auto;
-      overflow-y:visible;
-      scroll-snap-type:x mandatory;
-      scroll-padding-inline:24px;
-      padding:10px 24px 22px;
-      scrollbar-width:none;
-    }
-    .feedback-track::-webkit-scrollbar{display:none}
-    .feedback-card{
-      position:relative;
-      border:none;
-      padding:18px 10px 26px;
-      min-height:150px;
-      scroll-snap-align:center;
-      flex:0 0 78%;
-      max-width:520px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-align:center;
-      opacity:.7;
-      transform:scale(.96);
-      transition:transform .3s ease, opacity .3s ease;
-    }
-    .feedback-card::before{content:none}
-    .feedback-bubble{
-      position:absolute;
-      width:78%;
-      height:78%;
-      right:8%;
-      top:6%;
-      background:linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
-      border-radius:46% 54% 50% 50%;
-      box-shadow:0 10px 20px rgba(31,41,55,.12);
-      z-index:0;
-    }
-    .feedback-bubble::after{
-      content:"";
-      position:absolute;
-      bottom:-10px;
-      right:22%;
-      width:26px;height:20px;
-      background:linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
-      clip-path:polygon(0 50%, 100% 0, 100% 100%);
-    }
-    .testimonial-card{
-      position:relative;
-      z-index:1;
-      background:#fff;
-      border-radius:22px;
-      padding:20px 22px 18px;
-      box-shadow:0 14px 26px rgba(31,41,55,.12);
-      width:100%;
-      max-width:440px;
-      min-height:140px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:8px;
-    }
-    .testimonial-badge{
-      position:absolute;
-      top:-16px;
-      right:16px;
-      width:36px;height:36px;
-      border-radius:50%;
-      background:linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-      box-shadow:0 8px 16px rgba(31,41,55,.12);
-    }
-    .quote-mark{
-      width:100%;
-      text-align:right;
-      font-size:18px;
-      color:#c08ac0;
-      line-height:1;
-    }
-    .feedback-text{
-      font-weight:700;
-      line-height:1.7;
-      color:#5b2b77;
-      font-size:clamp(13px, 3.2vw, 16px);
-    }
-    .stars{
-      font-size:13px;
-      color:#f5b301;
-      letter-spacing:1px;
-      opacity:.9;
-    }
-    @media(max-width:420px){
-      .feedback-card{flex-basis:82%;}
-      .testimonial-card{padding:18px 18px 16px; min-height:130px;}
-    }
-    @media(min-width:900px){
-      .feedback-card{flex-basis:42%;}
-      .feedback-text{font-size:clamp(13px, 1vw, 16px);}
-    }
+    /* Feedback slider styles are injected in the feedback section */
     .feedback-card.is-active{
       transform:scale(1.02);
       opacity:1;
@@ -680,84 +575,351 @@
       </div>
     </section>
 
-    <section id="feedback" data-tab="feedback">
-      <h2 class="section-title">آراء الزباين</h2>
-      <p class="section-sub">كلمات لطيفة من زباين حقيقيين.</p>
-      <div class="feedback-track" id="feedbackTrack">
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">💬</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">كل شي مرتب وسريع، والتواصل كتير لطيف.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">✨</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">💗</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">كتير ارتحت بالطريقة، كل خطوة واضحة.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">🌸</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">أفضل تجربة طلب من شي إن صراحة.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">💬</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">الردود سريعة والتسليم كان سهل.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">✨</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">الخدمة بناتي وكتير راقية.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">💗</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">ما توقعت يكون في متابعة لطيفة هيك.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
-        <div class="feedback-card">
-          <div class="feedback-bubble"></div>
-          <div class="testimonial-card">
-            <div class="testimonial-badge">🌸</div>
-            <div class="quote-mark">“</div>
-            <div class="feedback-text">تعامل هادي ومريح جدًا.</div>
-            <div class="stars">★★★★★</div>
-          </div>
-        </div>
+    <!-- =========================
+         FEEDBACK SECTION (DROP-IN)
+         ========================= -->
+    <section id="feedback" class="fb-section" dir="rtl">
+      <div class="fb-header">
+        <h2 class="fb-title">آراء الزباين 💗</h2>
+        <p class="fb-sub">كلام بناتنا اللطيف… شكراً من القلب ✨</p>
       </div>
+
+      <div class="fb-wrap">
+        <button class="fb-nav fb-prev" type="button" aria-label="السابق">‹</button>
+
+        <div class="fb-viewport" aria-roledescription="carousel">
+          <div class="fb-track">
+            <!-- Slide 1 -->
+            <article class="fb-slide" aria-label="رأي 1">
+              <div class="fb-bubble"></div>
+              <div class="fb-card">
+                <div class="fb-badge" aria-hidden="true">💬</div>
+                <div class="fb-quoteMark" aria-hidden="true">“</div>
+                <p class="fb-quote">“الطلب وصل مرتب والتفاصيل كانت دقيقة… كتير انبسطت 💕”</p>
+              </div>
+            </article>
+
+            <!-- Slide 2 -->
+            <article class="fb-slide" aria-label="رأي 2">
+              <div class="fb-bubble"></div>
+              <div class="fb-card">
+                <div class="fb-badge" aria-hidden="true">💜</div>
+                <div class="fb-quoteMark" aria-hidden="true">“</div>
+                <p class="fb-quote">“أريح تجربة طلب من شي إن بصراحة… وكل خطوة كانت واضحة.”</p>
+              </div>
+            </article>
+
+            <!-- Slide 3 -->
+            <article class="fb-slide" aria-label="رأي 3">
+              <div class="fb-bubble"></div>
+              <div class="fb-card">
+                <div class="fb-badge" aria-hidden="true">✨</div>
+                <div class="fb-quoteMark" aria-hidden="true">“</div>
+                <p class="fb-quote">“الرد سريع والتعامل لطيف… حسّيت حالي مطمّنة طول الوقت 💗”</p>
+              </div>
+            </article>
+
+            <!-- Slide 4 -->
+            <article class="fb-slide" aria-label="رأي 4">
+              <div class="fb-bubble"></div>
+              <div class="fb-card">
+                <div class="fb-badge" aria-hidden="true">🛍️</div>
+                <div class="fb-quoteMark" aria-hidden="true">“</div>
+                <p class="fb-quote">“كلشي كان منظم… وحتى لو في تكرار بالقطع انتبهتوا عليه.”</p>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <button class="fb-nav fb-next" type="button" aria-label="التالي">›</button>
+      </div>
+
+      <div class="fb-dots" aria-hidden="true"></div>
     </section>
+
+    <style>
+    /* =========================
+       FEEDBACK SLIDER STYLES
+       Pink–Purple, layered bubble
+       ========================= */
+    .fb-section{
+      padding: 28px 0 10px;
+    }
+
+    .fb-header{
+      max-width: 980px;
+      margin: 0 auto 12px;
+      padding: 0 16px;
+      text-align: center;
+    }
+
+    .fb-title{
+      margin: 0;
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 800;
+    }
+
+    .fb-sub{
+      margin: 6px 0 0;
+      opacity: .8;
+    }
+
+    /* Wrapper with nav buttons */
+    .fb-wrap{
+      max-width: 980px;
+      margin: 18px auto 0;
+      padding: 0 10px;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Nav buttons */
+    .fb-nav{
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      border: 1px solid rgba(120, 70, 160, .22);
+      background: rgba(255,255,255,.75);
+      box-shadow: 0 10px 30px rgba(120,70,160,.12);
+      cursor: pointer;
+      font-size: 26px;
+      line-height: 1;
+    }
+    .fb-nav:active{ transform: scale(.98); }
+
+    /* Viewport to show peeks */
+    .fb-viewport{
+      overflow: visible; /* key for peeking */
+      position: relative;
+    }
+
+    /* Track becomes a horizontal carousel */
+    .fb-track{
+      display: flex;
+      gap: 16px;
+      scroll-snap-type: x mandatory;
+      overflow-x: auto;
+      padding: 10px 6px 18px;
+      scrollbar-width: none;
+    }
+    .fb-track::-webkit-scrollbar{ display:none; }
+
+    /* Each slide is narrower than viewport to reveal peeks */
+    .fb-slide{
+      scroll-snap-align: center;
+      flex: 0 0 min(78%, 520px); /* ~80% viewport = peeks */
+      position: relative;
+      padding: 18px 0; /* space for bubble shadow */
+      transform-origin: center;
+      transition: transform .35s ease, opacity .35s ease;
+    }
+
+    /* The big pastel speech bubble behind */
+    .fb-bubble{
+      position: absolute;
+      inset: 12px 20px 6px 10px;
+      border-radius: 28px;
+      background: radial-gradient(circle at 20% 20%, rgba(255,168,220,.55), rgba(194,154,255,.45));
+      filter: blur(0px);
+      box-shadow: 0 18px 60px rgba(170, 90, 210, .18);
+      transform: rotate(-2deg);
+      z-index: 0;
+    }
+
+    /* Tail of bubble */
+    .fb-bubble::after{
+      content:"";
+      position:absolute;
+      bottom:-18px;
+      right: 64px; /* in RTL this will appear visually as the "end" */
+      width: 0;
+      height: 0;
+      border-left: 18px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 22px solid rgba(194,154,255,.45);
+      transform: rotate(10deg);
+      filter: drop-shadow(0 14px 18px rgba(170, 90, 210, .10));
+    }
+
+    /* White testimonial card on top */
+    .fb-card{
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(160, 120, 200, .18);
+      border-radius: 22px;
+      padding: 22px 18px 18px;
+      box-shadow: 0 16px 40px rgba(80, 40, 120, .10);
+      min-height: 120px;
+    }
+
+    /* Badge (anonymous icon) floating on card */
+    .fb-badge{
+      position: absolute;
+      top: -16px;
+      right: 18px;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.9), rgba(255,230,245,.8));
+      border: 1px solid rgba(160, 120, 200, .22);
+      box-shadow: 0 12px 26px rgba(120,70,160,.14);
+      font-size: 20px;
+    }
+
+    /* Quotation mark decor */
+    .fb-quoteMark{
+      position: absolute;
+      left: 16px;
+      top: 10px;
+      font-size: 54px;
+      opacity: .14;
+      font-weight: 900;
+    }
+
+    /* Quote text */
+    .fb-quote{
+      margin: 10px 0 0;
+      font-size: clamp(15px, 2.2vw, 18px);
+      line-height: 1.65;
+      font-weight: 700;
+      color: rgba(70, 30, 95, .95);
+      text-align: center;
+    }
+
+    /* Dots */
+    .fb-dots{
+      display:flex;
+      justify-content:center;
+      gap: 8px;
+      padding: 10px 0 0;
+    }
+    .fb-dot{
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(120,70,160,.25);
+      transition: transform .25s ease, background .25s ease;
+    }
+    .fb-dot.is-active{
+      background: rgba(120,70,160,.65);
+      transform: scale(1.3);
+    }
+
+    /* Active emphasis (set by JS) */
+    .fb-slide.is-active{
+      transform: scale(1.02);
+      opacity: 1;
+    }
+    .fb-slide:not(.is-active){
+      opacity: .78;
+    }
+
+    /* Responsive tweaks */
+    @media (max-width: 520px){
+      .fb-wrap{ grid-template-columns: 36px 1fr 36px; }
+      .fb-nav{ width: 36px; height: 36px; font-size: 22px; }
+      .fb-bubble{ inset: 12px 14px 6px 6px; }
+      .fb-bubble::after{ right: 44px; }
+    }
+    </style>
+
+    <script>
+    /* =========================
+       FEEDBACK SLIDER LOGIC
+       - autoplay every 2s
+       - peeking neighbors via slide width < viewport
+       - pause on hover/touch
+       ========================= */
+    (function(){
+      const track = document.querySelector('.fb-track');
+      if(!track) return;
+
+      const slides = Array.from(track.querySelectorAll('.fb-slide'));
+      const dotsWrap = document.querySelector('.fb-dots');
+      const btnPrev = document.querySelector('.fb-prev');
+      const btnNext = document.querySelector('.fb-next');
+
+      let idx = 0;
+      let timer = null;
+      let paused = false;
+
+      // Create dots
+      const dots = slides.map((_, i) => {
+        const d = document.createElement('div');
+        d.className = 'fb-dot' + (i === 0 ? ' is-active' : '');
+        d.addEventListener('click', () => goTo(i, true));
+        dotsWrap.appendChild(d);
+        return d;
+      });
+
+      function setActive(i){
+        slides.forEach((s, k) => s.classList.toggle('is-active', k === i));
+        dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
+      }
+
+      function goTo(i, userInitiated=false){
+        idx = (i + slides.length) % slides.length;
+        setActive(idx);
+        slides[idx].scrollIntoView({behavior: userInitiated ? 'smooth' : 'smooth', inline:'center', block:'nearest'});
+      }
+
+      function next(){ goTo(idx + 1); }
+      function prev(){ goTo(idx - 1, true); }
+
+      btnNext?.addEventListener('click', next);
+      btnPrev?.addEventListener('click', prev);
+
+      // Track scroll -> update active slide based on closest center
+      function updateFromScroll(){
+        const rect = track.getBoundingClientRect();
+        const center = rect.left + rect.width / 2;
+        let best = 0, bestDist = Infinity;
+
+        slides.forEach((s, i) => {
+          const r = s.getBoundingClientRect();
+          const sc = r.left + r.width / 2;
+          const dist = Math.abs(sc - center);
+          if(dist < bestDist){ bestDist = dist; best = i; }
+        });
+
+        if(best !== idx){
+          idx = best;
+          setActive(idx);
+        }
+      }
+      track.addEventListener('scroll', () => {
+        window.requestAnimationFrame(updateFromScroll);
+      }, {passive:true});
+
+      // Autoplay
+      function start(){
+        stop();
+        timer = setInterval(() => {
+          if(!paused) next();
+        }, 2000);
+      }
+      function stop(){
+        if(timer) clearInterval(timer);
+        timer = null;
+      }
+
+      // Pause on hover/touch
+      const viewport = document.querySelector('.fb-viewport');
+      viewport?.addEventListener('mouseenter', () => paused = true);
+      viewport?.addEventListener('mouseleave', () => paused = false);
+      viewport?.addEventListener('touchstart', () => paused = true, {passive:true});
+      viewport?.addEventListener('touchend', () => paused = false, {passive:true});
+
+      // Init
+      setActive(0);
+      start();
+    })();
+    </script>
 
     <section id="faq" data-tab="faq">
       <h2 class="section-title">الأسئلة الشائعة</h2>
@@ -1139,62 +1301,6 @@
 
     if(faqSearch) faqSearch.addEventListener('input', filterFaq);
     filterFaq();
-
-    // Feedback auto slide
-    const feedbackTrack = document.getElementById('feedbackTrack');
-    const feedbackCards = feedbackTrack ? Array.from(feedbackTrack.querySelectorAll('.feedback-card')) : [];
-    let feedbackIdx = 0;
-    let feedbackTimer = null;
-    let feedbackRaf = null;
-
-    function updateActiveFeedback(){
-      if(!feedbackTrack || !feedbackCards.length) return;
-      const trackRect = feedbackTrack.getBoundingClientRect();
-      const centerX = trackRect.left + trackRect.width / 2;
-      let closestIdx = 0;
-      let closestDist = Infinity;
-      feedbackCards.forEach((card, idx)=>{
-        const rect = card.getBoundingClientRect();
-        const cardCenter = rect.left + rect.width / 2;
-        const dist = Math.abs(centerX - cardCenter);
-        if(dist < closestDist){
-          closestDist = dist;
-          closestIdx = idx;
-        }
-      });
-      feedbackCards.forEach((card, idx)=> card.classList.toggle('is-active', idx === closestIdx));
-    }
-
-    function queueActiveUpdate(){
-      if(feedbackRaf) cancelAnimationFrame(feedbackRaf);
-      feedbackRaf = requestAnimationFrame(updateActiveFeedback);
-    }
-
-    function goToFeedback(idx){
-      if(!feedbackCards.length) return;
-      feedbackIdx = (idx + feedbackCards.length) % feedbackCards.length;
-      feedbackCards[feedbackIdx].scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
-      queueActiveUpdate();
-    }
-
-    function startFeedbackAuto(){
-      if(!feedbackCards.length) return;
-      if(feedbackTimer) clearInterval(feedbackTimer);
-      feedbackTimer = setInterval(()=>{
-        if(document.hidden) return;
-        goToFeedback(feedbackIdx + 1);
-      }, 2000);
-    }
-
-    if(feedbackTrack){
-      feedbackTrack.addEventListener('scroll', queueActiveUpdate, {passive:true});
-      feedbackTrack.addEventListener('mouseenter', ()=> clearInterval(feedbackTimer));
-      feedbackTrack.addEventListener('mouseleave', startFeedbackAuto);
-      feedbackTrack.addEventListener('touchstart', ()=> clearInterval(feedbackTimer), {passive:true});
-      feedbackTrack.addEventListener('touchend', startFeedbackAuto, {passive:true});
-      startFeedbackAuto();
-      queueActiveUpdate();
-    }
 
     showStep(1);
   </script>
