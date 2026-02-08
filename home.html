@@ -343,37 +343,40 @@
       overflow-x:auto;
       overflow-y:visible;
       scroll-snap-type:x mandatory;
-      scroll-padding-inline:18px;
-      padding:8px 18px 18px;
+      scroll-padding-inline:24px;
+      padding:10px 24px 22px;
       scrollbar-width:none;
     }
     .feedback-track::-webkit-scrollbar{display:none}
     .feedback-card{
       position:relative;
-      background:linear-gradient(135deg,#FCE7F3 0%, #F3E8FF 100%);
+      background:linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
       border:none;
-      border-radius:28px;
-      box-shadow:0 12px 26px rgba(31,41,55,.12);
-      padding:18px 20px;
-      min-height:0;
+      border-radius:34px;
+      box-shadow:0 14px 28px rgba(31,41,55,.14);
+      padding:20px 24px;
+      min-height:110px;
       scroll-snap-align:center;
-      flex:0 0 80%;
+      flex:0 0 78%;
       max-width:520px;
       display:flex;
       align-items:center;
       justify-content:center;
       text-align:center;
+      opacity:.7;
+      transform:scale(.96);
+      transition:transform .3s ease, opacity .3s ease;
     }
     .feedback-card::before{content:none}
     .feedback-card::after{
       content:"";
       position:absolute;
       bottom:16px;
-      right:-12px;
-      width:18px;height:18px;
-      background:linear-gradient(135deg,#FCE7F3 0%, #F3E8FF 100%);
+      right:-18px;
+      width:28px;height:24px;
+      background:linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
       clip-path:polygon(0 50%, 100% 0, 100% 100%);
-      filter:drop-shadow(0 6px 10px rgba(31,41,55,.12));
+      filter:drop-shadow(0 8px 12px rgba(31,41,55,.14));
     }
     .feedback-text{
       font-weight:700;
@@ -381,7 +384,35 @@
       color:#5b2b77;
     }
     @media(min-width:900px){
-      .feedback-card{flex-basis:40%;}
+      .feedback-card{flex-basis:42%;}
+    }
+    .feedback-card.cloud{
+      border-radius:40px;
+      padding:22px 26px;
+      z-index:0;
+    }
+    .feedback-card.cloud::before{
+      content:"";
+      position:absolute;
+      inset:-6px -4px;
+      border-radius:48px;
+      background:
+        radial-gradient(circle at 12% 30%, #FDE2F3 18px, transparent 19px),
+        radial-gradient(circle at 30% 10%, #FDE2F3 22px, transparent 23px),
+        radial-gradient(circle at 55% 6%, #EDE7FF 24px, transparent 25px),
+        radial-gradient(circle at 78% 18%, #EDE7FF 22px, transparent 23px),
+        radial-gradient(circle at 92% 42%, #FDE2F3 18px, transparent 19px),
+        radial-gradient(circle at 90% 70%, #EDE7FF 20px, transparent 21px),
+        radial-gradient(circle at 68% 92%, #FDE2F3 22px, transparent 23px),
+        radial-gradient(circle at 36% 94%, #EDE7FF 20px, transparent 21px),
+        radial-gradient(circle at 10% 70%, #FDE2F3 18px, transparent 19px),
+        linear-gradient(135deg,#FDE2F3 0%, #EDE7FF 100%);
+      z-index:-1;
+      filter:drop-shadow(0 12px 18px rgba(31,41,55,.12));
+    }
+    .feedback-card.is-active{
+      transform:scale(1.02);
+      opacity:1;
     }
 
     /* FAQ */
@@ -623,14 +654,14 @@
       <h2 class="section-title">آراء الزباين</h2>
       <p class="section-sub">كلمات لطيفة من زباين حقيقيين.</p>
       <div class="feedback-track" id="feedbackTrack">
-        <div class="feedback-card"><div class="feedback-text">“كل شي مرتب وسريع، والتواصل كتير لطيف.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“كتير ارتحت بالطريقة، كل خطوة واضحة.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“أفضل تجربة طلب من شي إن صراحة.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“الردود سريعة والتسليم كان سهل.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“الخدمة بناتي وكتير راقية.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“ما توقعت يكون في متابعة لطيفة هيك.”</div></div>
-        <div class="feedback-card"><div class="feedback-text">“تعامل هادي ومريح جدًا.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“كل شي مرتب وسريع، والتواصل كتير لطيف.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“كتير ارتحت بالطريقة، كل خطوة واضحة.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“أفضل تجربة طلب من شي إن صراحة.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“الردود سريعة والتسليم كان سهل.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“الخدمة بناتي وكتير راقية.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“ما توقعت يكون في متابعة لطيفة هيك.”</div></div>
+        <div class="feedback-card cloud"><div class="feedback-text">“تعامل هادي ومريح جدًا.”</div></div>
       </div>
     </section>
 
@@ -1020,11 +1051,36 @@
     const feedbackCards = feedbackTrack ? Array.from(feedbackTrack.querySelectorAll('.feedback-card')) : [];
     let feedbackIdx = 0;
     let feedbackTimer = null;
+    let feedbackRaf = null;
+
+    function updateActiveFeedback(){
+      if(!feedbackTrack || !feedbackCards.length) return;
+      const trackRect = feedbackTrack.getBoundingClientRect();
+      const centerX = trackRect.left + trackRect.width / 2;
+      let closestIdx = 0;
+      let closestDist = Infinity;
+      feedbackCards.forEach((card, idx)=>{
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.left + rect.width / 2;
+        const dist = Math.abs(centerX - cardCenter);
+        if(dist < closestDist){
+          closestDist = dist;
+          closestIdx = idx;
+        }
+      });
+      feedbackCards.forEach((card, idx)=> card.classList.toggle('is-active', idx === closestIdx));
+    }
+
+    function queueActiveUpdate(){
+      if(feedbackRaf) cancelAnimationFrame(feedbackRaf);
+      feedbackRaf = requestAnimationFrame(updateActiveFeedback);
+    }
 
     function goToFeedback(idx){
       if(!feedbackCards.length) return;
       feedbackIdx = (idx + feedbackCards.length) % feedbackCards.length;
       feedbackCards[feedbackIdx].scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+      queueActiveUpdate();
     }
 
     function startFeedbackAuto(){
@@ -1037,11 +1093,13 @@
     }
 
     if(feedbackTrack){
+      feedbackTrack.addEventListener('scroll', queueActiveUpdate, {passive:true});
       feedbackTrack.addEventListener('mouseenter', ()=> clearInterval(feedbackTimer));
       feedbackTrack.addEventListener('mouseleave', startFeedbackAuto);
       feedbackTrack.addEventListener('touchstart', ()=> clearInterval(feedbackTimer), {passive:true});
       feedbackTrack.addEventListener('touchend', startFeedbackAuto, {passive:true});
       startFeedbackAuto();
+      queueActiveUpdate();
     }
 
     showStep(1);
