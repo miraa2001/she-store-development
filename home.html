@@ -857,7 +857,7 @@
       let idx = 0;
       let timer = null;
       let paused = false;
-      let inView = true;
+      let inView = false;
 
       // Create dots
       const dots = slides.map((_, i) => {
@@ -873,10 +873,19 @@
         dots.forEach((d, k) => d.classList.toggle('is-active', k === i));
       }
 
+      function scrollToSlide(i, smooth){
+        const slide = slides[i];
+        if(!slide) return;
+        const trackRect = track.getBoundingClientRect();
+        const slideRect = slide.getBoundingClientRect();
+        const delta = (slideRect.left - trackRect.left) + (slideRect.width - trackRect.width) / 2;
+        track.scrollBy({left: delta, behavior: smooth ? 'smooth' : 'auto'});
+      }
+
       function goTo(i, userInitiated=false){
         idx = (i + slides.length) % slides.length;
         setActive(idx);
-        slides[idx].scrollIntoView({behavior: userInitiated ? 'smooth' : 'smooth', inline:'center', block:'nearest'});
+        scrollToSlide(idx, true);
       }
 
       function next(){ goTo(idx + 1); }
@@ -942,7 +951,7 @@
 
       // Init
       setActive(0);
-      start();
+      if(!section) start();
     })();
     </script>
 
