@@ -334,19 +334,49 @@
       margin-top:8px;
     }
 
-    /* Feedback */
-    .feedback-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    .feedback-card{position:relative}
-    .feedback-card::before{content:"💬";position:absolute;top:10px;right:10px}
-    @media(max-width:900px){
-      .feedback-grid{
-        display:flex;
-        overflow-x:auto;
-        gap:12px;
-        padding-bottom:6px;
-        scroll-snap-type:x mandatory;
-      }
-      .feedback-card{min-width:240px;scroll-snap-align:start}
+    /* Feedback carousel */
+    .feedback-track{
+      display:flex;
+      gap:14px;
+      overflow-x:auto;
+      scroll-snap-type:x mandatory;
+      scroll-padding-inline:18px;
+      padding:6px 18px 12px;
+      scrollbar-width:none;
+    }
+    .feedback-track::-webkit-scrollbar{display:none}
+    .feedback-card{
+      position:relative;
+      background:#fff;
+      border:1px solid #f1d7ea;
+      border-radius:26px;
+      box-shadow:0 12px 24px rgba(31,41,55,.08);
+      padding:22px 20px;
+      min-height:120px;
+      scroll-snap-align:center;
+      flex:0 0 70%;
+      display:flex;
+      align-items:center;
+    }
+    .feedback-card::before{
+      content:"💬";
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:88px;
+      opacity:.18;
+      pointer-events:none;
+    }
+    .feedback-text{
+      position:relative;
+      font-weight:700;
+      line-height:1.7;
+      color:#5b2b77;
+    }
+    @media(min-width:900px){
+      .feedback-card{flex-basis:42%;}
     }
 
     /* FAQ */
@@ -587,15 +617,15 @@
     <section id="feedback" data-tab="feedback">
       <h2 class="section-title">آراء الزباين</h2>
       <p class="section-sub">كلمات لطيفة من زباين حقيقيين.</p>
-      <div class="feedback-grid">
-        <div class="card feedback-card">“كل شي مرتب وسريع، والتواصل كتير لطيف.”</div>
-        <div class="card feedback-card">“الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.”</div>
-        <div class="card feedback-card">“كتير ارتحت بالطريقة، كل خطوة واضحة.”</div>
-        <div class="card feedback-card">“أفضل تجربة طلب من شي إن صراحة.”</div>
-        <div class="card feedback-card">“الردود سريعة والتسليم كان سهل.”</div>
-        <div class="card feedback-card">“الخدمة بناتي وكتير راقية.”</div>
-        <div class="card feedback-card">“ما توقعت يكون في متابعة لطيفة هيك.”</div>
-        <div class="card feedback-card">“تعامل هادي ومريح جدًا.”</div>
+      <div class="feedback-track" id="feedbackTrack">
+        <div class="feedback-card"><div class="feedback-text">“كل شي مرتب وسريع، والتواصل كتير لطيف.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“الطلب وصل مرتب والاهتمام بالتفاصيل رهيب.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“كتير ارتحت بالطريقة، كل خطوة واضحة.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“أفضل تجربة طلب من شي إن صراحة.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“الردود سريعة والتسليم كان سهل.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“الخدمة بناتي وكتير راقية.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“ما توقعت يكون في متابعة لطيفة هيك.”</div></div>
+        <div class="feedback-card"><div class="feedback-text">“تعامل هادي ومريح جدًا.”</div></div>
       </div>
     </section>
 
@@ -979,6 +1009,35 @@
 
     if(faqSearch) faqSearch.addEventListener('input', filterFaq);
     filterFaq();
+
+    // Feedback auto slide
+    const feedbackTrack = document.getElementById('feedbackTrack');
+    const feedbackCards = feedbackTrack ? Array.from(feedbackTrack.querySelectorAll('.feedback-card')) : [];
+    let feedbackIdx = 0;
+    let feedbackTimer = null;
+
+    function goToFeedback(idx){
+      if(!feedbackCards.length) return;
+      feedbackIdx = (idx + feedbackCards.length) % feedbackCards.length;
+      feedbackCards[feedbackIdx].scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+    }
+
+    function startFeedbackAuto(){
+      if(!feedbackCards.length) return;
+      if(feedbackTimer) clearInterval(feedbackTimer);
+      feedbackTimer = setInterval(()=>{
+        if(document.hidden) return;
+        goToFeedback(feedbackIdx + 1);
+      }, 2000);
+    }
+
+    if(feedbackTrack){
+      feedbackTrack.addEventListener('mouseenter', ()=> clearInterval(feedbackTimer));
+      feedbackTrack.addEventListener('mouseleave', startFeedbackAuto);
+      feedbackTrack.addEventListener('touchstart', ()=> clearInterval(feedbackTimer), {passive:true});
+      feedbackTrack.addEventListener('touchend', startFeedbackAuto, {passive:true});
+      startFeedbackAuto();
+    }
 
     showStep(1);
   </script>
