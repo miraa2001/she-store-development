@@ -2064,11 +2064,63 @@ saveOrderBtn.onclick = async () => {
 };
 
 /* ===== New purchase links inputs ===== */
-for(let i=1;i<=5;i++){
-  const input = document.createElement("input");
-  input.placeholder = `رابط ${i}`;
-  linksWrap.appendChild(input);
+const NEW_PURCHASE_LINKS_LIMIT = 5;
+let newPurchaseLinkCount = 1;
+
+function renderNewPurchaseLinks(){
+  if(!linksWrap) return;
+  linksWrap.innerHTML = "";
+
+  for(let i=1; i<=newPurchaseLinkCount; i++){
+    const input = document.createElement("input");
+    input.type = "url";
+    input.placeholder = `رابط ${i}`;
+    input.dataset.newLink = String(i);
+    input.style.flex = "1";
+    input.style.minWidth = "220px";
+    linksWrap.appendChild(input);
+  }
+
+  const addLinkBtn = document.createElement("button");
+  addLinkBtn.type = "button";
+  addLinkBtn.className = "btn";
+  addLinkBtn.textContent = "+";
+  addLinkBtn.title = "إضافة رابط";
+  addLinkBtn.setAttribute("aria-label", "إضافة رابط");
+  addLinkBtn.style.minWidth = "42px";
+  addLinkBtn.disabled = newPurchaseLinkCount >= NEW_PURCHASE_LINKS_LIMIT;
+  addLinkBtn.onclick = ()=>{
+    if(newPurchaseLinkCount >= NEW_PURCHASE_LINKS_LIMIT) return;
+    newPurchaseLinkCount += 1;
+    renderNewPurchaseLinks();
+    const nextInput = linksWrap.querySelector(`input[data-new-link="${newPurchaseLinkCount}"]`);
+    if(nextInput) nextInput.focus();
+  };
+  linksWrap.appendChild(addLinkBtn);
+
+  if(newPurchaseLinkCount > 1){
+    const removeLinkBtn = document.createElement("button");
+    removeLinkBtn.type = "button";
+    removeLinkBtn.className = "btn";
+    removeLinkBtn.textContent = "−";
+    removeLinkBtn.title = "حذف آخر رابط";
+    removeLinkBtn.setAttribute("aria-label", "حذف آخر رابط");
+    removeLinkBtn.style.minWidth = "42px";
+    removeLinkBtn.onclick = ()=>{
+      if(newPurchaseLinkCount <= 1) return;
+      newPurchaseLinkCount -= 1;
+      renderNewPurchaseLinks();
+    };
+    linksWrap.appendChild(removeLinkBtn);
+  }
 }
+
+function resetNewPurchaseLinks(){
+  newPurchaseLinkCount = 1;
+  renderNewPurchaseLinks();
+}
+
+resetNewPurchaseLinks();
 
 setupCustomerAutocomplete(customer, customerList, customerClearBtn, { applyPickup: true });
 
@@ -3572,7 +3624,7 @@ addBtn.onclick = async ()=>{
     bagSize.value="كيس صغير";
     note.value="";
     images.value="";
-    linksWrap.querySelectorAll("input").forEach(i=>i.value="");
+    resetNewPurchaseLinks();
     selectedImages=[]; updatePreview();
     clearDuplicateWarning();
 
