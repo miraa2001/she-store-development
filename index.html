@@ -851,10 +851,16 @@
 
             <div class="row" id="arrivedRow" style="margin-top:8px;display:none">
               <div class="row" style="gap:8px;align-items:center">
-                <label class="row" style="gap:8px;cursor:pointer">
+                <div class="love">
                   <input type="checkbox" id="arrivedToggle">
-                  <span>تم وصول الطلب</span>
-                </label>
+                  <label class="love-heart" for="arrivedToggle">
+                    <i class="left"></i>
+                    <i class="right"></i>
+                    <i class="bottom"></i>
+                    <div class="round"></div>
+                  </label>
+                </div>
+                <label for="arrivedToggle" style="cursor:pointer">تم وصول الطلب</label>
                 <span id="arrivedBadge"></span>
               </div>
               <div class="row" style="gap:8px">
@@ -962,10 +968,16 @@
               <b id="viewTitle"></b>
 
               <div id="viewPlacedToggleWrap" class="toggleRow" style="display:none">
-                <label class="toggleRow" style="cursor:pointer">
+                <div class="love">
                   <input type="checkbox" id="viewPlacedAtPickupToggle">
-                  <span>تم وضع الطلب في نقطة الاستلام</span>
-                </label>
+                  <label class="love-heart" for="viewPlacedAtPickupToggle">
+                    <i class="left"></i>
+                    <i class="right"></i>
+                    <i class="bottom"></i>
+                    <div class="round"></div>
+                  </label>
+                </div>
+                <label for="viewPlacedAtPickupToggle" style="cursor:pointer">تم وضع الطلب في نقطة الاستلام</label>
                 <span id="viewPlacedToggleMsg" class="muted"></span>
               </div>
             </div>
