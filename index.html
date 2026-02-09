@@ -457,6 +457,32 @@
     th,td{border-bottom:1px solid var(--color-border);padding:10px;text-align:right;vertical-align:top}
     td a{word-break:break-all;overflow-wrap:anywhere}
     th{color:var(--color-muted);font-size:13px}
+    #ordersTableWrap table{min-width:760px}
+    #ordersTableWrap th:nth-child(7),
+    #ordersTableWrap td:nth-child(7){
+      max-width:240px;
+      white-space:normal;
+      word-break:break-word;
+    }
+    #ordersTableWrap th:last-child,
+    #ordersTableWrap td.actionCell{
+      width:86px;
+      min-width:86px;
+      text-align:center;
+      padding-inline:6px;
+      white-space:nowrap;
+    }
+    @media(max-width:700px){
+      #ordersTableWrap table{min-width:680px}
+      #ordersTableWrap th:nth-child(7),
+      #ordersTableWrap td:nth-child(7){max-width:150px}
+      #ordersTableWrap th:last-child,
+      #ordersTableWrap td.actionCell{
+        width:72px;
+        min-width:72px;
+        padding-inline:4px;
+      }
+    }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
