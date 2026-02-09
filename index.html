@@ -670,11 +670,7 @@
     #openAddPurchaseModalBtn:hover{filter:brightness(.98)}
 
     .checkbox-wrapper-41{
-      --size: 44px;
-      --toggle-on: #61463D;
-      --toggle-border: #2d5f52;
-      --toggle-off: #e7f0ec;
-      --toggle-thumb: #ffffff;
+      --size: 100px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -685,14 +681,14 @@
       appearance:none;
       width:var(--size);
       height:calc(var(--size) / 2);
-      background-color:var(--toggle-off);
-      border:2px solid var(--toggle-border);
+      background-color:#fff;
+      border:3px solid #222;
       border-radius:30px 100px 100px 100px;
-      box-shadow:0 6px 12px rgba(79,138,123,.18);
+      box-shadow:0 10px 20px rgba(0,0,0,.2);
       outline:none;
       cursor:pointer;
       position:relative;
-      transition:all .35s ease;
+      transition:all .5s;
       margin:0;
     }
     .checkbox-wrapper-41 input[type="checkbox"]::before{
@@ -702,29 +698,24 @@
       height:calc(var(--size) / 2);
       left:0;
       top:50%;
-      transform:translateY(-50%) scale(.72);
-      border:2px solid var(--toggle-border);
+      transform:translateY(-50%) scale(.7);
+      border:3px solid #222;
       border-radius:30px 100px 100px 100px;
-      background-color:var(--toggle-thumb);
+      background-color:#fde881;
       box-sizing:border-box;
-      transition:all .35s ease;
+      transition:all .5s;
     }
     .checkbox-wrapper-41 input[type="checkbox"]:checked{
-      background-color:var(--toggle-on);
+      background-color:#fde881;
       border-radius:100px 100px 30px 100px;
-      border-color:var(--toggle-on);
     }
     .checkbox-wrapper-41 input[type="checkbox"]:checked::before{
       left:50%;
-      background-color:var(--toggle-thumb);
+      background-color:#fff;
       border-radius:100px 100px 30px 100px;
-      border-color:var(--toggle-on);
     }
     .checkbox-wrapper-41 input[type="checkbox"]:focus-visible{
-      box-shadow:0 0 0 3px rgba(79,138,123,.22), 0 6px 12px rgba(79,138,123,.18);
-    }
-    @media(max-width:700px){
-      .checkbox-wrapper-41{ --size: 36px; }
+      box-shadow:0 0 0 3px rgba(45,140,240,.25), 0 10px 20px rgba(0,0,0,.2);
     }
 
     /* From Uiverse.io by ilkhoeri */
