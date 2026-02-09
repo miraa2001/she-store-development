@@ -607,6 +607,7 @@
     #addPurchaseModalCard{
       width:min(720px, calc(100vw - 32px));
       max-height:calc(100vh - 32px);
+      max-height:calc(100dvh - 32px);
       background:#fff;
       border-radius:16px;
       box-shadow:0 24px 64px rgba(0,0,0,.24);
@@ -645,6 +646,26 @@
     #addPurchaseModalBody{
       padding:16px;
       overflow:auto;
+    }
+    @media(max-width:700px){
+      #addPurchaseModalBackdrop{
+        align-items:flex-start;
+        padding:12px;
+        padding-top:calc(8px + env(safe-area-inset-top));
+        padding-bottom:calc(8px + env(safe-area-inset-bottom));
+      }
+      #addPurchaseModalCard{
+        width:calc(100vw - 24px);
+        max-height:calc(100vh - 16px);
+        max-height:calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 16px);
+        border-radius:14px;
+      }
+      .addPurchaseModalHeader{
+        padding:10px 12px;
+      }
+      #addPurchaseModalBody{
+        padding:12px;
+      }
     }
     #openAddPurchaseModalBtn:hover{filter:brightness(.98)}
   </style>
