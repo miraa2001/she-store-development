@@ -142,6 +142,10 @@
     .grid.list-collapsed{grid-template-columns:46px 1fr}
     .grid.list-collapsed .listFull{display:none}
     .grid.list-collapsed .listCollapsed{display:flex}
+    #ordersGrid > main.card{
+      width:min(100%, 800px);
+      justify-self:start;
+    }
     #ordersGrid.list-collapsed > aside.card,
     #viewGrid.list-collapsed > aside.card{
       border:none;
@@ -340,6 +344,10 @@
         background:transparent;
         box-shadow:none;
         padding:0;
+      }
+      #ordersGrid > main.card{
+        width:100%;
+        justify-self:stretch;
       }
       #ordersGrid.list-collapsed .listCollapsed,
       #viewGrid.list-collapsed .listCollapsed{
