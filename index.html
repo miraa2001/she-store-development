@@ -669,6 +669,64 @@
     }
     #openAddPurchaseModalBtn:hover{filter:brightness(.98)}
 
+    .checkbox-wrapper-41{
+      --size: 38px;
+      --toggle-on: var(--brand);
+      --toggle-border: #2d5f52;
+      --toggle-off: #e7f0ec;
+      --toggle-thumb: #ffffff;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex:0 0 auto;
+    }
+    .checkbox-wrapper-41 input[type="checkbox"]{
+      -webkit-appearance:none;
+      appearance:none;
+      width:var(--size);
+      height:calc(var(--size) / 2);
+      background-color:var(--toggle-off);
+      border:2px solid var(--toggle-border);
+      border-radius:30px 100px 100px 100px;
+      box-shadow:0 6px 12px rgba(79,138,123,.18);
+      outline:none;
+      cursor:pointer;
+      position:relative;
+      transition:all .35s ease;
+      margin:0;
+    }
+    .checkbox-wrapper-41 input[type="checkbox"]::before{
+      content:"";
+      position:absolute;
+      width:calc(var(--size) / 2);
+      height:calc(var(--size) / 2);
+      left:0;
+      top:50%;
+      transform:translateY(-50%) scale(.72);
+      border:2px solid var(--toggle-border);
+      border-radius:30px 100px 100px 100px;
+      background-color:var(--toggle-thumb);
+      box-sizing:border-box;
+      transition:all .35s ease;
+    }
+    .checkbox-wrapper-41 input[type="checkbox"]:checked{
+      background-color:var(--toggle-on);
+      border-radius:100px 100px 30px 100px;
+      border-color:var(--toggle-on);
+    }
+    .checkbox-wrapper-41 input[type="checkbox"]:checked::before{
+      left:50%;
+      background-color:var(--toggle-thumb);
+      border-radius:100px 100px 30px 100px;
+      border-color:var(--toggle-on);
+    }
+    .checkbox-wrapper-41 input[type="checkbox"]:focus-visible{
+      box-shadow:0 0 0 3px rgba(79,138,123,.22), 0 6px 12px rgba(79,138,123,.18);
+    }
+    @media(max-width:700px){
+      .checkbox-wrapper-41{ --size: 32px; }
+    }
+
     /* From Uiverse.io by ilkhoeri */
     .action_has {
       --color: 0 0% 60%;
@@ -851,10 +909,9 @@
 
             <div class="row" id="arrivedRow" style="margin-top:8px;display:none">
               <div class="row" style="gap:8px;align-items:center">
-                <label class="container">
+                <div class="checkbox-wrapper-41">
                   <input type="checkbox" id="arrivedToggle">
-                  <div class="checkmark"></div>
-                </label>
+                </div>
                 <label for="arrivedToggle" style="cursor:pointer">تم وصول الطلب</label>
                 <span id="arrivedBadge"></span>
               </div>
@@ -963,10 +1020,9 @@
               <b id="viewTitle"></b>
 
               <div id="viewPlacedToggleWrap" class="toggleRow" style="display:none">
-                <label class="container">
+                <div class="checkbox-wrapper-41">
                   <input type="checkbox" id="viewPlacedAtPickupToggle">
-                  <div class="checkmark"></div>
-                </label>
+                </div>
                 <label for="viewPlacedAtPickupToggle" style="cursor:pointer">تم وضع الطلب في نقطة الاستلام</label>
                 <span id="viewPlacedToggleMsg" class="muted"></span>
               </div>
