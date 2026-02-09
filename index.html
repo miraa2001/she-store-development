@@ -3129,14 +3129,11 @@ function renderPurchasesTableWith(list){
   tbody.innerHTML="";
 
   dataList.forEach(p=>{
-    const imgs=(p.purchase_images||[]).map(i=>{
-      const url=sb.storage.from(BUCKET).getPublicUrl(i.storage_path).data.publicUrl;
-      return `<img src="${escapeAttr(url)}" alt="صورة" data-customer="${escapeAttr(p.customer_name || "")}">`;
-    }).join("");
-
     const pickupTxt = p.pickup_point || "من نقطة الاستلام";
     const bagTxt = p.bag_size || "—";
     const noteTxt = p.note || "";
+    const hasLinks = (p.purchase_links || []).length > 0;
+    const hasImages = (p.purchase_images || []).length > 0;
 
     const tr=document.createElement("tr");
     tr.dataset.purchaseId = p.id;
@@ -3149,9 +3146,9 @@ function renderPurchasesTableWith(list){
       <td>${escapeHtml(p.price ?? "")}</td>
       <td>${escapeHtml(p.paid_price ?? "—")}</td>
       <td>${escapeHtml(bagTxt)}</td>
-      <td>${(p.purchase_links||[]).map((l,i)=>`<a href="${escapeAttr(l.url)}" target="_blank" rel="noopener">رابط ${i+1}</a>`).join("<br>") || "—"}</td>
+      <td class="muted">${hasLinks ? "مخفية (تظهر عند التعديل)" : "—"}</td>
       <td>${escapeHtml(pickupTxt)}</td>
-      <td class="thumbs">${imgs}</td>
+      <td class="muted">${hasImages ? "مخفية (تظهر عند التعديل)" : "—"}</td>
       <td>${escapeHtml(noteTxt) || "—"}</td>
       <td class="actionCell">
         <button class="icon-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
