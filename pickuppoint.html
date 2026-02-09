@@ -583,15 +583,10 @@ function renderTable(){
       <td>${escapeHtml(p.bag_size || "\u2014")}</td>
       <td>
         <div class="row" style="gap:6px;align-items:center">
-          <div class="love">
+          <label class="container">
             <input class="chk" type="checkbox" id="${pickupInputId}" data-id="${p.id}" ${checked}>
-            <label class="love-heart" for="${pickupInputId}">
-              <i class="left"></i>
-              <i class="right"></i>
-              <i class="bottom"></i>
-              <div class="round"></div>
-            </label>
-          </div>
+            <div class="checkmark"></div>
+          </label>
           <label for="${pickupInputId}" style="cursor:pointer">${pickupBadge}</label>
         </div>
       </td>

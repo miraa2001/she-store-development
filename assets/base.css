@@ -392,119 +392,78 @@ body[data-page]:not([data-page="login"]) textarea:focus{
 
 body[data-page]:not([data-page="login"]) textarea{min-height:90px;resize:vertical}
 
-/* Heart checkbox */
-.love{
-  --love-scale:2.6;
+/* Checkbox (Uiverse style, adapted to theme) */
+.container{
+  --input-focus: var(--brand);
+  --input-out-of-focus: #d5e1dc;
+  --bg-color: #fff;
+  --main-color: #2d5f52;
   position:relative;
+  cursor:pointer;
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  width:30px;
-  height:26px;
+  width:22px;
+  height:22px;
   flex:0 0 auto;
 }
 
-.love input[type="checkbox"],
-#switch{
-  display:none;
-}
-
-.love .love-heart,
-.love .love-heart::after{
-  border-color:hsl(231deg 28% 86%);
-  border:1px solid;
-  border-top-left-radius:100px;
-  border-top-right-radius:100px;
-  width:10px;
-  height:8px;
-  border-bottom:0;
-}
-
-.love .round{
+.container input{
   position:absolute;
-  z-index:1;
-  width:8px;
-  height:8px;
-  background:hsl(0deg 0% 100%);
-  box-shadow:rgb(0 0 0 / 24%) 0px 0px 4px 0px;
-  border-radius:100%;
-  left:0px;
-  bottom:-1px;
-  transition:all .5s ease;
-  animation:check-animation2 .5s forwards;
+  opacity:0;
 }
 
-.love input[type="checkbox"]:checked + label .round{
-  transform:translate(0px, 0px);
-  animation:check-animation .5s forwards;
-  background-color:hsl(0deg 0% 100%);
-}
-
-@keyframes check-animation{
-  0%{transform:translate(0px, 0px);}
-  50%{transform:translate(0px, 7px);}
-  100%{transform:translate(7px, 7px);}
-}
-
-@keyframes check-animation2{
-  0%{transform:translate(7px, 7px);}
-  50%{transform:translate(0px, 7px);}
-  100%{transform:translate(0px, 0px);}
-}
-
-.love .love-heart{
-  box-sizing:border-box;
+.checkmark{
+  width:20px;
+  height:20px;
   position:relative;
-  transform:rotate(-45deg) translate(-50%, -33px) scale(var(--love-scale));
-  transform-origin:center;
-  display:block;
-  border-color:hsl(231deg 28% 86%);
-  cursor:pointer;
   top:0;
+  left:0;
+  border:2px solid var(--main-color);
+  border-radius:5px;
+  box-shadow:2px 2px var(--main-color);
+  background-color:var(--input-out-of-focus);
+  transition:all .3s;
 }
 
-.love input[type="checkbox"]:checked + .love-heart,
-.love input[type="checkbox"]:checked + .love-heart::after,
-.love input[type="checkbox"]:checked + .love-heart .bottom{
-  border-color:hsl(347deg 81% 61%);
-  box-shadow:inset 6px -5px 0px 2px hsl(347deg 99% 72%);
+.container input:checked ~ .checkmark{
+  background-color:var(--input-focus);
 }
 
-.love .love-heart::after,
-.love .love-heart .bottom{
+.checkmark:after{
   content:"";
-  display:block;
-  box-sizing:border-box;
-  position:absolute;
-  border-color:hsl(231deg 28% 86%);
-}
-
-.love .love-heart::after{
-  right:-9px;
-  transform:rotate(90deg);
-  top:7px;
-}
-
-.love .love-heart .bottom{
-  width:11px;
+  width:5px;
   height:11px;
-  border-left:1px solid;
-  border-bottom:1px solid;
-  border-color:hsl(231deg 28% 86%);
-  left:-1px;
-  top:5px;
-  border-radius:0px 0px 0px 5px;
+  position:absolute;
+  top:2px;
+  left:6px;
+  display:none;
+  border:solid var(--bg-color);
+  border-width:0 2px 2px 0;
+  transform:rotate(45deg);
 }
 
-.love input[type="checkbox"]:checked + .love-heart path[data-path="box"]{
-  fill:hsl(347deg 81% 61% / .08);
+.container input:checked ~ .checkmark:after{
+  display:block;
 }
 
 @media(max-width:900px){
-  .love{
-    --love-scale:2.2;
-    width:26px;
-    height:22px;
+  .container{
+    width:20px;
+    height:20px;
+  }
+  .checkmark{
+    width:17px;
+    height:17px;
+    border-width:1.5px;
+    box-shadow:1.5px 1.5px var(--main-color);
+  }
+  .checkmark:after{
+    width:4px;
+    height:9px;
+    top:1px;
+    left:5px;
+    border-width:0 1.5px 1.5px 0;
   }
 }
 
