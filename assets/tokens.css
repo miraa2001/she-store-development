@@ -1,19 +1,17 @@
 :root{
-  --brand:#65b5ff;
-  --brand-hover:#3d4856;
-  --brand-tint:#eef6ff;
+  --brand:#4F8A7B;
+  --brand-hover:#3F7467;
+  --brand-tint:#EAF4F1;
 
-  --color-bg:#f5f8fc;
+  --color-bg:#F6F8F7;
   --color-card:#FFFFFF;
-  --color-border:#d4deeb;
-  --color-text:#3d4856;
-  --color-muted:#a0acbd;
-  --color-success:#65b5ff;
-  --color-warning:#f88fb6;
-  --color-danger:#bd5a81;
-  --color-info:#65b5ff;
-  --color-accent:#f88fb6;
-  --color-accent-strong:#bd5a81;
+  --color-border:#E2E8E4;
+  --color-text:#111111;
+  --color-muted:#6B7280;
+  --color-success:#2f7d4f;
+  --color-warning:#b58b1f;
+  --color-danger:#b42318;
+  --color-info:#1d4ed8;
 
   --space-1:6px;
   --space-2:12px;
@@ -31,10 +29,10 @@
   --radius-lg:28px;
 
   --surface-1:#FFFFFF;
-  --surface-2:#f7faff;
-  --surface-3:#eef4fb;
-  --divider-soft:#dbe4ef;
-  --text-soft:#5b6a7d;
+  --surface-2:#FBFDFC;
+  --surface-3:#F2F6F4;
+  --divider-soft:#E8EEEB;
+  --text-soft:#4B5563;
 
   --shadow-sm:0 1px 3px rgba(15,23,42,.06);
   --shadow-md:0 8px 20px rgba(15,23,42,.10);
@@ -42,8 +40,8 @@
   --shadow-layer-1:0 1px 0 rgba(255,255,255,.85) inset, 0 8px 18px rgba(15,23,42,.06);
   --shadow-layer-2:0 1px 0 rgba(255,255,255,.9) inset, 0 14px 28px rgba(15,23,42,.10);
   --shadow-card:var(--shadow-md);
-  --focus-ring:0 0 0 3px rgba(101,181,255,.28);
+  --focus-ring:0 0 0 3px rgba(79,138,123,.25);
 
-  --table-head-bg:#edf3fa;
-  --table-row-hover:#e9f1fb;
+  --table-head-bg:#f2f5f4;
+  --table-row-hover:#f0f4f2;
 }

@@ -134,9 +134,9 @@
     }
     body[data-page="finance"] .tabBtn.active{
       position:relative;
-      background:#eef6ff;
-      color:#3d4856;
-      box-shadow:inset 0 0 0 1px #b9cce3;
+      background:#eaf4f1;
+      color:#25584c;
+      box-shadow:inset 0 0 0 1px #b9d5cc;
     }
     body[data-page="finance"] .tabBtn.active::after{
       content:"";
@@ -157,7 +157,7 @@
       position:sticky;
       top:92px;
       border-radius:20px 20px 10px 20px;
-      background:linear-gradient(180deg,#fff 0%,#f7faff 100%);
+      background:linear-gradient(180deg,#fff 0%,#f7fbf9 100%);
     }
     body[data-page="finance"] .grid > main.card{
       border-radius:24px 24px 12px 24px;
@@ -169,14 +169,14 @@
       margin-top:0 !important;
     }
     body[data-page="finance"] .kpi{
-      border:1px solid #d4deeb;
+      border:1px solid #d8e3de;
       border-radius:14px;
-      background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+      background:linear-gradient(180deg,#fff 0%,#f9fcfb 100%);
       box-shadow:0 8px 12px rgba(15,23,42,.04);
       padding:12px;
     }
     body[data-page="finance"] .kpi .label{
-      color:#6c7788;
+      color:#697671;
       font-size:12px;
       font-weight:600;
     }
@@ -187,18 +187,18 @@
     }
     body[data-page="finance"] .progress{
       height:10px;
-      background:#e6edf7;
-      border:1px solid #d2ddec;
+      background:#e8efec;
+      border:1px solid #d4dfda;
       border-radius:999px;
       overflow:hidden;
     }
     body[data-page="finance"] .progress span{
-      background:linear-gradient(90deg,#65b5ff 0%,#f88fb6 100%);
+      background:linear-gradient(90deg,#4f8a7b 0%,#6aa394 100%);
       border-radius:999px;
     }
     body[data-page="finance"] .segmented{
       border-radius:999px;
-      border:1px solid #d0ddef;
+      border:1px solid #d2dfda;
       background:#fff;
       box-shadow:0 6px 10px rgba(15,23,42,.06);
     }
@@ -207,34 +207,34 @@
       margin:4px;
       padding:8px 14px;
       font-weight:600;
-      color:#5f6b7f;
+      color:#5c6964;
     }
     body[data-page="finance"] .segmented button.active{
-      background:#eef6ff;
-      color:#3d4856;
-      box-shadow:inset 0 0 0 1px #b9cce3;
+      background:#eaf4f1;
+      color:#25584c;
+      box-shadow:inset 0 0 0 1px #b9d5cc;
     }
     body[data-page="finance"] .monthPicker{
       border-radius:18px;
-      background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+      background:linear-gradient(180deg,#fff 0%,#f8fcfa 100%);
       box-shadow:0 10px 16px rgba(15,23,42,.05);
     }
     body[data-page="finance"] .monthBtn{
       border-radius:11px;
-      border:1px solid #d4deeb;
+      border:1px solid #d6e2dd;
     }
     body[data-page="finance"] .monthBtn.active{
-      background:#eef6ff;
-      color:#3d4856;
-      border-color:#b9cce3;
+      background:#eaf4f1;
+      color:#25584c;
+      border-color:#b9d5cc;
     }
     body[data-page="finance"] .monthCharts{
       border-radius:22px;
-      background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+      background:linear-gradient(180deg,#fff 0%,#f9fcfb 100%);
       box-shadow:0 12px 18px rgba(15,23,42,.06);
     }
     body[data-page="finance"] .chartBox{
-      border:1px solid #d4deeb;
+      border:1px solid #d9e3de;
       border-radius:14px;
       background:#fff;
       box-shadow:inset 0 0 0 1px #eef4f1;
@@ -1102,8 +1102,8 @@ function renderMonthCharts(){
     : [Math.max(0, m.collected), Math.max(0, outstanding)];
 
   const pieColors = chartMode === "profit"
-    ? ["#65b5ff", "#f88fb6"]
-    : ["#65b5ff", "#a0acbd"];
+    ? ["#4F8A7B", "#cfd6dd"]
+    : ["#4F8A7B", "#e8e2c6"];
 
   if(donutEmpty){
     const donutHasData = m.collected > 0;
@@ -1163,8 +1163,8 @@ function renderMonthCharts(){
   }
 
   if(!showEmpty && lineData.length){
-    const lineColor = "#65b5ff";
-    const fillColor = "rgba(101,181,255,0.2)";
+    const lineColor = "#4F8A7B";
+    const fillColor = "rgba(79,138,123,0.15)";
     const line = new Chart(monthLine, {
       type: "line",
       data: {
