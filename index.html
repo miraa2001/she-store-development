@@ -557,6 +557,62 @@
     .miniPreview .thumb button{
       position:absolute;top:6px;left:6px;border:none;background:rgba(0,0,0,.55);color:#fff;width:26px;height:26px;border-radius:var(--radius-sm);cursor:pointer
     }
+
+    body.modal-open{overflow:hidden}
+    #addPurchaseModalBackdrop{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background:rgba(0,0,0,.45);
+      z-index:1200;
+    }
+    #addPurchaseModalBackdrop.open{display:flex}
+    #addPurchaseModalCard{
+      width:min(720px, calc(100vw - 32px));
+      max-height:calc(100vh - 32px);
+      background:#fff;
+      border-radius:16px;
+      box-shadow:0 24px 64px rgba(0,0,0,.24);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .addPurchaseModalHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      direction:ltr;
+      padding:14px 16px;
+      border-bottom:1px solid var(--color-border);
+      background:#fff;
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+    .addPurchaseModalHeader b{
+      font-size:18px;
+      line-height:1.2;
+    }
+    #closeAddPurchaseModalBtn{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      border:1px solid var(--color-border);
+      background:#fff;
+      cursor:pointer;
+      font-size:18px;
+      line-height:1;
+    }
+    #closeAddPurchaseModalBtn:hover{background:#f7f7f7}
+    #addPurchaseModalBody{
+      padding:16px;
+      overflow:auto;
+    }
+    #openAddPurchaseModalBtn:hover{filter:brightness(.98)}
   </style>
 </head>
 <body data-page="index">
@@ -658,72 +714,9 @@
             </div>
           </div>
 
-          <div class="orderContent" id="addPurchaseSection">
-            <b>إضافة مشترى</b>
-        <div class="row">
-          <div class="autoWrap">
-            <input id="customer" placeholder="اسم الزبون" autocomplete="off">
-            <button class="btn" id="customerClearBtn" type="button" style="display:none">تغيير</button>
-            <div class="autoList" id="customerList"></div>
+          <div class="row" style="margin:8px 0 12px">
+            <button class="btn primary" id="openAddPurchaseModalBtn" type="button">+ Add Purchase</button>
           </div>
-          <input id="qty" type="number" value="1" placeholder="العدد">
-          <input id="price" type="number" placeholder="السعر">
-        </div>
-
-        <div class="row" id="links" style="margin-top:8px"></div>
-
-        <div class="row" style="margin-top:8px">
-          <label class="muted" for="bagSize">حجم الكيس</label>
-          <select id="bagSize">
-            <option value="كيس كبير">كيس كبير</option>
-            <option value="كيس صغير" selected>كيس صغير</option>
-          </select>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <label class="muted" for="pickupPoint">مكان الاستلام</label>
-          <select id="pickupPoint">
-            <option value="من البيت">من البيت</option>
-            <option value="توصيل">توصيل</option>
-            <option value="من نقطة الاستلام" selected>من نقطة الاستلام</option>
-          </select>
-        </div>
-
-        <div style="margin-top:8px">
-          <div id="dropZone" class="dropZone" tabindex="0">
-            <b>صور المشترى</b>
-            <div class="muted" style="margin-top:6px">
-              اسحبي وافلتي الصور هون، أو اضغطي لاختيار ملفات، أو الصقي (Ctrl+V)
-              <br>(حد أقصى: 10 صور)
-            </div>
-
-            <div class="row" style="margin-top:10px">
-              <button class="btn" id="pickImagesBtn" type="button">اختيار صور</button>
-              <span class="pill" id="imgCount">0/10</span>
-            </div>
-
-            <div id="preview" class="preview" style="margin-top:10px"></div>
-            <div class="row" style="margin-top:10px;align-items:center;gap:8px">
-              <button class="btn" id="analyzeImagesBtn" type="button">تحليل الأسعار من الصور</button>
-              <span class="muted" id="aiStatus"></span>
-            </div>
-            <input id="images" type="file" multiple accept="image/*" style="display:none">
-          </div>
-
-          <div style="margin-top:10px">
-          <div class="muted" style="margin-bottom:6px">ملاحظة</div>
-          <textarea id="note" placeholder="اكتبي أي ملاحظة..."></textarea>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <div id="duplicateWarning" class="dangerText" style="display:none">⛔ يوجد مشترى بنفس الاسم في هذه الطلبية</div>
-        </div>
-
-        <div class="row" style="margin-top:6px">
-          <button class="btn primary" id="addBtn">إضافة</button>
-          <span class="muted" id="addStatus"></span>
-        </div>
-      </div>
 
         <hr>
 
@@ -924,6 +917,85 @@
         </thead>
         <tbody id="custTableBody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<div id="addPurchaseModalBackdrop" aria-hidden="true">
+  <div id="addPurchaseModalCard" role="dialog" aria-modal="true" aria-labelledby="addPurchaseModalTitle">
+    <div class="addPurchaseModalHeader">
+      <b id="addPurchaseModalTitle">Add Purchase</b>
+      <button id="closeAddPurchaseModalBtn" type="button" aria-label="Close">✕</button>
+    </div>
+    <div id="addPurchaseModalBody">
+      <!-- UI-only change; purchase logic unchanged. -->
+      <div class="orderContent" id="addPurchaseSection">
+        <b>إضافة مشترى</b>
+        <div class="row">
+          <div class="autoWrap">
+            <input id="customer" placeholder="اسم الزبون" autocomplete="off">
+            <button class="btn" id="customerClearBtn" type="button" style="display:none">تغيير</button>
+            <div class="autoList" id="customerList"></div>
+          </div>
+          <input id="qty" type="number" value="1" placeholder="العدد">
+          <input id="price" type="number" placeholder="السعر">
+        </div>
+
+        <div class="row" id="links" style="margin-top:8px"></div>
+
+        <div class="row" style="margin-top:8px">
+          <label class="muted" for="bagSize">حجم الكيس</label>
+          <select id="bagSize">
+            <option value="كيس كبير">كيس كبير</option>
+            <option value="كيس صغير" selected>كيس صغير</option>
+          </select>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <label class="muted" for="pickupPoint">مكان الاستلام</label>
+          <select id="pickupPoint">
+            <option value="من البيت">من البيت</option>
+            <option value="توصيل">توصيل</option>
+            <option value="من نقطة الاستلام" selected>من نقطة الاستلام</option>
+          </select>
+        </div>
+
+        <div style="margin-top:8px">
+          <div id="dropZone" class="dropZone" tabindex="0">
+            <b>صور المشترى</b>
+            <div class="muted" style="margin-top:6px">
+              اسحبي وافلتي الصور هون، أو اضغطي لاختيار ملفات، أو الصقي (Ctrl+V)
+              <br>(حد أقصى: 10 صور)
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn" id="pickImagesBtn" type="button">اختيار صور</button>
+              <span class="pill" id="imgCount">0/10</span>
+            </div>
+
+            <div id="preview" class="preview" style="margin-top:10px"></div>
+            <div class="row" style="margin-top:10px;align-items:center;gap:8px">
+              <button class="btn" id="analyzeImagesBtn" type="button">تحليل الأسعار من الصور</button>
+              <span class="muted" id="aiStatus"></span>
+            </div>
+            <input id="images" type="file" multiple accept="image/*" style="display:none">
+          </div>
+
+          <div style="margin-top:10px">
+            <div class="muted" style="margin-bottom:6px">ملاحظة</div>
+            <textarea id="note" placeholder="اكتبي أي ملاحظة..."></textarea>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div id="duplicateWarning" class="dangerText" style="display:none">⛔ يوجد مشترى بنفس الاسم في هذه الطلبية</div>
+          </div>
+
+          <div class="row" style="margin-top:6px">
+            <button class="btn primary" id="addBtn">إضافة</button>
+            <span class="muted" id="addStatus"></span>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1430,6 +1502,12 @@ const images = document.getElementById("images");
 const linksWrap = document.getElementById("links");
 const addBtn = document.getElementById("addBtn");
 const addStatus = document.getElementById("addStatus");
+const openAddPurchaseModalBtn = document.getElementById("openAddPurchaseModalBtn");
+const closeAddPurchaseModalBtn = document.getElementById("closeAddPurchaseModalBtn");
+const addPurchaseModalBackdrop = document.getElementById("addPurchaseModalBackdrop");
+const addPurchaseModalCard = document.getElementById("addPurchaseModalCard");
+const addPurchaseSection = document.getElementById("addPurchaseSection");
+let addPurchaseModalOpener = null;
 const deleteOrderBtn = document.getElementById("deleteOrderBtn");
 const duplicateWarning = document.getElementById("duplicateWarning");
 
@@ -1478,6 +1556,50 @@ if(viewOrdersListToggle){
 if(viewOrdersListToggleMini){
   viewOrdersListToggleMini.onclick = ()=> setViewListCollapsed(false);
 }
+
+function openAddPurchaseModal(){
+  if(!addPurchaseModalBackdrop) return;
+  addPurchaseModalOpener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  addPurchaseModalBackdrop.classList.add("open");
+  addPurchaseModalBackdrop.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const firstInput = addPurchaseSection?.querySelector?.("input, select, textarea");
+  if(firstInput){
+    requestAnimationFrame(()=> firstInput.focus());
+  }
+}
+
+function closeAddPurchaseModal(){
+  if(!addPurchaseModalBackdrop || !addPurchaseModalBackdrop.classList.contains("open")) return;
+  addPurchaseModalBackdrop.classList.remove("open");
+  addPurchaseModalBackdrop.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  if(openAddPurchaseModalBtn){
+    openAddPurchaseModalBtn.focus();
+  }else if(addPurchaseModalOpener){
+    addPurchaseModalOpener.focus();
+  }
+}
+
+if(openAddPurchaseModalBtn){
+  openAddPurchaseModalBtn.addEventListener("click", openAddPurchaseModal);
+}
+if(closeAddPurchaseModalBtn){
+  closeAddPurchaseModalBtn.addEventListener("click", closeAddPurchaseModal);
+}
+if(addPurchaseModalBackdrop){
+  addPurchaseModalBackdrop.addEventListener("click", (e)=>{
+    if(e.target === addPurchaseModalBackdrop) closeAddPurchaseModal();
+  });
+}
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape" && addPurchaseModalBackdrop?.classList.contains("open")){
+    closeAddPurchaseModal();
+  }
+});
+
 const viewCounter = document.getElementById("viewCounter");
 const viewPrev = document.getElementById("viewPrev");
 const viewNext = document.getElementById("viewNext");
