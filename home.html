@@ -528,7 +528,7 @@
     .shein-nav{
       position:absolute;
       top:50%;
-      transform:translateY(-50%);
+      transform:translateY(-50%) scaleY(-1);
       width:36px;
       height:36px;
       border:none;
@@ -543,8 +543,8 @@
       justify-content:center;
       z-index:6;
     }
-    .shein-prev{left:-18px}
-    .shein-next{right:-18px}
+    .shein-prev{right:-18px;left:auto}
+    .shein-next{left:-18px;right:auto}
 
     .shein-dots{
       display:flex;
@@ -571,8 +571,8 @@
       .shein-phone-col{order:1}
       .shein-text-col{order:2}
       .shein-phone{width:240px;height:500px}
-      .shein-prev{left:-12px}
-      .shein-next{right:-12px}
+      .shein-prev{right:-12px;left:auto}
+      .shein-next{left:-12px;right:auto}
     }
     @media(max-width:600px){
       .shein-phone{width:220px;height:470px}
@@ -736,7 +736,7 @@
         <div class="shein-grid">
           <div class="shein-phone-col">
             <div class="shein-phone-wrap">
-              <button class="shein-nav shein-prev" type="button" aria-label="السابق">‹</button>
+              <button class="shein-nav shein-prev" type="button" aria-label="السابق">›</button>
               <div class="shein-phone" aria-label="عرض خطوات السلة">
                 <div class="shein-notch" aria-hidden="true"></div>
                 <div class="shein-screen">
@@ -766,7 +766,7 @@
                   </div>
                 </div>
               </div>
-              <button class="shein-nav shein-next" type="button" aria-label="التالي">›</button>
+              <button class="shein-nav shein-next" type="button" aria-label="التالي">‹</button>
             </div>
 
             <div class="shein-dots" role="tablist" aria-label="خطوات الشرح">
