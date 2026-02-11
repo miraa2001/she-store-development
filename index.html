@@ -3943,7 +3943,7 @@ function setViewMode(mode){
 }
 
 function viewCanShowWhatsapp(){
-  return myEmail === EMAIL_RAHAF && !!viewActiveOrder?.arrived && !!viewActiveOrder?.placed_at_pickup;
+  return myEmail === EMAIL_RAHAF && !!viewActiveOrder?.arrived;
 }
 
 function viewNormalizePhone(value){
@@ -4023,8 +4023,8 @@ async function openViewWhatsappForPurchase(purchaseId){
       return;
     }
 
-    if(!order.arrived || !order.placed_at_pickup){
-      alert("يجب أن تكون الطلبية واصلة وتم وضعها بنقطة الاستلام أولاً.");
+    if(!order.arrived){
+      alert("يجب أن تكون الطلبية واصلة أولاً.");
       return;
     }
 
