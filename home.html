@@ -397,6 +397,10 @@
       padding:22px;
       box-shadow:0 18px 32px rgba(31,41,55,.08);
     }
+    .shein-tutorial,
+    .shein-tutorial *{
+      font-family:"Alexandria",system-ui,-apple-system,Segoe UI,Tahoma,Arial,"Noto Sans Arabic","Noto Naskh Arabic",sans-serif;
+    }
     .shein-grid{
       display:grid;
       grid-template-columns:1fr 1fr;
@@ -542,6 +546,11 @@
       align-items:center;
       justify-content:center;
       z-index:6;
+    }
+    .shein-nav:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+      box-shadow:none;
     }
     .shein-prev{right:-18px;left:auto}
     .shein-next{left:-18px;right:auto}
@@ -736,7 +745,7 @@
         <div class="shein-grid">
           <div class="shein-phone-col">
             <div class="shein-phone-wrap">
-              <button class="shein-nav shein-prev" type="button" aria-label="السابق">›</button>
+              <button class="shein-nav shein-prev" type="button" aria-label="السابق">&gt;</button>
               <div class="shein-phone" aria-label="عرض خطوات السلة">
                 <div class="shein-notch" aria-hidden="true"></div>
                 <div class="shein-screen">
@@ -766,7 +775,7 @@
                   </div>
                 </div>
               </div>
-              <button class="shein-nav shein-next" type="button" aria-label="التالي">‹</button>
+              <button class="shein-nav shein-next" type="button" aria-label="التالي">&lt;</button>
             </div>
 
             <div class="shein-dots" role="tablist" aria-label="خطوات الشرح">
@@ -1591,7 +1600,8 @@
       }
 
       function setActive(nextIndex){
-        activeIndex = (nextIndex + slides.length) % slides.length;
+        const maxIndex = slides.length - 1;
+        activeIndex = Math.max(0, Math.min(maxIndex, nextIndex));
         measure();
         const offset = activeIndex * (slideWidth + slideGap);
         track.style.transform = `translateX(${-offset}px)`;
@@ -1599,6 +1609,8 @@
         slides.forEach((s,i)=> s.classList.toggle('active', i === activeIndex));
         dots.forEach((d,i)=> d.classList.toggle('active', i === activeIndex));
         steps.forEach((s,i)=> s.classList.toggle('active', i === activeIndex));
+        if(prevBtn) prevBtn.disabled = activeIndex === 0;
+        if(nextBtn) nextBtn.disabled = activeIndex === maxIndex;
       }
 
       if(prevBtn){
