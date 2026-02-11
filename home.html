@@ -445,6 +445,12 @@
     }
     .shein-step-text{font-size:18px;font-weight:600}
 
+    .shein-phone-wrap{
+      position:relative;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
     .shein-phone{
       width:280px;
       height:570px;
@@ -476,26 +482,26 @@
     .shein-screen-viewport{
       position:absolute;
       inset:0;
-      padding:18px 16px;
+      padding:0;
       overflow:hidden;
       direction:ltr;
     }
     .shein-screen-track{
       display:flex;
-      gap:14px;
+      gap:0;
       height:100%;
       transition:transform .35s ease;
       will-change:transform;
     }
     .shein-screen-slide{
-      flex:0 0 84%;
+      flex:0 0 100%;
       height:100%;
       background:#fff;
-      border-radius:20px;
+      border-radius:0;
       overflow:hidden;
       position:relative;
-      box-shadow:0 14px 28px rgba(31,41,55,.12);
-      padding:6px;
+      box-shadow:none;
+      padding:0;
       box-sizing:border-box;
     }
     .shein-screen-slide img{
@@ -536,8 +542,8 @@
       justify-content:center;
       z-index:6;
     }
-    .shein-prev{left:10px}
-    .shein-next{right:10px}
+    .shein-prev{left:-18px}
+    .shein-next{right:-18px}
 
     .shein-dots{
       display:flex;
@@ -564,12 +570,15 @@
       .shein-phone-col{order:1}
       .shein-text-col{order:2}
       .shein-phone{width:240px;height:500px}
+      .shein-prev{left:-12px}
+      .shein-next{right:-12px}
     }
     @media(max-width:600px){
       .shein-phone{width:220px;height:470px}
       .shein-screen-number{font-size:96px}
       .shein-step-text{font-size:16px}
       .shein-step-num{width:40px;height:40px;border-radius:14px}
+      .shein-prev,.shein-next{width:32px;height:32px;font-size:20px}
     }
 
     /* About */
@@ -725,37 +734,38 @@
       <div class="shein-tutorial" dir="rtl">
         <div class="shein-grid">
           <div class="shein-phone-col">
-            <div class="shein-phone" aria-label="عرض خطوات السلة">
-              <div class="shein-notch" aria-hidden="true"></div>
-              <div class="shein-screen">
-                <div class="shein-screen-viewport">
-                  <div class="shein-screen-track" id="sheinTrack">
-                    <div class="shein-screen-slide" data-step="0" aria-label="تسجيل خروج">
-                      <div class="shein-screen-number">01</div>
-                      <img src="assets/shein/step-01.png" alt="تسجيل خروج">
-                    </div>
-                    <div class="shein-screen-slide" data-step="1" aria-label="وضع المشتريات بالسلة">
-                      <div class="shein-screen-number">02</div>
-                      <img src="assets/shein/step-02.png" alt="وضع المشتريات بالسلة">
-                    </div>
-                    <div class="shein-screen-slide" data-step="2" aria-label="ضغط Share">
-                      <div class="shein-screen-number">03</div>
-                      <img src="assets/shein/step-03.png" alt="ضغط Share">
-                    </div>
-                    <div class="shein-screen-slide" data-step="3" aria-label="تحديد المشتريات">
-                      <div class="shein-screen-number">04</div>
-                      <img src="assets/shein/step-04.png" alt="تحديد المشتريات">
-                    </div>
-                    <div class="shein-screen-slide" data-step="4" aria-label="إرسال رابط السلة">
-                      <div class="shein-screen-number">05</div>
-                      <img src="assets/shein/step-05.png" alt="إرسال رابط السلة">
+            <div class="shein-phone-wrap">
+              <button class="shein-nav shein-prev" type="button" aria-label="السابق">‹</button>
+              <div class="shein-phone" aria-label="عرض خطوات السلة">
+                <div class="shein-notch" aria-hidden="true"></div>
+                <div class="shein-screen">
+                  <div class="shein-screen-viewport">
+                    <div class="shein-screen-track" id="sheinTrack">
+                      <div class="shein-screen-slide" data-step="0" aria-label="تسجيل خروج">
+                        <div class="shein-screen-number">01</div>
+                        <img src="assets/shein/step-01.png" alt="تسجيل خروج">
+                      </div>
+                      <div class="shein-screen-slide" data-step="1" aria-label="وضع المشتريات بالسلة">
+                        <div class="shein-screen-number">02</div>
+                        <img src="assets/shein/step-02.png" alt="وضع المشتريات بالسلة">
+                      </div>
+                      <div class="shein-screen-slide" data-step="2" aria-label="ضغط Share">
+                        <div class="shein-screen-number">03</div>
+                        <img src="assets/shein/step-03.png" alt="ضغط Share">
+                      </div>
+                      <div class="shein-screen-slide" data-step="3" aria-label="تحديد المشتريات">
+                        <div class="shein-screen-number">04</div>
+                        <img src="assets/shein/step-04.png" alt="تحديد المشتريات">
+                      </div>
+                      <div class="shein-screen-slide" data-step="4" aria-label="إرسال رابط السلة">
+                        <div class="shein-screen-number">05</div>
+                        <img src="assets/shein/step-05.png" alt="إرسال رابط السلة">
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                <button class="shein-nav shein-prev" type="button" aria-label="السابق">‹</button>
-                <button class="shein-nav shein-next" type="button" aria-label="التالي">›</button>
               </div>
+              <button class="shein-nav shein-next" type="button" aria-label="التالي">›</button>
             </div>
 
             <div class="shein-dots" role="tablist" aria-label="خطوات الشرح">
