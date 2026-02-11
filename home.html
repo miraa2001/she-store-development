@@ -495,11 +495,15 @@
       overflow:hidden;
       position:relative;
       box-shadow:0 14px 28px rgba(31,41,55,.12);
+      padding:6px;
+      box-sizing:border-box;
     }
     .shein-screen-slide img{
       width:100%;
       height:100%;
-      object-fit:cover;
+      object-fit:contain;
+      object-position:center;
+      background:#fff;
       display:block;
     }
     .shein-screen-number{
