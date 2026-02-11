@@ -507,7 +507,6 @@
       box-shadow:none;
       padding:0;
       box-sizing:border-box;
-      transform:scaleX(-1);
     }
     .shein-screen-slide img{
       width:100%;
@@ -1607,7 +1606,7 @@
         activeIndex = Math.max(0, Math.min(maxIndex, nextIndex));
         measure();
         const offset = activeIndex * (slideWidth + slideGap);
-        track.style.transform = `translateX(${-offset}px) scaleX(-1)`;
+        track.style.transform = `translateX(${-offset}px)`;
 
         slides.forEach((s,i)=> s.classList.toggle('active', i === activeIndex));
         dots.forEach((d,i)=> d.classList.toggle('active', i === activeIndex));
