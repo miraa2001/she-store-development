@@ -389,6 +389,185 @@
       font-size:22px;
     }
 
+    /* Shein tutorial (phone slider) */
+    .shein-tutorial{
+      background:#fff;
+      border:1px solid #f1d7ea;
+      border-radius:28px;
+      padding:22px;
+      box-shadow:0 18px 32px rgba(31,41,55,.08);
+    }
+    .shein-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:24px;
+      align-items:center;
+    }
+    .shein-phone-col{order:2}
+    .shein-text-col{order:1}
+    .shein-title{font-size:26px;font-weight:800;margin:0 0 10px}
+    .shein-desc{color:var(--cute-muted);margin:0 0 18px;line-height:1.8}
+    .shein-steps{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .shein-step{
+      border:none;
+      background:transparent;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:6px;
+      border-radius:16px;
+      cursor:pointer;
+      text-align:right;
+      transition:all .2s ease;
+      color:#6b7280;
+    }
+    .shein-step.active{
+      background:linear-gradient(135deg,#FCE7F3,#EDE9FE);
+      color:#3b214e;
+      box-shadow:inset 0 0 0 1px #f1cfe3;
+    }
+    .shein-step-num{
+      width:44px;height:44px;border-radius:16px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;
+      background:#fce7f3;
+      color:#c25585;
+      flex:0 0 auto;
+    }
+    .shein-step.active .shein-step-num{
+      background:linear-gradient(135deg,#f9a8d4,#c4b5fd);
+      color:#fff;
+      box-shadow:0 10px 18px rgba(244,114,182,.25);
+    }
+    .shein-step-text{font-size:18px;font-weight:600}
+
+    .shein-phone{
+      width:280px;
+      height:570px;
+      border:12px solid #2f2f2f;
+      border-radius:42px;
+      background:#fff;
+      box-shadow:0 20px 40px rgba(244,114,182,.22);
+      position:relative;
+      overflow:hidden;
+      margin-inline:auto;
+    }
+    .shein-notch{
+      position:absolute;
+      top:0;
+      left:50%;
+      transform:translateX(-50%);
+      width:130px;
+      height:24px;
+      background:#2f2f2f;
+      border-radius:0 0 16px 16px;
+      z-index:5;
+    }
+    .shein-screen{
+      position:relative;
+      width:100%;
+      height:100%;
+      background:#f8f7fb;
+    }
+    .shein-screen-viewport{
+      position:absolute;
+      inset:0;
+      padding:18px 16px;
+      overflow:hidden;
+      direction:ltr;
+    }
+    .shein-screen-track{
+      display:flex;
+      gap:14px;
+      height:100%;
+      transition:transform .35s ease;
+      will-change:transform;
+    }
+    .shein-screen-slide{
+      flex:0 0 84%;
+      height:100%;
+      background:#fff;
+      border-radius:20px;
+      overflow:hidden;
+      position:relative;
+      box-shadow:0 14px 28px rgba(31,41,55,.12);
+    }
+    .shein-screen-slide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .shein-screen-number{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:120px;
+      font-weight:800;
+      color:rgba(244,114,182,.16);
+      pointer-events:none;
+      z-index:2;
+    }
+    .shein-nav{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:36px;
+      height:36px;
+      border:none;
+      border-radius:999px;
+      background:rgba(255,255,255,.9);
+      box-shadow:0 10px 20px rgba(31,41,55,.12);
+      cursor:pointer;
+      font-size:22px;
+      color:#c25585;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:6;
+    }
+    .shein-prev{left:10px}
+    .shein-next{right:10px}
+
+    .shein-dots{
+      display:flex;
+      justify-content:center;
+      gap:8px;
+      margin-top:14px;
+    }
+    .shein-dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      border:none;
+      background:#f1cfe3;
+      cursor:pointer;
+      transition:all .2s ease;
+    }
+    .shein-dot.active{
+      width:26px;
+      background:linear-gradient(135deg,#f9a8d4,#c4b5fd);
+    }
+
+    @media(max-width:900px){
+      .shein-grid{grid-template-columns:1fr}
+      .shein-phone-col{order:1}
+      .shein-text-col{order:2}
+      .shein-phone{width:240px;height:500px}
+    }
+    @media(max-width:600px){
+      .shein-phone{width:220px;height:470px}
+      .shein-screen-number{font-size:96px}
+      .shein-step-text{font-size:16px}
+      .shein-step-num{width:40px;height:40px;border-radius:14px}
+    }
+
     /* About */
     .about-card{line-height:1.8}
 
@@ -539,42 +718,77 @@
     </section>
 
     <section id="how" data-tab="how">
-      <h2 class="section-title">كيف بنطلب؟</h2>
-      <p class="section-sub">خطوات بسيطة ولطيفة من أول رابط لحد الاستلام.</p>
-      <div class="grid three">
-        <div class="card how-card">
-          <div class="how-icon">🛍️</div>
-          <div>
-            <b>انسخي رابط السلة</b>
-            <div class="muted">من شي إن بعد ما تكملي اختيارك.</div>
+      <div class="shein-tutorial" dir="rtl">
+        <div class="shein-grid">
+          <div class="shein-phone-col">
+            <div class="shein-phone" aria-label="عرض خطوات السلة">
+              <div class="shein-notch" aria-hidden="true"></div>
+              <div class="shein-screen">
+                <div class="shein-screen-viewport">
+                  <div class="shein-screen-track" id="sheinTrack">
+                    <div class="shein-screen-slide" data-step="0" aria-label="تسجيل خروج">
+                      <div class="shein-screen-number">01</div>
+                      <img src="assets/shein/step-01.png" alt="تسجيل خروج">
+                    </div>
+                    <div class="shein-screen-slide" data-step="1" aria-label="وضع المشتريات بالسلة">
+                      <div class="shein-screen-number">02</div>
+                      <img src="assets/shein/step-02.png" alt="وضع المشتريات بالسلة">
+                    </div>
+                    <div class="shein-screen-slide" data-step="2" aria-label="ضغط Share">
+                      <div class="shein-screen-number">03</div>
+                      <img src="assets/shein/step-03.png" alt="ضغط Share">
+                    </div>
+                    <div class="shein-screen-slide" data-step="3" aria-label="تحديد المشتريات">
+                      <div class="shein-screen-number">04</div>
+                      <img src="assets/shein/step-04.png" alt="تحديد المشتريات">
+                    </div>
+                    <div class="shein-screen-slide" data-step="4" aria-label="إرسال رابط السلة">
+                      <div class="shein-screen-number">05</div>
+                      <img src="assets/shein/step-05.png" alt="إرسال رابط السلة">
+                    </div>
+                  </div>
+                </div>
+
+                <button class="shein-nav shein-prev" type="button" aria-label="السابق">‹</button>
+                <button class="shein-nav shein-next" type="button" aria-label="التالي">›</button>
+              </div>
+            </div>
+
+            <div class="shein-dots" role="tablist" aria-label="خطوات الشرح">
+              <button class="shein-dot active" type="button" data-step="0" aria-label="خطوة 1"></button>
+              <button class="shein-dot" type="button" data-step="1" aria-label="خطوة 2"></button>
+              <button class="shein-dot" type="button" data-step="2" aria-label="خطوة 3"></button>
+              <button class="shein-dot" type="button" data-step="3" aria-label="خطوة 4"></button>
+              <button class="shein-dot" type="button" data-step="4" aria-label="خطوة 5"></button>
+            </div>
           </div>
-        </div>
-        <div class="card how-card">
-          <div class="how-icon">✨</div>
-          <div>
-            <b>ابعتيلنا التفاصيل</b>
-            <div class="muted">الاسم، المدينة، وعدد القطع.</div>
-          </div>
-        </div>
-        <div class="card how-card">
-          <div class="how-icon">💗</div>
-          <div>
-            <b>بنراجع الطلب</b>
-            <div class="muted">وبنحكيلك أي توضيحات بسرعة.</div>
-          </div>
-        </div>
-        <div class="card how-card">
-          <div class="how-icon">📦</div>
-          <div>
-            <b>تنسيق الاستلام</b>
-            <div class="muted">من البيت أو من نقطة الاستلام.</div>
-          </div>
-        </div>
-        <div class="card how-card">
-          <div class="how-icon">✅</div>
-          <div>
-            <b>تأكيد نهائي</b>
-            <div class="muted">كل التفاصيل قبل التنفيذ.</div>
+
+          <div class="shein-text-col">
+            <h2 class="section-title">كيف تبعتي سلة شي إن؟</h2>
+            <p class="section-sub">نسهّل عليكِ التسوّق من شي إن. افتحي السلة، انسخي الرابط، وابعتيه إلنا — والباقي علينا.</p>
+
+            <div class="shein-steps">
+              <button class="shein-step active" type="button" data-step="0">
+                <span class="shein-step-num">01</span>
+                <span class="shein-step-text">تسجيل خروج</span>
+              </button>
+              <button class="shein-step" type="button" data-step="1">
+                <span class="shein-step-num">02</span>
+                <span class="shein-step-text">وضع المشتريات بالسلة</span>
+              </button>
+              <button class="shein-step" type="button" data-step="2">
+                <span class="shein-step-num">03</span>
+                <span class="shein-step-text">ضغط Share</span>
+              </button>
+              <button class="shein-step" type="button" data-step="3">
+                <span class="shein-step-num">04</span>
+                <span class="shein-step-text">تحديد المشتريات</span>
+              </button>
+              <button class="shein-step" type="button" data-step="4">
+                <span class="shein-step-num">05</span>
+                <span class="shein-step-text">إرسال رابط السلة</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1337,6 +1551,63 @@
     filterFaq();
 
     showStep(1);
+  </script>
+  <script>
+    (function(){
+      const section = document.querySelector('#how');
+      if(!section) return;
+      const track = section.querySelector('#sheinTrack');
+      const slides = Array.from(section.querySelectorAll('.shein-screen-slide'));
+      const dots = Array.from(section.querySelectorAll('.shein-dot'));
+      const steps = Array.from(section.querySelectorAll('.shein-step'));
+      const prevBtn = section.querySelector('.shein-prev');
+      const nextBtn = section.querySelector('.shein-next');
+      if(!track || !slides.length) return;
+
+      let activeIndex = 0;
+      let slideWidth = 0;
+      let slideGap = 0;
+
+      function measure(){
+        if(!slides.length) return;
+        const style = getComputedStyle(track);
+        slideGap = parseFloat(style.columnGap || style.gap || '0') || 0;
+        slideWidth = slides[0].getBoundingClientRect().width;
+      }
+
+      function setActive(nextIndex){
+        activeIndex = (nextIndex + slides.length) % slides.length;
+        measure();
+        const offset = activeIndex * (slideWidth + slideGap);
+        track.style.transform = `translateX(${-offset}px)`;
+
+        slides.forEach((s,i)=> s.classList.toggle('active', i === activeIndex));
+        dots.forEach((d,i)=> d.classList.toggle('active', i === activeIndex));
+        steps.forEach((s,i)=> s.classList.toggle('active', i === activeIndex));
+      }
+
+      if(prevBtn){
+        prevBtn.addEventListener('click', ()=> setActive(activeIndex - 1));
+      }
+      if(nextBtn){
+        nextBtn.addEventListener('click', ()=> setActive(activeIndex + 1));
+      }
+      dots.forEach((d)=>{
+        d.addEventListener('click', ()=>{
+          const idx = Number(d.dataset.step || 0);
+          setActive(idx);
+        });
+      });
+      steps.forEach((s)=>{
+        s.addEventListener('click', ()=>{
+          const idx = Number(s.dataset.step || 0);
+          setActive(idx);
+        });
+      });
+
+      window.addEventListener('resize', ()=> setActive(activeIndex));
+      setActive(0);
+    })();
   </script>
 </body>
 </html>
