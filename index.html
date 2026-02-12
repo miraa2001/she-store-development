@@ -608,13 +608,19 @@
       min-width:0;
       table-layout:auto;
     }
+    #ordersTableWrap .ordersTableModern thead tr{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 14px 4px;
+    }
     #ordersTableWrap .ordersTableModern thead th{
       background:transparent;
       border:none;
       color:#6b7874;
       font-size:13px;
       font-weight:600;
-      padding:0 10px 4px;
+      padding:0;
       text-align:right;
       vertical-align:middle;
     }
@@ -706,6 +712,7 @@
     }
     #ordersTableWrap .ordersTableModern th:first-child{
       width:auto;
+      flex:1;
     }
     #ordersTableWrap .ordersTableModern .menu-btn{
       width:36px;
@@ -1988,7 +1995,8 @@ if(ordersListResizer && ordersGrid && ordersAside){
   };
   const moveResize = (clientX)=>{
     if(!resizing) return;
-    const delta = clientX - startX;
+    const isRTL = getComputedStyle(document.documentElement).direction === "rtl";
+    const delta = isRTL ? (startX - clientX) : (clientX - startX);
     const nextWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + delta));
     ordersGrid.style.setProperty("--orders-aside-width", `${nextWidth}px`);
     if(typeof syncOrdersTableScroll === "function") syncOrdersTableScroll();
