@@ -16,7 +16,7 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      padding:20px;
+      padding:16px;
       background:
         radial-gradient(520px 300px at 100% 0%, rgba(79,138,123,.14), transparent 70%),
         radial-gradient(520px 300px at 0% 100%, rgba(79,138,123,.08), transparent 70%),
@@ -24,54 +24,56 @@
       color:var(--color-text);
     }
     .container{
-      width:min(380px, 100%);
+      width:100%;
       display:flex;
       justify-content:center;
+      align-items:center;
     }
     .card{
       display:flex;
       justify-content:center;
       align-items:center;
       min-height:350px;
-      width:min(340px, calc(100vw - 32px));
+      width:300px;
       flex-direction:column;
-      gap:20px;
-      background:#eaf2ef;
-      border:1px solid #d7e2dd;
-      box-shadow:14px 14px 28px rgba(172, 185, 179, .7), -14px -14px 28px rgba(255, 255, 255, .94);
+      gap:28px;
+      background:#e8efec;
+      border:1px solid #d8e2de;
+      box-shadow:16px 16px 32px rgba(185, 196, 191, .7), -16px -16px 32px rgba(255,255,255,.96);
       border-radius:16px;
-      padding:18px 16px 16px;
+      padding:22px 18px 18px;
       box-sizing:border-box;
     }
     .login-hero{
-      width:112px;
-      max-width:52%;
+      width:88px;
+      max-width:45%;
       display:block;
-      margin:0 auto -2px;
-      border-radius:14px;
-      background:#f2f7f5;
-      padding:4px;
+      margin:0 auto -12px;
+      border-radius:12px;
+      background:#eff5f2;
+      padding:3px;
     }
     .login{
       color:var(--color-text);
-      letter-spacing:1px;
+      letter-spacing:2px;
       display:block;
       font-weight:800;
-      font-size:clamp(22px, 5vw, 30px);
+      font-size:clamp(24px, 5vw, 30px);
       text-decoration:none;
       line-height:1.1;
     }
     .muted{
       color:var(--color-muted);
-      font-size:13px;
-      margin-top:-6px;
-      margin-bottom:2px;
-      line-height:1.6;
+      font-size:12px;
+      margin-top:-18px;
+      margin-bottom:-4px;
+      line-height:1.5;
       text-align:center;
+      width:250px;
     }
     .inputBox{
       position:relative;
-      width:100%;
+      width:250px;
     }
     .inputBox input{
       width:100%;
@@ -81,65 +83,62 @@
       color:var(--color-text);
       font-size:1em;
       background:transparent;
-      border-inline-start:2px solid var(--brand);
-      border-bottom:2px solid var(--brand);
-      transition:.15s;
-      border-bottom-left-radius:10px;
-      min-height:45px;
+      border-left:2px solid var(--color-text);
+      border-bottom:2px solid var(--color-text);
+      transition:.12s;
+      border-bottom-left-radius:8px;
+      min-height:44px;
       box-sizing:border-box;
       font-family:inherit;
     }
     .inputBox span{
+      margin-top:5px;
       position:absolute;
-      right:0;
-      top:50%;
-      transform:translateY(-50%);
-      margin-right:8px;
+      left:0;
+      transform:translateY(-4px);
+      margin-left:10px;
       padding:8px 10px;
       pointer-events:none;
       font-size:12px;
       color:var(--color-muted);
-      transition:.35s;
-      letter-spacing:.03em;
+      transition:.5s;
+      letter-spacing:1px;
       border-radius:999px;
       background:transparent;
       line-height:1;
     }
     .inputBox input:valid ~ span,
     .inputBox input:focus ~ span{
-      transform:translateY(-155%);
-      font-size:.72em;
-      padding:5px 9px;
-      background:var(--brand);
+      transform:translateX(113px) translateY(-15px);
+      font-size:.8em;
+      padding:5px 10px;
+      background:var(--brand-hover);
       color:#fff;
       letter-spacing:.08em;
     }
     .inputBox input:valid,
     .inputBox input:focus{
-      border:2px solid var(--brand);
-      border-radius:10px;
-      background:#fff;
-      box-shadow:var(--focus-ring);
+      border:2px solid var(--color-text);
+      border-radius:8px;
     }
     .enter{
-      min-height:45px;
-      width:100%;
-      border-radius:999px;
-      border:2px solid var(--brand);
+      height:45px;
+      width:140px;
+      border-radius:8px;
+      border:2px solid var(--brand-hover);
       cursor:pointer;
-      background-color:var(--brand);
-      transition:.25s;
+      background-color:transparent;
+      transition:.3s;
       text-transform:none;
-      font-size:14px;
-      letter-spacing:.04em;
-      color:#fff;
+      font-size:12px;
+      letter-spacing:2px;
+      color:var(--color-text);
       font-weight:700;
-      box-shadow:0 10px 16px rgba(79,138,123,.22);
       font-family:inherit;
     }
     .enter:hover{
       background-color:var(--brand-hover);
-      border-color:var(--brand-hover);
+      color:#fff;
     }
     .enter:disabled{
       opacity:.6;
@@ -147,25 +146,31 @@
       box-shadow:none;
     }
     .msg{
-      margin-top:-4px;
+      margin-top:-14px;
       font-size:13px;
       color:#a63434;
       min-height:18px;
       text-align:center;
-      width:100%;
+      width:250px;
     }
     @media (max-width:420px){
-      body{padding:14px}
+      body{padding:10px}
       .card{
-        width:min(340px, calc(100vw - 20px));
+        width:min(300px, calc(100vw - 20px));
         min-height:320px;
-        gap:16px;
-        padding:16px 14px 14px;
+        gap:22px;
+        padding:18px 12px 14px;
       }
-      .login-hero{width:96px}
-      .muted{font-size:12px}
+      .login-hero{width:78px}
+      .muted{width:min(250px, calc(100vw - 60px)); font-size:11px}
+      .inputBox{width:min(250px, calc(100vw - 60px))}
       .inputBox input{min-height:42px;font-size:15px}
-      .enter{min-height:42px;font-size:13px}
+      .inputBox input:valid ~ span,
+      .inputBox input:focus ~ span{
+        transform:translateX(92px) translateY(-15px);
+      }
+      .msg{width:min(250px, calc(100vw - 60px))}
+      .enter{height:42px;width:128px}
     }
   </style>
 </head>
@@ -175,7 +180,7 @@
     <div class="card">
       <img src="assets/woman.png" alt="صورة لطيفة" class="login-hero">
       <a class="login">تسجيل الدخول</a>
-      <div class="muted">اكتبي اسم المستخدم وكلمة المرور. (اسم المستخدم = مثل: <b>rahaf</b> أو <b>reem</b> أو <b>rawand</b>)</div>
+      <div class="muted">اسم المستخدم: <b>rahaf</b> أو <b>reem</b> أو <b>rawand</b></div>
 
       <div class="inputBox">
         <input id="username" type="text" autocomplete="username" required="required">
