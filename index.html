@@ -841,6 +841,11 @@
       }
     }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    body[data-page="index"] .wrap{padding-top:12px;padding-bottom:12px}
+    body[data-page="index"] .topbar{padding:10px 12px;margin-bottom:8px;top:6px}
+    body[data-page="index"] .tabs{margin:6px 0 10px;padding:4px}
+    body[data-page="index"] #ordersPanel > .ordersSearchRow{margin-bottom:6px !important}
+    body[data-page="index"] #searchResults{margin-top:4px}
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
     .orderGroupLabel{
@@ -1145,7 +1150,7 @@
   </div>
 
   <div id="ordersPanel" class="tabPanel">
-  <div class="row" style="margin-bottom:12px">
+  <div class="row ordersSearchRow">
     <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
     <span class="pill" id="searchCount" style="display:none"></span>
   </div>
