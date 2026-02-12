@@ -216,6 +216,9 @@
 
     /* ===== Layout ===== */
     .grid{display:grid;grid-template-columns:320px 1fr;gap:12px}
+    #ordersGrid{grid-template-columns:var(--orders-aside-width, 320px) 1fr}
+    #ordersGrid > aside.card{position:relative}
+    #ordersGrid.list-collapsed{grid-template-columns:46px 1fr}
     .grid.list-collapsed{grid-template-columns:46px 1fr}
     .grid.list-collapsed .listFull{display:none}
     .grid.list-collapsed .listCollapsed{display:flex}
@@ -258,6 +261,33 @@
       gap:8px;
       margin-top:0 !important;
     }
+    .asideResizer{
+      position:absolute;
+      top:8px;
+      bottom:8px;
+      inset-inline-end:-6px;
+      width:12px;
+      cursor:col-resize;
+      z-index:5;
+    }
+    .asideResizer::before{
+      content:"";
+      position:absolute;
+      top:50%;
+      left:50%;
+      width:4px;
+      height:36px;
+      border-radius:999px;
+      background:#cfdad5;
+      transform:translate(-50%,-50%);
+      opacity:.6;
+      transition:opacity .2s ease, background .2s ease;
+    }
+    .asideResizer:hover::before{
+      opacity:1;
+      background:#b6c6bf;
+    }
+    #ordersGrid.list-collapsed .asideResizer{display:none}
     #ordersGrid > aside.card .listFull .orderGroupLabel{
       display:inline-flex;
       align-items:center;
@@ -471,6 +501,7 @@
       #viewGrid.list-collapsed .listCollapsed .collapsedStat{
         flex:0 0 auto;
       }
+      #ordersGrid .asideResizer{display:none}
     }
     .grid > *{min-width:0}
     @media(max-width:900px){.grid{grid-template-columns:1fr}}
@@ -591,40 +622,34 @@
       display:none;
     }
     #ordersTableWrap .ordersTableModern tbody tr{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:12px 14px;
+      background:var(--color-card);
+      border:1px solid var(--color-border);
+      border-radius:var(--radius-lg);
+      box-shadow:var(--shadow-sm);
       transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
-      filter:drop-shadow(0 4px 10px rgba(15,23,42,.08));
     }
     #ordersTableWrap .ordersTableModern tbody tr:hover{
+      border-color:#c9d7d2;
+      box-shadow:var(--shadow-md);
       transform:translateY(-1px);
     }
     #ordersTableWrap .ordersTableModern tbody td{
-      background:var(--color-card);
-      border-top:1px solid var(--color-border);
-      border-bottom:1px solid var(--color-border);
-      border-left:none;
-      border-right:none;
-      padding:12px 14px;
+      background:transparent;
+      border:none;
+      padding:0;
       text-align:right;
       vertical-align:middle;
     }
-    #ordersTableWrap .ordersTableModern tbody td:not(.primaryCell):not(.actionCell){
+    #ordersTableWrap .ordersTableModern tbody tr:not(.inlineEditRow):not([data-edit-row]) td:not(.primaryCell):not(.actionCell){
       display:none;
     }
-    #ordersTableWrap .ordersTableModern tbody td:first-child{
-      border-right:1px solid var(--color-border);
-      border-radius:0 var(--radius-lg) var(--radius-lg) 0;
-    }
-    #ordersTableWrap .ordersTableModern tbody td:last-child{
-      border-left:1px solid var(--color-border);
-      border-radius:var(--radius-lg) 0 0 var(--radius-lg);
-    }
-    #ordersTableWrap .ordersTableModern tbody tr:hover td{
-      background:#fbfdfc;
-      border-color:#c9d7d2;
-    }
-    #ordersTableWrap .ordersTableModern tbody tr.highlight td:first-child{
-      box-shadow:inset 4px 0 0 #f0d4a6;
-      border-right-color:#ead4a6;
+    #ordersTableWrap .ordersTableModern tbody tr.highlight{
+      box-shadow:inset 4px 0 0 #f0d4a6, var(--shadow-sm);
+      border-color:#ead4a6;
     }
     #ordersTableWrap .ordersTableModern .primaryCell .order-id{
       font-size:16px;
@@ -645,6 +670,10 @@
       flex-wrap:wrap;
       gap:8px;
       line-height:1.4;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell{
+      flex:1;
+      min-width:0;
     }
     #ordersTableWrap .ordersTableModern .pill{
       display:inline-flex;
@@ -668,6 +697,7 @@
       width:auto;
       min-width:140px;
       text-align:right;
+      flex:0 0 auto;
     }
     #ordersTableWrap .ordersTableModern th:last-child{
       width:auto;
@@ -702,6 +732,11 @@
     }
     #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
     #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
+      display:table-row;
+      padding:0;
+      background:transparent;
+      border:none;
+      box-shadow:none;
       filter:none;
       transform:none;
     }
@@ -771,7 +806,7 @@
       }
       #ordersTableWrap .ordersTableModern tbody td::before{
         content:attr(data-label);
-        font-size:12px;
+        font-size:13px;
         color:var(--color-muted);
         font-weight:600;
       }
@@ -1131,6 +1166,7 @@
         <span class="collapsedStat" id="collapsedOrdersCount">0</span>
         <div class="collapsedStack" id="collapsedOrdersPreview" aria-hidden="true"></div>
       </div>
+      <div class="asideResizer" id="ordersListResizer" aria-hidden="true"></div>
     </aside>
 
     <main class="card">
@@ -1918,6 +1954,8 @@ const orderStats = document.getElementById("orderStats");
 const ordersGrid = document.getElementById("ordersGrid");
 const ordersListToggle = document.getElementById("ordersListToggle");
 const ordersListToggleMini = document.getElementById("ordersListToggleMini");
+const ordersListResizer = document.getElementById("ordersListResizer");
+const ordersAside = ordersGrid ? ordersGrid.querySelector("aside.card") : null;
 const collapsedOrdersCountEl = document.getElementById("collapsedOrdersCount");
 const collapsedOrdersPreviewEl = document.getElementById("collapsedOrdersPreview");
 const tbody = document.getElementById("tbody");
@@ -1931,6 +1969,52 @@ const exportPdfBtn = document.getElementById("exportPdfBtn");
 
 if(exportPdfBtn){
   exportPdfBtn.disabled = true;
+}
+
+// Resizable orders list (UI-only)
+if(ordersListResizer && ordersGrid && ordersAside){
+  const minWidth = 220;
+  const maxWidth = 520;
+  let resizing = false;
+  let startX = 0;
+  let startWidth = 0;
+
+  const startResize = (clientX)=>{
+    if(ordersGrid.classList.contains("list-collapsed")) return;
+    resizing = true;
+    startX = clientX;
+    startWidth = ordersAside.getBoundingClientRect().width;
+    document.body.style.userSelect = "none";
+  };
+  const moveResize = (clientX)=>{
+    if(!resizing) return;
+    const delta = clientX - startX;
+    const nextWidth = Math.max(minWidth, Math.min(maxWidth, startWidth + delta));
+    ordersGrid.style.setProperty("--orders-aside-width", `${nextWidth}px`);
+    if(typeof syncOrdersTableScroll === "function") syncOrdersTableScroll();
+  };
+  const endResize = ()=>{
+    if(!resizing) return;
+    resizing = false;
+    document.body.style.userSelect = "";
+  };
+
+  ordersListResizer.addEventListener("mousedown", (e)=>{
+    e.preventDefault();
+    startResize(e.clientX);
+  });
+  window.addEventListener("mousemove", (e)=> moveResize(e.clientX));
+  window.addEventListener("mouseup", endResize);
+
+  ordersListResizer.addEventListener("touchstart", (e)=>{
+    if(!e.touches || !e.touches.length) return;
+    startResize(e.touches[0].clientX);
+  }, { passive:true });
+  window.addEventListener("touchmove", (e)=>{
+    if(!e.touches || !e.touches.length) return;
+    moveResize(e.touches[0].clientX);
+  }, { passive:true });
+  window.addEventListener("touchend", endResize);
 }
 
 function updateArrivedBadge(){
