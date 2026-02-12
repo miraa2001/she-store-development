@@ -17,11 +17,8 @@
       align-items:center;
       justify-content:center;
       padding:16px;
-      background:
-        radial-gradient(520px 300px at 100% 0%, rgba(79,138,123,.14), transparent 70%),
-        radial-gradient(520px 300px at 0% 100%, rgba(79,138,123,.08), transparent 70%),
-        linear-gradient(180deg, #fbfdfc 0%, #f6f8f7 100%);
-      color:var(--color-text);
+      background:#e6e9e8;
+      color:#000;
     }
     .container{
       width:100%;
@@ -29,47 +26,31 @@
       justify-content:center;
       align-items:center;
     }
+    .login{
+      color:#000;
+      text-transform:uppercase;
+      letter-spacing:2px;
+      display:block;
+      font-weight:bold;
+      font-size:x-large;
+      line-height:1;
+      text-decoration:none;
+      margin-bottom:2px;
+    }
     .card{
       display:flex;
       justify-content:center;
       align-items:center;
       min-height:350px;
-      width:300px;
+      width:min(300px, calc(100vw - 24px));
       flex-direction:column;
       gap:28px;
-      background:#e8efec;
-      border:1px solid #d8e2de;
-      box-shadow:16px 16px 32px rgba(185, 196, 191, .7), -16px -16px 32px rgba(255,255,255,.96);
+      background:#e3e3e3;
+      box-shadow:16px 16px 32px #c8c8c8, -16px -16px 32px #fefefe;
       border-radius:16px;
-      padding:22px 18px 18px;
+      padding:24px 14px 18px;
       box-sizing:border-box;
-    }
-    .login-hero{
-      width:88px;
-      max-width:45%;
-      display:block;
-      margin:0 auto -12px;
-      border-radius:12px;
-      background:#eff5f2;
-      padding:3px;
-    }
-    .login{
-      color:var(--color-text);
-      letter-spacing:2px;
-      display:block;
-      font-weight:800;
-      font-size:clamp(24px, 5vw, 30px);
-      text-decoration:none;
-      line-height:1.1;
-    }
-    .muted{
-      color:var(--color-muted);
-      font-size:12px;
-      margin-top:-18px;
-      margin-bottom:-4px;
-      line-height:1.5;
-      text-align:center;
-      width:250px;
+      direction:ltr;
     }
     .inputBox{
       position:relative;
@@ -80,12 +61,12 @@
       padding:11px 12px;
       outline:none;
       border:none;
-      color:var(--color-text);
+      color:#000;
       font-size:1em;
       background:transparent;
-      border-left:2px solid var(--color-text);
-      border-bottom:2px solid var(--color-text);
-      transition:.12s;
+      border-left:2px solid #000;
+      border-bottom:2px solid #000;
+      transition:.1s;
       border-bottom-left-radius:8px;
       min-height:44px;
       box-sizing:border-box;
@@ -100,44 +81,47 @@
       padding:8px 10px;
       pointer-events:none;
       font-size:12px;
-      color:var(--color-muted);
+      color:#000;
       transition:.5s;
-      letter-spacing:1px;
+      letter-spacing:3px;
       border-radius:999px;
       background:transparent;
       line-height:1;
+      text-transform:uppercase;
     }
     .inputBox input:valid ~ span,
     .inputBox input:focus ~ span{
       transform:translateX(113px) translateY(-15px);
       font-size:.8em;
       padding:5px 10px;
-      background:var(--brand-hover);
+      background:#000;
       color:#fff;
-      letter-spacing:.08em;
+      letter-spacing:.2em;
     }
     .inputBox input:valid,
     .inputBox input:focus{
-      border:2px solid var(--color-text);
+      border:2px solid #000;
       border-radius:8px;
+      box-shadow:none;
     }
     .enter{
       height:45px;
-      width:140px;
-      border-radius:8px;
-      border:2px solid var(--brand-hover);
+      width:100px;
+      border-radius:5px;
+      border:2px solid #000;
       cursor:pointer;
       background-color:transparent;
       transition:.3s;
-      text-transform:none;
-      font-size:12px;
+      text-transform:uppercase;
+      font-size:10px;
       letter-spacing:2px;
-      color:var(--color-text);
-      font-weight:700;
+      color:#000;
+      font-weight:600;
       font-family:inherit;
+      margin-bottom:.2em;
     }
     .enter:hover{
-      background-color:var(--brand-hover);
+      background-color:#000;
       color:#fff;
     }
     .enter:disabled{
@@ -157,12 +141,10 @@
       body{padding:10px}
       .card{
         width:min(300px, calc(100vw - 20px));
-        min-height:320px;
-        gap:22px;
-        padding:18px 12px 14px;
+        min-height:330px;
+        gap:24px;
+        padding:20px 10px 14px;
       }
-      .login-hero{width:78px}
-      .muted{width:min(250px, calc(100vw - 60px)); font-size:11px}
       .inputBox{width:min(250px, calc(100vw - 60px))}
       .inputBox input{min-height:42px;font-size:15px}
       .inputBox input:valid ~ span,
@@ -170,7 +152,7 @@
         transform:translateX(92px) translateY(-15px);
       }
       .msg{width:min(250px, calc(100vw - 60px))}
-      .enter{height:42px;width:128px}
+      .enter{height:42px;width:104px}
     }
   </style>
 </head>
@@ -178,21 +160,19 @@
 
   <div class="container">
     <div class="card">
-      <img src="assets/woman.png" alt="صورة لطيفة" class="login-hero">
-      <a class="login">تسجيل الدخول</a>
-      <div class="muted">اسم المستخدم: <b>rahaf</b> أو <b>reem</b> أو <b>rawand</b></div>
+      <a class="login">Log in</a>
 
       <div class="inputBox">
         <input id="username" type="text" autocomplete="username" required="required">
-        <span class="user">اسم المستخدم</span>
+        <span class="user">Username</span>
       </div>
 
       <div class="inputBox">
         <input id="password" type="password" autocomplete="current-password" required="required">
-        <span>كلمة المرور</span>
+        <span>Password</span>
       </div>
 
-      <button class="enter" id="loginBtn">دخول</button>
+      <button class="enter" id="loginBtn">Enter</button>
       <div class="msg" id="msg"></div>
     </div>
   </div>
@@ -232,15 +212,15 @@
   loginBtn.onclick = async () => {
     msg.textContent = "";
     loginBtn.disabled = true;
-    loginBtn.textContent = "جاري الدخول...";
+    loginBtn.textContent = "Loading...";
 
     const username = usernameEl.value;
     const password = passwordEl.value;
 
     if(!username.trim() || !password){
-      msg.textContent = "اكتبي اسم المستخدم وكلمة المرور.";
+      msg.textContent = "Enter username and password.";
       loginBtn.disabled = false;
-      loginBtn.textContent = "دخول";
+      loginBtn.textContent = "Enter";
       return;
     }
 
@@ -254,9 +234,9 @@ if(error){
   console.error("LOGIN ERROR:", error);
 
   // show real error (Arabic-friendly)
-  msg.textContent = `فشل الدخول: ${error.message}`;
+  msg.textContent = `Login failed: ${error.message}`;
   loginBtn.disabled = false;
-  loginBtn.textContent = "دخول";
+  loginBtn.textContent = "Enter";
   return;
 }
 
