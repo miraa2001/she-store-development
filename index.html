@@ -841,11 +841,45 @@
       }
     }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    body[data-page="index"] .wrap{padding-top:12px;padding-bottom:12px}
-    body[data-page="index"] .topbar{padding:10px 12px;margin-bottom:8px;top:6px}
-    body[data-page="index"] .tabs{margin:6px 0 10px;padding:4px}
-    body[data-page="index"] #ordersPanel > .ordersSearchRow{margin-bottom:6px !important}
-    body[data-page="index"] #searchResults{margin-top:4px}
+    body[data-page="index"]{
+      --density-1:6px;
+      --density-2:10px;
+      --density-3:14px;
+      --density-card-pad:10px;
+      --density-gap:10px;
+    }
+    body[data-page="index"] .wrap{padding-top:12px;padding-bottom:12px;padding-inline:12px}
+    body[data-page="index"] .topbar{padding:8px 10px;margin-bottom:6px;top:6px;gap:8px}
+    body[data-page="index"] .topbar .brand{display:flex;flex-direction:column;gap:2px}
+    body[data-page="index"] .topbar .brand b{line-height:1.1}
+    body[data-page="index"] .tabs{margin:4px 0 8px;padding:4px;gap:4px}
+    body[data-page="index"] .tabLink{padding:8px 12px}
+    body[data-page="index"] #modeSwitch{padding:4px}
+    body[data-page="index"] #modeSwitch .modeBtn{padding:7px 12px}
+    body[data-page="index"] .row{gap:8px}
+    body[data-page="index"] #ordersPanel > .ordersSearchRow,
+    body[data-page="index"] #viewPanel > .viewSearchRow{margin-bottom:6px !important}
+    body[data-page="index"] #searchResults,
+    body[data-page="index"] #viewSearchResults{margin-top:4px}
+    body[data-page="index"] #ordersGrid,
+    body[data-page="index"] #viewGrid{gap:10px}
+    body[data-page="index"] .card{padding:var(--density-card-pad)}
+    body[data-page="index"] .filtersPanel{
+      margin:8px 0;
+      padding:8px;
+      background:transparent;
+      border:1px solid var(--divider-soft);
+      box-shadow:none;
+    }
+    body[data-page="index"] .filtersBody{margin-top:8px}
+    body[data-page="index"] #viewListView{
+      background:transparent;
+      border:none;
+      padding:0;
+      box-shadow:none;
+    }
+    body[data-page="index"] #viewListView .listTable{margin-top:8px}
+    body[data-page="index"] hr{margin:8px 0;border-color:var(--divider-soft)}
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
     .orderGroupLabel{
@@ -1281,7 +1315,7 @@
   </div>
 
   <div id="viewPanel" class="tabPanel viewPanel" style="display:none">
-    <div class="row" style="margin-bottom:12px">
+    <div class="row viewSearchRow">
       <input id="viewSearchInput" class="searchBox" placeholder="بحث باسم الزبون...">
       <span class="pill" id="viewSearchCount" style="display:none"></span>
     </div>
@@ -1653,6 +1687,23 @@ function resolveTotalFromResult(result){
 function escapeAttr(s=""){ return escapeHtml(s); }
 function todayName(){ const d=new Date(); return `طلبية ${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`; }
 
+function normalizeText(value){
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/[\u064B-\u065F\u0610-\u061A\u06D6-\u06ED]/g, "")
+    .replace(/[٠-٩]/g, d => String("0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)]))
+    .replace(/[۰-۹]/g, d => String("0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)]))
+    .replace(/\s+/g, " ");
+}
+
+function searchByName(list, query, accessor){
+  const q = normalizeText(query);
+  if(!q) return Array.isArray(list) ? list : [];
+  const getter = typeof accessor === "function" ? accessor : (item=>item?.name || "");
+  return (list || []).filter(item => normalizeText(getter(item)).includes(q));
+}
+
 function isMobile(){ return window.matchMedia("(max-width: 900px)").matches; }
 
 let ordersListCollapsed = false;
@@ -1898,17 +1949,20 @@ function showTab(tab){
     if(modeEditBtn) modeEditBtn.classList.add("active");
     if(modeViewBtn) modeViewBtn.classList.remove("active");
     document.body.dataset.mode = "edit";
+    state.mode = "edit";
   }
   if(isView){
     currentMode = "view";
     if(modeViewBtn) modeViewBtn.classList.add("active");
     if(modeEditBtn) modeEditBtn.classList.remove("active");
     document.body.dataset.mode = "view";
+    state.mode = "view";
   }
 }
 
 function setMode(mode){
   currentMode = mode;
+  state.mode = mode;
   if(modeEditBtn) modeEditBtn.classList.toggle("active", mode === "edit");
   if(modeViewBtn) modeViewBtn.classList.toggle("active", mode === "view");
   showTab(mode === "edit" ? "orders" : "view");
@@ -1922,6 +1976,7 @@ function setFiltersOpen(open){
 
 function setupTabs(role){
   currentRole = role || "";
+  state.role = currentRole;
   if(role === "reem"){
     if(navTabs) navTabs.style.display = "none";
     setMode("view");
@@ -2364,6 +2419,30 @@ let highlightPurchaseId = null;
 let highlightTimer = null;
 let ordersScrollSyncing = false;
 
+const state = {
+  orders: [],
+  customers: [],
+  activeOrderId: null,
+  activePurchases: [],
+  mode: "edit",
+  role: null
+};
+const setStateOrders = (list)=>{
+  state.orders = Array.isArray(list) ? list : [];
+  orders = state.orders;
+};
+const setStateActiveOrder = (order)=>{
+  activeOrder = order || null;
+  state.activeOrderId = order ? order.id : null;
+};
+const setStateActivePurchases = (list)=>{
+  state.activePurchases = Array.isArray(list) ? list : [];
+  activePurchases = state.activePurchases;
+};
+const setStateCustomers = (list)=>{
+  state.customers = Array.isArray(list) ? list : [];
+};
+
 function syncOrdersTableScroll(){
   if(!ordersTableWrap || !ordersTableScrollTop || !ordersTableScrollInner) return;
   const needs = ordersTableWrap.scrollWidth > ordersTableWrap.clientWidth + 1;
@@ -2418,7 +2497,7 @@ async function searchCustomers(term){
     .or(`name.ilike.%${q}%,phone.ilike.%${q}%`)
     .limit(10);
   if(error){ console.error(error); return []; }
-  return data || [];
+  return searchByName(data || [], term, c=>`${c.name || ""} ${c.phone || ""}`);
 }
 
 function setCustomerSelection(inputEl, clearBtn, customerData, opts={}){
@@ -2560,7 +2639,7 @@ async function runSearch(){
 
   if(error){ console.error(error); return; }
 
-  const results = data || [];
+  const results = searchByName(data || [], q, r=>r.customer_name);
   if(searchCountEl){
     searchCountEl.textContent = `${results.length} نتيجة`;
     searchCountEl.style.display = "";
@@ -2699,26 +2778,47 @@ setupCustomerAutocomplete(customer, customerList, customerClearBtn, { applyPicku
 let selectedImages = [];
 const MAX_IMAGES = 10;
 
-function updatePreview(){
-  imgCount.textContent = `${selectedImages.length}/${MAX_IMAGES}`;
-  preview.innerHTML="";
-  setAiStatus("");
-  const name = (customer && customer.value ? customer.value : "").trim();
-  selectedImages.forEach((file,i)=>{
+function pickImageFiles(files){
+  return [...files].filter(f=>f && f.type && f.type.startsWith("image/"));
+}
+
+function appendImageFiles(target, files, limit){
+  const arr = pickImageFiles(files);
+  for(const f of arr){
+    if(target.length >= limit) break;
+    target.push(f);
+  }
+}
+
+function renderImageThumbs({ container, files, label, onRemove }){
+  if(!container) return;
+  container.innerHTML = "";
+  files.forEach((file, i)=>{
     const url = URL.createObjectURL(file);
     const div = document.createElement("div");
-    div.className="thumb";
+    div.className = "thumb";
     div.innerHTML = `<button type="button" title="حذف">×</button><img alt="صورة">`;
     const imgEl = div.querySelector("img");
     imgEl.src = url;
-    if(name) imgEl.dataset.customer = name;
-    div.querySelector("button").onclick=()=>{ selectedImages.splice(i,1); updatePreview(); };
-    preview.appendChild(div);
+    if(label) imgEl.dataset.customer = label;
+    div.querySelector("button").onclick = ()=> onRemove(i);
+    container.appendChild(div);
+  });
+}
+
+function updatePreview(){
+  imgCount.textContent = `${selectedImages.length}/${MAX_IMAGES}`;
+  setAiStatus("");
+  const name = (customer && customer.value ? customer.value : "").trim();
+  renderImageThumbs({
+    container: preview,
+    files: selectedImages,
+    label: name,
+    onRemove: (i)=>{ selectedImages.splice(i,1); updatePreview(); }
   });
 }
 function addFiles(files){
-  const arr=[...files].filter(f=>f && f.type && f.type.startsWith("image/"));
-  for(const f of arr){ if(selectedImages.length>=MAX_IMAGES) break; selectedImages.push(f); }
+  appendImageFiles(selectedImages, files, MAX_IMAGES);
   updatePreview();
 }
 
@@ -3264,7 +3364,7 @@ async function loadOrders(){
   const { data, error } = await sb.from("orders").select("*").order("created_at",{ascending:false});
   if(error){ console.error(error); return; }
 
-  orders = data || [];
+  setStateOrders(data || []);
   ordersList.innerHTML="";
   let lastGroup = "";
   const monthLabel = (iso)=>{
@@ -3295,7 +3395,7 @@ async function loadOrders(){
 }
 
 async function selectOrder(o){
-  activeOrder=o;
+  setStateActiveOrder(o);
   deleteOrderBtn.disabled=false;
   empty.style.display="none";
   main.style.display="";
@@ -3380,7 +3480,7 @@ deleteOrderBtn.onclick = async ()=>{
 
   lastDeletedOrder = { order: orderSnapshot, purchases: purchases || [] };
 
-  activeOrder=null;
+  setStateActiveOrder(null);
   deleteOrderBtn.disabled=true;
   main.style.display="none";
   empty.style.display="";
@@ -3446,7 +3546,7 @@ function updateEditCounts(purchaseId){
   if(!badge) return;
   const remainingExisting = state.existingCount - state.deleteImgIds.size;
   const total = remainingExisting + state.newFiles.length;
-  badge.textContent = `${total}/10`;
+  badge.textContent = `${total}/${MAX_IMAGES}`;
 }
 
 function renderNewPreview(purchaseId){
@@ -3458,19 +3558,17 @@ function renderNewPreview(purchaseId){
   const previewEl = row.querySelector(`[data-new-preview="${purchaseId}"]`);
   if(!previewEl) return;
 
-  previewEl.innerHTML="";
   const nameInput = row.querySelector(`input[data-customer-input="${purchaseId}"]`);
   const name = nameInput ? (nameInput.value || "").trim() : "";
-  state.newFiles.forEach((file,i)=>{
-    const url=URL.createObjectURL(file);
-    const div=document.createElement("div");
-    div.className="thumb";
-    div.innerHTML=`<button type="button" title="حذف">×</button><img alt="صورة">`;
-    const imgEl = div.querySelector("img");
-    imgEl.src = url;
-    if(name) imgEl.dataset.customer = name;
-    div.querySelector("button").onclick=()=>{ state.newFiles.splice(i,1); renderNewPreview(purchaseId); updateEditCounts(purchaseId); };
-    previewEl.appendChild(div);
+  renderImageThumbs({
+    container: previewEl,
+    files: state.newFiles,
+    label: name,
+    onRemove: (i)=>{
+      state.newFiles.splice(i,1);
+      renderNewPreview(purchaseId);
+      updateEditCounts(purchaseId);
+    }
   });
 }
 
@@ -3480,10 +3578,9 @@ function addEditFiles(purchaseId, files){
   const state = editImageState.get(purchaseId);
   if(!state) return;
 
-  const arr=[...files].filter(f=>f && f.type && f.type.startsWith("image/"));
   const remainingExisting = state.existingCount - state.deleteImgIds.size;
-  const allowed = Math.max(0, 10 - remainingExisting - state.newFiles.length);
-  arr.slice(0,allowed).forEach(f=>state.newFiles.push(f));
+  const allowed = Math.max(0, MAX_IMAGES - remainingExisting - state.newFiles.length);
+  appendImageFiles(state.newFiles, files, state.newFiles.length + allowed);
 
   renderNewPreview(purchaseId);
   updateEditCounts(purchaseId);
@@ -3571,7 +3668,7 @@ function resetEditRow(purchaseId){
   setEditAiStatus(purchaseId, "");
 }
 
-let actionMenuBound = false;
+let dropdownsBound = false;
 function closeAllActionMenus(){
   tbody?.querySelectorAll(".actionMenu.open").forEach(menu=>menu.classList.remove("open"));
   tbody?.querySelectorAll("[data-actions][aria-expanded='true']").forEach(btn=>btn.setAttribute("aria-expanded","false"));
@@ -3589,9 +3686,9 @@ function toggleActionMenu(id){
   }
 }
 
-function bindActionMenuHandlers(){
-  if(actionMenuBound || !tbody) return;
-  actionMenuBound = true;
+function setupDropdowns(){
+  if(dropdownsBound || !tbody) return;
+  dropdownsBound = true;
 
   tbody.addEventListener("click", (e)=>{
     const analyzeBtn = e.target.closest("[data-ai-analyze]");
@@ -3640,6 +3737,10 @@ function bindActionMenuHandlers(){
   document.addEventListener("keydown", (e)=>{
     if(e.key === "Escape") closeAllActionMenus();
   });
+}
+
+function bindActionMenuHandlers(){
+  setupDropdowns();
 }
 
 async function saveInlineEdit(purchaseId){
@@ -4042,7 +4143,7 @@ async function loadPurchases(){
 
   if(error){ console.error(error); return; }
 
-  activePurchases = data || [];
+  setStateActivePurchases(data || []);
 
   // ✅ restore totals per order
   const purchasesCount = (data||[]).length;
@@ -4790,7 +4891,7 @@ async function runViewSearch(){
 
   if(error){ console.error(error); return; }
 
-  const results = data || [];
+  const results = searchByName(data || [], q, r=>r.customer_name);
   if(viewSearchCountEl){
     viewSearchCountEl.textContent = `${results.length} نتيجة`;
     viewSearchCountEl.style.display = "";
@@ -5018,6 +5119,7 @@ async function loadCustomersPanel(){
     .select("id,name,phone,city,usual_pickup_point")
     .order("created_at", { ascending: false });
   if(error){ console.error(error); return; }
+  setStateCustomers(data || []);
   renderCustList(data || []);
 }
 
