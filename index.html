@@ -568,6 +568,209 @@
         padding-inline:4px;
       }
     }
+
+    /* ===== Orders table modern card rows ===== */
+    #ordersTableWrap .ordersTableModern{
+      border-collapse:separate;
+      border-spacing:0 10px;
+      width:max-content;
+      min-width:100%;
+    }
+    #ordersTableWrap .ordersTableModern thead th{
+      background:transparent;
+      border:none;
+      color:#6b7874;
+      font-size:12px;
+      font-weight:600;
+      padding:0 10px 4px;
+      text-align:right;
+      vertical-align:middle;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr{
+      transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+      filter:drop-shadow(0 4px 10px rgba(15,23,42,.08));
+    }
+    #ordersTableWrap .ordersTableModern tbody tr:hover{
+      transform:translateY(-1px);
+    }
+    #ordersTableWrap .ordersTableModern tbody td{
+      background:var(--color-card);
+      border-top:1px solid var(--color-border);
+      border-bottom:1px solid var(--color-border);
+      border-left:none;
+      border-right:none;
+      padding:12px 14px;
+      text-align:right;
+      vertical-align:middle;
+    }
+    #ordersTableWrap .ordersTableModern tbody td:first-child{
+      border-right:1px solid var(--color-border);
+      border-radius:0 var(--radius-lg) var(--radius-lg) 0;
+    }
+    #ordersTableWrap .ordersTableModern tbody td:last-child{
+      border-left:1px solid var(--color-border);
+      border-radius:var(--radius-lg) 0 0 var(--radius-lg);
+    }
+    #ordersTableWrap .ordersTableModern tbody tr:hover td{
+      background:#fbfdfc;
+      border-color:#c9d7d2;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.highlight td:first-child{
+      box-shadow:inset 4px 0 0 #f0d4a6;
+      border-right-color:#ead4a6;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell .order-id{
+      font-size:16px;
+      font-weight:700;
+      color:var(--color-text);
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell .customer{
+      font-size:14px;
+      font-weight:600;
+      color:var(--color-text);
+      margin-top:2px;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell .meta{
+      margin-top:6px;
+      font-size:12px;
+      color:var(--color-muted);
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      line-height:1.4;
+    }
+    #ordersTableWrap .ordersTableModern .pill{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+      border:1px solid transparent;
+      white-space:nowrap;
+    }
+    #ordersTableWrap .ordersTableModern .pill--completed{background:#e8f5ef;color:#1f7a4b;border-color:#bfe6d3}
+    #ordersTableWrap .ordersTableModern .pill--pending{background:#fff4e3;color:#a56b11;border-color:#f0d4a6}
+    #ordersTableWrap .ordersTableModern .pill--issue{background:#ffe9ea;color:#a53737;border-color:#f4bcbc}
+    #ordersTableWrap .ordersTableModern .actionCell{
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
+      position:relative;
+      width:auto;
+      min-width:140px;
+      text-align:right;
+    }
+    #ordersTableWrap .ordersTableModern th:last-child{
+      width:auto;
+      min-width:140px;
+      text-align:right;
+    }
+    #ordersTableWrap .ordersTableModern .menu-btn{
+      width:36px;
+      height:36px;
+      border-radius:999px;
+      border:1px solid var(--color-border);
+      background:var(--color-card);
+      font-size:20px;
+      line-height:1;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:background .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    #ordersTableWrap .ordersTableModern .menu-btn:hover{
+      background:#f7fbf9;
+      border-color:#c9d7d2;
+      box-shadow:var(--shadow-sm);
+    }
+    #ordersTableWrap .ordersTableModern .menu-btn:focus-visible{
+      outline:none;
+      box-shadow:var(--focus-ring);
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
+    #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
+      filter:none;
+      transform:none;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow td{
+      padding:0;
+      border:none;
+      background:transparent;
+      box-shadow:none;
+    }
+    @media(max-width:700px){
+      #ordersTableWrap .ordersTableModern thead{
+        position:absolute;
+        width:1px;
+        height:1px;
+        padding:0;
+        margin:-1px;
+        overflow:hidden;
+        clip:rect(0,0,0,0);
+        white-space:nowrap;
+        border:0;
+      }
+      #ordersTableWrap .ordersTableModern tbody tr{
+        display:block;
+        border:1px solid var(--color-border);
+        border-radius:var(--radius-lg);
+        padding:12px;
+        background:var(--color-card);
+        box-shadow:var(--shadow-sm);
+        filter:none;
+        margin-bottom:10px;
+      }
+      #ordersTableWrap .ordersTableModern tbody tr.highlight{
+        box-shadow:inset 4px 0 0 #f0d4a6, var(--shadow-sm);
+        border-color:#ead4a6;
+      }
+      #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
+      #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
+        display:table-row;
+        border:none;
+        box-shadow:none;
+        margin-bottom:0;
+        padding:0;
+        background:transparent;
+      }
+      #ordersTableWrap .ordersTableModern tbody td{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        padding:4px 0;
+        border:none;
+        background:transparent;
+      }
+      #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow td,
+      #ordersTableWrap .ordersTableModern tbody tr[data-edit-row] td{
+        display:block;
+        padding:0;
+      }
+      #ordersTableWrap .ordersTableModern tbody td:first-child,
+      #ordersTableWrap .ordersTableModern tbody td:last-child{
+        border:none;
+        border-radius:0;
+      }
+      #ordersTableWrap .ordersTableModern tbody td::before{
+        content:attr(data-label);
+        font-size:11px;
+        color:var(--color-muted);
+        font-weight:600;
+      }
+      #ordersTableWrap .ordersTableModern tbody td.primaryCell{
+        display:block;
+      }
+      #ordersTableWrap .ordersTableModern tbody td.primaryCell::before{
+        content:none;
+      }
+      #ordersTableWrap .ordersTableModern .actionCell{
+        justify-content:space-between;
+      }
+    }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
@@ -981,7 +1184,7 @@
 
         <div class="tableScrollTop" id="ordersTableScrollTop"><div class="tableScrollInner" id="ordersTableScrollInner"></div></div>
         <div class="tableWrap" id="ordersTableWrap">
-        <table>
+        <table class="ordersTableModern">
           <thead>
             <tr>
               <th>الزبون</th>
@@ -3460,6 +3663,21 @@ function renderPurchasesTableWith(list){
     const pickupTxt = p.pickup_point || "من نقطة الاستلام";
     const bagTxt = p.bag_size || "—";
     const noteTxt = p.note || "";
+    const shortIdRaw = String(p.id || "").replace(/-/g,"");
+    const shortId = shortIdRaw ? shortIdRaw.slice(0,6).toUpperCase() : "—";
+    const priceVal = parsePrice(p.price);
+    const paidVal = parsePrice(p.paid_price);
+    let statusClass = "pending";
+    let statusLabel = "قيد الانتظار";
+    if(Number.isFinite(priceVal) && priceVal > 0){
+      if(Number.isFinite(paidVal) && paidVal >= priceVal){
+        statusClass = "completed";
+        statusLabel = "مكتمل";
+      } else if(Number.isFinite(paidVal) && paidVal > 0){
+        statusClass = "issue";
+        statusLabel = "جزئي";
+      }
+    }
 
     const tr=document.createElement("tr");
     tr.dataset.purchaseId = p.id;
@@ -3467,15 +3685,24 @@ function renderPurchasesTableWith(list){
       tr.classList.add("highlight");
     }
     tr.innerHTML=`
-      <td>${escapeHtml(p.customer_name || "")}</td>
-      <td>${escapeHtml(p.qty ?? "")}</td>
-      <td>${escapeHtml(p.price ?? "")}</td>
-      <td>${escapeHtml(p.paid_price ?? "—")}</td>
-      <td>${escapeHtml(bagTxt)}</td>
-      <td>${escapeHtml(pickupTxt)}</td>
-      <td>${escapeHtml(noteTxt) || "—"}</td>
-      <td class="actionCell">
-        <button class="icon-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
+      <td class="primaryCell" data-label="الطلب">
+        <div class="order-id">#${escapeHtml(shortId)}</div>
+        <div class="customer">${escapeHtml(p.customer_name || "")}</div>
+        <div class="meta">
+          <span>العدد: ${escapeHtml(p.qty ?? "")}</span>
+          <span>السعر: ${escapeHtml(p.price ?? "")}</span>
+          <span>${escapeHtml(pickupTxt)}</span>
+        </div>
+      </td>
+      <td data-label="العدد">${escapeHtml(p.qty ?? "")}</td>
+      <td data-label="السعر">${escapeHtml(p.price ?? "")}</td>
+      <td data-label="المدفوع">${escapeHtml(p.paid_price ?? "—")}</td>
+      <td data-label="حجم الكيس">${escapeHtml(bagTxt)}</td>
+      <td data-label="مكان الاستلام">${escapeHtml(pickupTxt)}</td>
+      <td data-label="ملاحظة">${escapeHtml(noteTxt) || "—"}</td>
+      <td class="actionCell" data-label="الحالة">
+        <span class="pill pill--${statusClass}">${statusLabel}</span>
+        <button class="icon-btn menu-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
         <div class="actionMenu" data-menu="${p.id}" role="menu">
           <button type="button" data-action="edit" data-id="${p.id}">تعديل</button>
           <button type="button" data-action="paid" data-id="${p.id}">تعديل المدفوع</button>
