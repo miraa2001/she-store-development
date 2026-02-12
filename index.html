@@ -609,10 +609,11 @@
       table-layout:auto;
     }
     #ordersTableWrap .ordersTableModern thead tr{
-      display:flex;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
       align-items:center;
-      justify-content:space-between;
-      padding:0 14px 4px;
+      gap:10px;
+      padding:0 12px 2px;
     }
     #ordersTableWrap .ordersTableModern thead th{
       background:transparent;
@@ -620,7 +621,7 @@
       color:#6b7874;
       font-size:13px;
       font-weight:600;
-      padding:0;
+      padding:0 2px;
       text-align:right;
       vertical-align:middle;
     }
@@ -628,19 +629,20 @@
       display:none;
     }
     #ordersTableWrap .ordersTableModern tbody tr{
-      display:flex;
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
       align-items:center;
-      gap:12px;
-      padding:12px 14px;
+      gap:10px;
+      padding:11px 12px;
       background:var(--color-card);
       border:1px solid var(--color-border);
-      border-radius:var(--radius-lg);
-      box-shadow:var(--shadow-sm);
+      border-radius:18px;
+      box-shadow:var(--shadow-layer-1);
       transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
     }
     #ordersTableWrap .ordersTableModern tbody tr:hover{
-      border-color:#c9d7d2;
-      box-shadow:var(--shadow-md);
+      border-color:#c4d5ce;
+      box-shadow:var(--shadow-layer-2);
       transform:translateY(-1px);
     }
     #ordersTableWrap .ordersTableModern tbody td{
@@ -654,42 +656,62 @@
       display:none;
     }
     #ordersTableWrap .ordersTableModern tbody tr.highlight{
-      box-shadow:inset 4px 0 0 #f0d4a6, var(--shadow-sm);
-      border-color:#ead4a6;
+      box-shadow:inset 4px 0 0 #d1e8df, var(--shadow-layer-1);
+      border-color:#c7ddd4;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell{
+      flex:1;
+      min-width:0;
+      display:grid;
+      gap:6px;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell .primaryHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      min-width:0;
     }
     #ordersTableWrap .ordersTableModern .primaryCell .order-id{
-      font-size:16px;
+      font-size:15px;
       font-weight:700;
-      color:var(--color-text);
+      color:#23352f;
+      letter-spacing:.2px;
     }
     #ordersTableWrap .ordersTableModern .primaryCell .customer{
       font-size:14px;
       font-weight:600;
       color:var(--color-text);
-      margin-top:2px;
+      line-height:1.25;
     }
     #ordersTableWrap .ordersTableModern .primaryCell .meta{
-      margin-top:6px;
       font-size:12px;
-      color:var(--color-muted);
+      color:#64726d;
       display:flex;
       flex-wrap:wrap;
       gap:8px;
-      line-height:1.4;
+      line-height:1.35;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell{
-      flex:1;
-      min-width:0;
+    #ordersTableWrap .ordersTableModern .primaryCell .meta span::before{
+      content:"•";
+      margin-inline-start:6px;
+      color:#9aaba4;
+    }
+    #ordersTableWrap .ordersTableModern .primaryCell .meta span:first-child::before{
+      content:none;
+      margin:0;
     }
     #ordersTableWrap .ordersTableModern .pill{
       display:inline-flex;
       align-items:center;
-      padding:4px 10px;
+      justify-content:center;
+      padding:4px 9px;
       border-radius:999px;
-      font-size:12px;
+      font-size:11px;
       font-weight:600;
       border:1px solid transparent;
       white-space:nowrap;
+      line-height:1.2;
     }
     #ordersTableWrap .ordersTableModern .pill--completed{background:#e8f5ef;color:#1f7a4b;border-color:#bfe6d3}
     #ordersTableWrap .ordersTableModern .pill--pending{background:#fff4e3;color:#a56b11;border-color:#f0d4a6}
@@ -698,16 +720,16 @@
       display:flex;
       align-items:center;
       justify-content:flex-end;
-      gap:8px;
+      gap:6px;
       position:relative;
       width:auto;
-      min-width:140px;
+      min-width:44px;
       text-align:right;
       flex:0 0 auto;
     }
     #ordersTableWrap .ordersTableModern th:last-child{
       width:auto;
-      min-width:140px;
+      min-width:44px;
       text-align:right;
     }
     #ordersTableWrap .ordersTableModern th:first-child{
@@ -720,7 +742,7 @@
       border-radius:999px;
       border:1px solid var(--color-border);
       background:var(--color-card);
-      font-size:20px;
+      font-size:18px;
       line-height:1;
       cursor:pointer;
       display:inline-flex;
@@ -769,15 +791,15 @@
         display:block;
         border:1px solid var(--color-border);
         border-radius:var(--radius-lg);
-        padding:12px;
+        padding:10px;
         background:var(--color-card);
-        box-shadow:var(--shadow-sm);
+        box-shadow:var(--shadow-layer-1);
         filter:none;
         margin-bottom:10px;
       }
       #ordersTableWrap .ordersTableModern tbody tr.highlight{
-        box-shadow:inset 4px 0 0 #f0d4a6, var(--shadow-sm);
-        border-color:#ead4a6;
+        box-shadow:inset 4px 0 0 #d1e8df, var(--shadow-layer-1);
+        border-color:#c7ddd4;
       }
       #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
       #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
@@ -796,7 +818,7 @@
         display:flex !important;
         align-items:center;
         justify-content:space-between;
-        gap:10px;
+        gap:8px;
         padding:4px 0;
         border:none;
         background:transparent;
@@ -813,7 +835,7 @@
       }
       #ordersTableWrap .ordersTableModern tbody td::before{
         content:attr(data-label);
-        font-size:13px;
+        font-size:12px;
         color:var(--color-muted);
         font-weight:600;
       }
@@ -824,10 +846,14 @@
         content:none;
       }
       #ordersTableWrap .ordersTableModern .primaryCell .meta{
-        display:none;
+        display:grid;
+        gap:4px;
+      }
+      #ordersTableWrap .ordersTableModern .primaryCell .meta span::before{
+        content:none;
       }
       #ordersTableWrap .ordersTableModern .actionCell{
-        justify-content:space-between;
+        justify-content:flex-start;
       }
       #ordersTableWrap .ordersTableModern .inlineEditBox{
         width:min(560px, 92vw);
@@ -842,36 +868,105 @@
     }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     body[data-page="index"]{
-      --density-1:6px;
-      --density-2:10px;
-      --density-3:14px;
-      --density-card-pad:10px;
-      --density-gap:10px;
+      --density-1:clamp(4px, .45vw, 6px);
+      --density-2:clamp(8px, .85vw, 10px);
+      --density-3:clamp(12px, 1vw, 14px);
+      --density-4:clamp(14px, 1.2vw, 18px);
     }
-    body[data-page="index"] .wrap{padding-top:12px;padding-bottom:12px;padding-inline:12px}
-    body[data-page="index"] .topbar{padding:8px 10px;margin-bottom:6px;top:6px;gap:8px}
+    body[data-page="index"] .wrap{padding:clamp(8px,1.5vw,12px)}
+    body[data-page="index"] .toolbarShell{
+      position:sticky;
+      top:6px;
+      z-index:40;
+      display:grid;
+      gap:var(--density-1);
+      margin-bottom:var(--density-2);
+      padding:var(--density-2);
+      background:rgba(255,255,255,.9);
+      border:1px solid var(--divider-soft);
+      border-radius:var(--radius-2);
+      box-shadow:0 6px 14px rgba(15,23,42,.08);
+      backdrop-filter:blur(8px);
+    }
+    body[data-page="index"] .topbar{
+      margin:0;
+      padding:0;
+      border:none;
+      box-shadow:none;
+      background:transparent;
+      display:grid;
+      grid-template-columns:minmax(180px,1fr) auto auto;
+      align-items:center;
+      gap:var(--density-2);
+    }
     body[data-page="index"] .topbar .brand{display:flex;flex-direction:column;gap:2px}
-    body[data-page="index"] .topbar .brand b{line-height:1.1}
-    body[data-page="index"] .tabs{margin:4px 0 8px;padding:4px;gap:4px}
-    body[data-page="index"] .tabLink{padding:8px 12px}
-    body[data-page="index"] #modeSwitch{padding:4px}
-    body[data-page="index"] #modeSwitch .modeBtn{padding:7px 12px}
-    body[data-page="index"] .row{gap:8px}
-    body[data-page="index"] #ordersPanel > .ordersSearchRow,
-    body[data-page="index"] #viewPanel > .viewSearchRow{margin-bottom:6px !important}
+    body[data-page="index"] .topbar .brand b{font-size:clamp(18px,1.6vw,20px);line-height:1.05}
+    body[data-page="index"] .topbar .brand .muted{font-size:12px;line-height:1.2}
+    body[data-page="index"] .menuBtn{
+      padding:8px 10px;
+      border-radius:12px;
+      border-color:var(--divider-soft);
+      box-shadow:none;
+    }
+    body[data-page="index"] #modeSwitch{
+      padding:3px;
+      border-color:var(--divider-soft);
+      background:var(--surface-2);
+    }
+    body[data-page="index"] #modeSwitch .modeBtn{padding:6px 11px;font-size:13px}
+    body[data-page="index"] .tabs{
+      margin:0;
+      padding:3px;
+      gap:4px;
+      border-radius:12px;
+      border-color:var(--divider-soft);
+      background:var(--surface-2);
+    }
+    body[data-page="index"] .tabLink{
+      padding:7px 12px;
+      border-radius:10px;
+      font-size:13px;
+    }
+    body[data-page="index"] .ordersPanelToolbar{
+      display:grid;
+      gap:var(--density-1);
+      margin:0 0 var(--density-2);
+      padding:var(--density-2);
+      background:var(--surface-1);
+      border:1px solid var(--divider-soft);
+      border-radius:var(--radius-md);
+      box-shadow:var(--shadow-sm);
+    }
+    body[data-page="index"] .ordersSearchRow,
+    body[data-page="index"] .viewSearchRow{
+      display:grid;
+      grid-template-columns:minmax(210px,1fr) auto;
+      align-items:center;
+      gap:var(--density-2);
+      margin:0 !important;
+    }
+    body[data-page="index"] .ordersSearchRow .searchBox,
+    body[data-page="index"] .viewSearchRow .searchBox{
+      width:100%;
+      max-width:none;
+      min-width:0;
+    }
     body[data-page="index"] #searchResults,
-    body[data-page="index"] #viewSearchResults{margin-top:4px}
+    body[data-page="index"] #viewSearchResults{margin-top:0}
+    body[data-page="index"] #searchResults:empty,
+    body[data-page="index"] #viewSearchResults:empty{display:none}
     body[data-page="index"] #ordersGrid,
-    body[data-page="index"] #viewGrid{gap:10px}
-    body[data-page="index"] .card{padding:var(--density-card-pad)}
+    body[data-page="index"] #viewGrid{gap:var(--density-2)}
+    body[data-page="index"] .card{padding:var(--density-2)}
     body[data-page="index"] .filtersPanel{
-      margin:8px 0;
-      padding:8px;
+      margin:var(--density-2) 0;
+      padding:var(--density-2);
       background:transparent;
       border:1px solid var(--divider-soft);
       box-shadow:none;
     }
-    body[data-page="index"] .filtersBody{margin-top:8px}
+    body[data-page="index"] .filtersBody{margin-top:var(--density-2)}
+    body[data-page="index"] .filtersRow{gap:var(--density-2)}
     body[data-page="index"] #viewListView{
       background:transparent;
       border:none;
@@ -880,6 +975,28 @@
     }
     body[data-page="index"] #viewListView .listTable{margin-top:8px}
     body[data-page="index"] hr{margin:8px 0;border-color:var(--divider-soft)}
+    @media(max-width:900px){
+      body[data-page="index"] .toolbarShell{
+        top:4px;
+        padding:8px;
+        margin-bottom:8px;
+      }
+      body[data-page="index"] .topbar{
+        grid-template-columns:1fr auto;
+        grid-template-areas:
+          "brand menu"
+          "mode mode";
+      }
+      body[data-page="index"] .topbar .brand{grid-area:brand}
+      body[data-page="index"] #modeSwitch{grid-area:mode;justify-self:start;width:100%}
+      body[data-page="index"] #openSidebarBtn{grid-area:menu}
+      body[data-page="index"] .ordersSearchRow,
+      body[data-page="index"] .viewSearchRow{
+        grid-template-columns:1fr;
+      }
+      body[data-page="index"] .ordersSearchRow .pill,
+      body[data-page="index"] .viewSearchRow .pill{justify-self:start}
+    }
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
     .orderGroupLabel{
@@ -1165,30 +1282,34 @@
 </aside>
 
 <div class="wrap">
-  <div class="topbar">
-    <div class="brand">
-      <b>الطلبيات</b>
-      <div class="muted">عرض / تعديل / إضافة</div>
+  <div class="toolbarShell">
+    <div class="topbar">
+      <div class="brand">
+        <b>الطلبيات</b>
+        <div class="muted">عرض / تعديل / إضافة</div>
+      </div>
+      <div class="modeSwitch" id="modeSwitch" style="display:none">
+        <button class="modeBtn active" type="button" id="modeEditBtn" data-mode="edit">تعديل / إضافة</button>
+        <button class="modeBtn" type="button" id="modeViewBtn" data-mode="view">عرض فقط</button>
+      </div>
+      <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
     </div>
-    <div class="modeSwitch" id="modeSwitch" style="display:none">
-      <button class="modeBtn active" type="button" id="modeEditBtn" data-mode="edit">تعديل / إضافة</button>
-      <button class="modeBtn" type="button" id="modeViewBtn" data-mode="view">عرض فقط</button>
-    </div>
-    <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
-  </div>
 
-  <div class="tabs" id="navTabs" style="display:none">
-    <button class="tabLink active" type="button" data-tab="orders">الطلبيات</button>
-    <button class="tabLink" type="button" data-tab="view">عرض الطلبيات</button>
-    <button class="tabLink" type="button" data-tab="customers">العملاء</button>
+    <div class="tabs" id="navTabs" style="display:none">
+      <button class="tabLink active" type="button" data-tab="orders">الطلبيات</button>
+      <button class="tabLink" type="button" data-tab="view">عرض الطلبيات</button>
+      <button class="tabLink" type="button" data-tab="customers">العملاء</button>
+    </div>
   </div>
 
   <div id="ordersPanel" class="tabPanel">
-  <div class="row ordersSearchRow">
-    <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
-    <span class="pill" id="searchCount" style="display:none"></span>
+  <div class="ordersPanelToolbar">
+    <div class="row ordersSearchRow">
+      <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
+      <span class="pill" id="searchCount" style="display:none"></span>
+    </div>
+    <div id="searchResults" class="searchResults" style="display:none"></div>
   </div>
-  <div id="searchResults" class="searchResults" style="display:none"></div>
 
   <div class="grid" id="ordersGrid">
     <aside class="card">
@@ -3888,6 +4009,18 @@ function renderPurchasesTableWith(list){
     const pickupTxt = p.pickup_point || "من نقطة الاستلام";
     const bagTxt = p.bag_size || "—";
     const noteTxt = p.note || "";
+    const purchaseIdShort = String(p.id || "").replace(/-/g, "").slice(0, 6).toUpperCase() || "—";
+    const priceNum = parsePrice(p.price);
+    const paidNum = parsePrice(p.paid_price ?? 0);
+    let statusClass = "pending";
+    let statusLabel = "قيد التحصيل";
+    if(priceNum > 0 && paidNum >= priceNum){
+      statusClass = "completed";
+      statusLabel = "مكتمل";
+    }else if(paidNum <= 0){
+      statusClass = "issue";
+      statusLabel = "غير مدفوع";
+    }
     const tr=document.createElement("tr");
     tr.dataset.purchaseId = p.id;
     if(highlightPurchaseId && String(p.id) === String(highlightPurchaseId)){
@@ -3895,10 +4028,15 @@ function renderPurchasesTableWith(list){
     }
     tr.innerHTML=`
       <td class="primaryCell" data-label="الطلب">
-        <div class="order-id">${escapeHtml(p.customer_name || "")}</div>
+        <div class="primaryHead">
+          <div class="order-id">طلب #${escapeHtml(purchaseIdShort)}</div>
+          <span class="pill pill--${statusClass}">${statusLabel}</span>
+        </div>
+        <div class="customer">${escapeHtml(p.customer_name || "")}</div>
         <div class="meta">
           <span>العدد: ${escapeHtml(p.qty ?? "")}</span>
           <span>السعر: ${escapeHtml(p.price ?? "")}</span>
+          <span>المدفوع: ${escapeHtml(p.paid_price ?? "—")}</span>
           <span>${escapeHtml(pickupTxt)}</span>
         </div>
       </td>
