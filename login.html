@@ -9,165 +9,85 @@
   <link rel="stylesheet" href="assets/base.css">
   <script src="assets/ui.js" defer></script>
   <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 16px;
-      background: #e3e3e3;
-      font-family: system-ui, Tahoma, Arial, sans-serif;
+    body{
+      font-family:system-ui,Tahoma,Arial;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:20px;
+      background:
+        radial-gradient(520px 300px at 100% 0%, rgba(79,138,123,.14), transparent 70%),
+        radial-gradient(520px 300px at 0% 100%, rgba(79,138,123,.08), transparent 70%),
+        linear-gradient(180deg, #fbfdfc 0%, #f6f8f7 100%);
+      color:var(--color-text);
     }
-
-    .container {
-      width: 100%;
-      display: grid;
-      place-items: center;
-      direction: ltr;
+    .card{
+      width:min(440px, 95vw);
+      background:linear-gradient(180deg, #ffffff 0%, #f9fcfb 100%);
+      border:1px solid var(--color-border);
+      border-radius:24px 24px 12px 24px;
+      padding:20px;
+      box-shadow:var(--shadow-layer-2);
     }
-
-    .login {
-      color: #000;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      display: block;
-      font-weight: bold;
-      font-size: x-large;
-      text-decoration: none;
+    .login-hero{
+      width:180px;
+      max-width:70%;
+      display:block;
+      margin:2px auto 12px;
+      border-radius:18px;
+      background:#f1f7f4;
+      padding:6px;
     }
-
-    .card {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 350px;
-      width: 300px;
-      flex-direction: column;
-      gap: 35px;
-      background: #e3e3e3;
-      box-shadow: 16px 16px 32px #c8c8c8, -16px -16px 32px #fefefe;
-      border-radius: 8px;
-      box-sizing: border-box;
-      padding: 20px 14px 16px;
+    .title{font-size:22px;font-weight:700;margin-bottom:6px}
+    .muted{color:var(--color-muted);font-size:13px;margin-bottom:14px;line-height:1.6}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:11px;
+      border:1px solid #d4dfda;
+      background:#fff;
+      color:var(--color-text);
+      outline:none;
+      box-sizing:border-box;
+      display:block;
+      min-height:42px;
     }
-
-    .inputBox {
-      position: relative;
-      width: 250px;
+    input:focus{border-color:var(--brand);box-shadow:var(--focus-ring)}
+    .btn{
+      width:100%;
+      padding:12px;
+      border-radius:999px;
+      border:1px solid var(--brand);
+      background:var(--brand);
+      color:#fff;
+      cursor:pointer;
+      font-weight:700;
+      box-sizing:border-box;
+      display:block;
+      box-shadow:0 10px 16px rgba(79,138,123,.22);
     }
-
-    .inputBox input {
-      width: 100%;
-      padding: 10px;
-      outline: none;
-      border: none;
-      color: #000;
-      font-size: 1em;
-      background: transparent;
-      border-left: 2px solid #000;
-      border-bottom: 2px solid #000;
-      transition: 0.1s;
-      border-bottom-left-radius: 8px;
-      box-sizing: border-box;
-    }
-
-    .inputBox span {
-      margin-top: 5px;
-      position: absolute;
-      left: 0;
-      transform: translateY(-4px);
-      margin-left: 10px;
-      padding: 10px;
-      pointer-events: none;
-      font-size: 12px;
-      color: #000;
-      text-transform: uppercase;
-      transition: 0.5s;
-      letter-spacing: 3px;
-      border-radius: 8px;
-    }
-
-    .inputBox input:valid ~ span,
-    .inputBox input:focus ~ span {
-      transform: translateX(113px) translateY(-15px);
-      font-size: 0.8em;
-      padding: 5px 10px;
-      background: #000;
-      letter-spacing: 0.2em;
-      color: #fff;
-      border: 2px;
-    }
-
-    .inputBox input:valid,
-    .inputBox input:focus {
-      border: 2px solid #000;
-      border-radius: 8px;
-    }
-
-    .enter {
-      height: 45px;
-      width: 100px;
-      border-radius: 5px;
-      border: 2px solid #000;
-      cursor: pointer;
-      background-color: transparent;
-      transition: 0.5s;
-      text-transform: uppercase;
-      font-size: 10px;
-      letter-spacing: 2px;
-      margin-bottom: 1em;
-    }
-
-    .enter:hover {
-      background-color: rgb(0, 0, 0);
-      color: white;
-    }
-
-    .enter:disabled {
-      opacity: .6;
-      cursor: not-allowed;
-    }
-
-    .msg {
-      margin-top: -18px;
-      min-height: 18px;
-      width: 250px;
-      text-align: center;
-      color: #a63434;
-      font-size: 13px;
-    }
-
-    @media (max-width: 420px) {
-      .card {
-        width: min(300px, calc(100vw - 20px));
-        min-height: 320px;
-      }
-
-      .inputBox {
-        width: min(250px, calc(100vw - 52px));
-      }
-    }
+    .btn:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .msg{margin-top:10px;font-size:13px;color:#a63434}
   </style>
 </head>
 <body data-page="login">
 
-  <div class="container">
-    <div class="card">
-      <a class="login">Log in</a>
+  <div class="card">
+    <img src="assets/woman.png" alt="صورة لطيفة" class="login-hero">
+    <div class="title">تسجيل الدخول</div>
+    <div class="muted">اكتبي اسم المستخدم وكلمة المرور. (اسم المستخدم = مثل: <b>rahaf</b> أو <b>reem</b> أو <b>rawand</b>)</div>
 
-      <div class="inputBox">
-        <input id="username" type="text" autocomplete="username" required="required">
-        <span class="user">Username</span>
-      </div>
+    <input id="username" placeholder="اسم المستخدم" autocomplete="username" />
+    <div style="height:10px"></div>
+    <input id="password" type="password" placeholder="كلمة المرور" autocomplete="current-password" />
+    <div style="height:12px"></div>
 
-      <div class="inputBox">
-        <input id="password" type="password" autocomplete="current-password" required="required">
-        <span>Password</span>
-      </div>
-
-      <button class="enter" id="loginBtn">Enter</button>
-      <div class="msg" id="msg"></div>
-    </div>
+    <button class="btn" id="loginBtn">دخول</button>
+    <div class="msg" id="msg"></div>
   </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -205,15 +125,15 @@
   loginBtn.onclick = async () => {
     msg.textContent = "";
     loginBtn.disabled = true;
-    loginBtn.textContent = "Loading...";
+    loginBtn.textContent = "جاري الدخول...";
 
     const username = usernameEl.value;
     const password = passwordEl.value;
 
     if(!username.trim() || !password){
-      msg.textContent = "Enter username and password.";
+      msg.textContent = "اكتبي اسم المستخدم وكلمة المرور.";
       loginBtn.disabled = false;
-      loginBtn.textContent = "Enter";
+      loginBtn.textContent = "دخول";
       return;
     }
 
@@ -227,9 +147,9 @@ if(error){
   console.error("LOGIN ERROR:", error);
 
   // show real error (Arabic-friendly)
-  msg.textContent = `Login failed: ${error.message}`;
+  msg.textContent = `فشل الدخول: ${error.message}`;
   loginBtn.disabled = false;
-  loginBtn.textContent = "Enter";
+  loginBtn.textContent = "دخول";
   return;
 }
 
