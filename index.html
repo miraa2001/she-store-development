@@ -868,96 +868,148 @@
     }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     body[data-page="index"]{
-      --density-1:clamp(4px, .45vw, 6px);
-      --density-2:clamp(8px, .85vw, 10px);
-      --density-3:clamp(12px, 1vw, 14px);
-      --density-4:clamp(14px, 1.2vw, 18px);
+      --density-1:clamp(6px, .55vw, 8px);
+      --density-2:clamp(10px, .9vw, 12px);
+      --density-3:clamp(12px, 1.2vw, 16px);
+      --density-4:clamp(16px, 1.5vw, 20px);
+      --cmd-h:46px;
     }
-    body[data-page="index"] .wrap{padding:clamp(8px,1.5vw,12px)}
-    body[data-page="index"] .toolbarShell{
+    body[data-page="index"] .wrap{
+      padding:clamp(8px,1.1vw,12px);
+      display:grid;
+      gap:var(--density-2);
+    }
+    body[data-page="index"] .commandBar{
       position:sticky;
       top:6px;
-      z-index:40;
+      z-index:46;
       display:grid;
-      gap:var(--density-1);
-      margin-bottom:var(--density-2);
-      padding:var(--density-2);
-      background:rgba(255,255,255,.9);
-      border:1px solid var(--divider-soft);
-      border-radius:var(--radius-2);
-      box-shadow:0 6px 14px rgba(15,23,42,.08);
-      backdrop-filter:blur(8px);
-    }
-    body[data-page="index"] .topbar{
-      margin:0;
-      padding:0;
-      border:none;
-      box-shadow:none;
-      background:transparent;
-      display:grid;
-      grid-template-columns:minmax(180px,1fr) auto auto;
+      grid-template-columns:auto minmax(0,1fr) clamp(220px,28vw,360px) auto auto;
+      grid-template-areas:"label tabs search mode menu";
       align-items:center;
-      gap:var(--density-2);
-    }
-    body[data-page="index"] .topbar .brand{display:flex;flex-direction:column;gap:2px}
-    body[data-page="index"] .topbar .brand b{font-size:clamp(18px,1.6vw,20px);line-height:1.05}
-    body[data-page="index"] .topbar .brand .muted{font-size:12px;line-height:1.2}
-    body[data-page="index"] .menuBtn{
-      padding:8px 10px;
+      gap:var(--density-1);
+      min-height:var(--cmd-h);
+      padding:6px 10px;
+      background:var(--surface-2);
+      border:1px solid var(--divider-soft);
       border-radius:12px;
-      border-color:var(--divider-soft);
       box-shadow:none;
     }
-    body[data-page="index"] #modeSwitch{
-      padding:3px;
-      border-color:var(--divider-soft);
-      background:var(--surface-2);
+    body[data-page="index"] .commandLabel{
+      grid-area:label;
+      font-size:12px;
+      color:var(--color-muted);
+      font-weight:700;
+      letter-spacing:.03em;
+      white-space:nowrap;
     }
-    body[data-page="index"] #modeSwitch .modeBtn{padding:6px 11px;font-size:13px}
-    body[data-page="index"] .tabs{
+    body[data-page="index"] .commandBar #navTabs{
+      grid-area:tabs;
       margin:0;
-      padding:3px;
+      padding:2px;
       gap:4px;
-      border-radius:12px;
-      border-color:var(--divider-soft);
-      background:var(--surface-2);
-    }
-    body[data-page="index"] .tabLink{
-      padding:7px 12px;
-      border-radius:10px;
-      font-size:13px;
-    }
-    body[data-page="index"] .ordersPanelToolbar{
-      display:grid;
-      gap:var(--density-1);
-      margin:0 0 var(--density-2);
-      padding:var(--density-2);
-      background:var(--surface-1);
       border:1px solid var(--divider-soft);
-      border-radius:var(--radius-md);
-      box-shadow:var(--shadow-sm);
+      border-radius:10px;
+      background:var(--surface-1);
+      min-width:0;
+      overflow:auto hidden;
+      scrollbar-width:none;
+      white-space:nowrap;
     }
-    body[data-page="index"] .ordersSearchRow,
-    body[data-page="index"] .viewSearchRow{
-      display:grid;
-      grid-template-columns:minmax(210px,1fr) auto;
+    body[data-page="index"] .commandBar #navTabs::-webkit-scrollbar{display:none}
+    body[data-page="index"] #navTabs.merged{justify-content:flex-start}
+    body[data-page="index"] .commandBar .tabLink{
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:12px;
+      line-height:1.2;
+      white-space:nowrap;
+    }
+    body[data-page="index"] .commandBar .commandSearchRow{
+      grid-area:search;
+      display:flex;
       align-items:center;
-      gap:var(--density-2);
-      margin:0 !important;
+      gap:var(--density-1);
+      margin:0;
+      min-width:0;
+      width:clamp(220px, 28vw, 360px);
     }
-    body[data-page="index"] .ordersSearchRow .searchBox,
-    body[data-page="index"] .viewSearchRow .searchBox{
+    body[data-page="index"] .commandBar .commandSearchRow .searchBox{
       width:100%;
       max-width:none;
       min-width:0;
+      height:36px;
     }
-    body[data-page="index"] #searchResults,
-    body[data-page="index"] #viewSearchResults{margin-top:0}
-    body[data-page="index"] #searchResults:empty,
-    body[data-page="index"] #viewSearchResults:empty{display:none}
+    body[data-page="index"] .commandBar .commandSearchRow .pill{
+      flex:0 0 auto;
+      padding:4px 8px;
+      min-width:42px;
+      text-align:center;
+    }
+    body[data-page="index"] .commandBar #modeSwitch{
+      grid-area:mode;
+      padding:2px;
+      border-color:var(--divider-soft);
+      background:var(--surface-1);
+      box-shadow:none;
+      white-space:nowrap;
+    }
+    body[data-page="index"] .commandBar #modeSwitch .modeBtn{
+      padding:6px 9px;
+      font-size:12px;
+    }
+    body[data-page="index"] .commandBar #openSidebarBtn{
+      grid-area:menu;
+      padding:7px 10px;
+      border-radius:10px;
+      border-color:var(--divider-soft);
+      box-shadow:none;
+    }
+    body[data-page="index"] .commandSearchResults{
+      margin-top:0;
+      border-color:var(--divider-soft);
+    }
+    body[data-page="index"] .commandSearchResults:empty{display:none}
+    body[data-page="index"] .workspace{
+      display:grid;
+      gap:var(--density-2);
+      min-width:0;
+    }
     body[data-page="index"] #ordersGrid,
     body[data-page="index"] #viewGrid{gap:var(--density-2)}
     body[data-page="index"] .card{padding:var(--density-2)}
+    body[data-page="index"] #ordersGrid > aside.card .listFull > .row:first-child,
+    body[data-page="index"] #viewGrid > aside.card .listFull > .row:first-child{
+      border:none;
+      background:transparent;
+      border-radius:0;
+      padding:0;
+      box-shadow:none;
+      margin-bottom:2px;
+    }
+    body[data-page="index"] #ordersGrid > aside.card .listFull > .row:first-child b,
+    body[data-page="index"] #viewGrid > aside.card .listFull > .row:first-child b{
+      font-size:13px;
+      font-weight:700;
+      color:#44545a;
+      letter-spacing:.01em;
+    }
+    body[data-page="index"] #ordersGrid > aside.card .listFull #ordersList,
+    body[data-page="index"] #viewGrid > aside.card .listFull #viewOrdersList{
+      gap:6px;
+    }
+    body[data-page="index"] .orderItem{
+      border-color:#dbe5e1;
+      border-radius:10px;
+      padding:8px 10px;
+      box-shadow:none;
+      background:var(--surface-1);
+    }
+    body[data-page="index"] .orderItem:hover{
+      border-color:#c7d8d2;
+      box-shadow:var(--shadow-sm);
+      transform:translateY(-1px);
+    }
     body[data-page="index"] .filtersPanel{
       margin:var(--density-2) 0;
       padding:var(--density-2);
@@ -976,26 +1028,32 @@
     body[data-page="index"] #viewListView .listTable{margin-top:8px}
     body[data-page="index"] hr{margin:8px 0;border-color:var(--divider-soft)}
     @media(max-width:900px){
-      body[data-page="index"] .toolbarShell{
-        top:4px;
-        padding:8px;
-        margin-bottom:8px;
-      }
-      body[data-page="index"] .topbar{
-        grid-template-columns:1fr auto;
+      body[data-page="index"] .commandBar{
+        grid-template-columns:minmax(0,1fr) auto;
         grid-template-areas:
-          "brand menu"
-          "mode mode";
+          "tabs menu"
+          "search mode";
+        gap:var(--density-1);
+        padding:8px;
       }
-      body[data-page="index"] .topbar .brand{grid-area:brand}
-      body[data-page="index"] #modeSwitch{grid-area:mode;justify-self:start;width:100%}
-      body[data-page="index"] #openSidebarBtn{grid-area:menu}
-      body[data-page="index"] .ordersSearchRow,
+      body[data-page="index"] .commandLabel{display:none}
+      body[data-page="index"] .commandBar .commandSearchRow{
+        width:100%;
+      }
+      body[data-page="index"] .commandBar #modeSwitch{
+        justify-self:start;
+      }
+    }
+    @media(max-width:700px){
+      body[data-page="index"] .commandBar{
+        border-radius:10px;
+      }
+      body[data-page="index"] .commandBar #modeSwitch .modeBtn{
+        padding:6px 8px;
+      }
       body[data-page="index"] .viewSearchRow{
-        grid-template-columns:1fr;
+        margin-bottom:6px !important;
       }
-      body[data-page="index"] .ordersSearchRow .pill,
-      body[data-page="index"] .viewSearchRow .pill{justify-self:start}
     }
     .orderItem{border:1px solid var(--color-border);border-radius:var(--radius-md);padding:10px;cursor:pointer;display:flex;justify-content:space-between}
     .orderItem.active{border-color:var(--brand);background:var(--brand-tint)}
@@ -1282,34 +1340,32 @@
 </aside>
 
 <div class="wrap">
-  <div class="toolbarShell">
-    <div class="topbar">
-      <div class="brand">
-        <b>الطلبيات</b>
-        <div class="muted">عرض / تعديل / إضافة</div>
-      </div>
-      <div class="modeSwitch" id="modeSwitch" style="display:none">
-        <button class="modeBtn active" type="button" id="modeEditBtn" data-mode="edit">تعديل / إضافة</button>
-        <button class="modeBtn" type="button" id="modeViewBtn" data-mode="view">عرض فقط</button>
-      </div>
-      <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
-    </div>
+  <div class="commandBar">
+    <span class="commandLabel" aria-hidden="true">لوحة التشغيل</span>
 
     <div class="tabs" id="navTabs" style="display:none">
       <button class="tabLink active" type="button" data-tab="orders">الطلبيات</button>
       <button class="tabLink" type="button" data-tab="view">عرض الطلبيات</button>
       <button class="tabLink" type="button" data-tab="customers">العملاء</button>
     </div>
-  </div>
 
-  <div id="ordersPanel" class="tabPanel">
-  <div class="ordersPanelToolbar">
-    <div class="row ordersSearchRow">
+    <div class="row ordersSearchRow commandSearchRow">
       <input id="searchInput" class="searchBox" placeholder="بحث باسم الزبون...">
       <span class="pill" id="searchCount" style="display:none"></span>
     </div>
-    <div id="searchResults" class="searchResults" style="display:none"></div>
+
+    <div class="modeSwitch" id="modeSwitch" style="display:none">
+      <button class="modeBtn active" type="button" id="modeEditBtn" data-mode="edit">تعديل / إضافة</button>
+      <button class="modeBtn" type="button" id="modeViewBtn" data-mode="view">عرض فقط</button>
+    </div>
+
+    <button class="menuBtn" id="openSidebarBtn" type="button" aria-label="فتح القائمة">☰</button>
   </div>
+
+  <div id="searchResults" class="searchResults commandSearchResults" style="display:none"></div>
+
+  <div class="workspace">
+  <div id="ordersPanel" class="tabPanel">
 
   <div class="grid" id="ordersGrid">
     <aside class="card">
@@ -1578,6 +1634,7 @@
         <tbody id="custTableBody"></tbody>
       </table>
     </div>
+  </div>
   </div>
 </div>
 
