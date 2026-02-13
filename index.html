@@ -7,6 +7,7 @@
   <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/8863/8863863.png" />
   <link rel="stylesheet" href="assets/tokens.css">
   <link rel="stylesheet" href="assets/base.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@100..900&display=swap">
   <script src="assets/ui.js" defer></script>
 
   <style>
@@ -600,91 +601,73 @@
       }
     }
 
-    /* ===== Orders table modern card rows ===== */
+    /* ===== Orders table + vertical purchase cards ===== */
     #ordersTableWrap .ordersTableModern{
       border-collapse:separate;
-      border-spacing:0 10px;
+      border-spacing:0 12px;
       width:100%;
       min-width:0;
-      table-layout:auto;
+      table-layout:fixed;
     }
-    #ordersTableWrap .ordersTableModern thead tr{
-      display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
-      align-items:center;
-      gap:10px;
-      padding:0 12px 2px;
-    }
-    #ordersTableWrap .ordersTableModern thead th{
-      background:transparent;
-      border:none;
-      color:#6b7874;
-      font-size:13px;
-      font-weight:600;
-      padding:0 2px;
-      text-align:right;
-      vertical-align:middle;
-    }
-    #ordersTableWrap .ordersTableModern thead th:not(:first-child):not(:last-child){
+    #ordersTableWrap .ordersTableModern thead{
       display:none;
     }
-    #ordersTableWrap .ordersTableModern tbody tr{
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow{
       display:grid;
       grid-template-columns:minmax(0,1fr) auto;
-      align-items:center;
+      align-items:start;
       gap:10px;
-      padding:11px 12px;
-      background:var(--color-card);
-      border:1px solid var(--color-border);
-      border-radius:18px;
-      box-shadow:var(--shadow-layer-1);
-      transition:border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+      padding:0;
+      background:transparent;
+      border:none;
+      box-shadow:none;
+      transition:none;
+      position:relative;
     }
-    #ordersTableWrap .ordersTableModern tbody tr:hover{
-      border-color:#c4d5ce;
-      box-shadow:var(--shadow-layer-2);
-      transform:translateY(-1px);
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow:hover{
+      transform:none;
+      border:none;
+      box-shadow:none;
     }
-    #ordersTableWrap .ordersTableModern tbody td{
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow.highlight{
+      background:transparent !important;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow.highlight td{
+      background:transparent !important;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow td{
       background:transparent;
       border:none;
       padding:0;
       text-align:right;
-      vertical-align:middle;
+      vertical-align:top;
     }
-    #ordersTableWrap .ordersTableModern tbody tr:not(.inlineEditRow):not([data-edit-row]) td:not(.primaryCell):not(.actionCell){
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow td:not(.primaryCell):not(.actionCell){
       display:none;
     }
-    #ordersTableWrap .ordersTableModern tbody tr.highlight{
-      box-shadow:inset 4px 0 0 #d1e8df, var(--shadow-layer-1);
-      border-color:#c7ddd4;
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary{
+      display:none;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell{
-      flex:1;
-      min-width:0;
-      display:grid;
-      gap:6px;
-    }
-    #ordersTableWrap .ordersTableModern .primaryCell .primaryHead{
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .primaryHead{
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:8px;
       min-width:0;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell .order-id{
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .order-id{
       font-size:15px;
       font-weight:700;
       color:#23352f;
       letter-spacing:.2px;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell .customer{
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .customer{
       font-size:14px;
       font-weight:600;
       color:var(--color-text);
       line-height:1.25;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell .meta{
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .meta{
       font-size:12px;
       color:#64726d;
       display:flex;
@@ -692,12 +675,12 @@
       gap:8px;
       line-height:1.35;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell .meta span::before{
-      content:"•";
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .meta span::before{
+      content:"\2022";
       margin-inline-start:6px;
       color:#9aaba4;
     }
-    #ordersTableWrap .ordersTableModern .primaryCell .meta span:first-child::before{
+    #ordersTableWrap .ordersTableModern .purchaseMobileSummary .meta span:first-child::before{
       content:none;
       margin:0;
     }
@@ -716,16 +699,175 @@
     #ordersTableWrap .ordersTableModern .pill--completed{background:#e8f5ef;color:#1f7a4b;border-color:#bfe6d3}
     #ordersTableWrap .ordersTableModern .pill--pending{background:#fff4e3;color:#a56b11;border-color:#f0d4a6}
     #ordersTableWrap .ordersTableModern .pill--issue{background:#ffe9ea;color:#a53737;border-color:#f4bcbc}
-    #ordersTableWrap .ordersTableModern .actionCell{
+    #ordersTableWrap .ordersTableModern .primaryCell.purchaseCardCell{
+      min-width:0;
+      display:flex;
+      justify-content:center;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVCard{
+      width:min(100%, 420px);
+      background:#fff;
+      border:1px solid #e7ecef;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 16px 30px rgba(15,23,42,.12);
+      font-family:"Alexandria",sans-serif;
+      transition:transform .22s ease, box-shadow .22s ease;
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow:hover .purchaseVCard{
+      transform:translateY(-1px);
+      box-shadow:0 20px 36px rgba(15,23,42,.16);
+    }
+    #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow.highlight .purchaseVCard{
+      border-color:#c5d8d1;
+      box-shadow:0 0 0 2px #e5f0ec, 0 20px 36px rgba(15,23,42,.16);
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVMedia{
+      position:relative;
+      height:320px;
+      background:#f2f4f6;
+      overflow:hidden;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVTrack{
+      --card-index:0;
+      display:flex;
+      width:100%;
+      height:100%;
+      transform:translateX(calc(var(--card-index) * -100%));
+      transition:transform .3s ease;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVSlide{
+      flex:0 0 100%;
+      min-width:100%;
+      height:100%;
+      background:#f2f4f6;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVSlide img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      cursor:pointer;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVPlaceholder{
+      width:100%;
+      height:100%;
+      display:grid;
+      place-items:center;
+      color:#697681;
+      font-size:14px;
+      font-weight:600;
+      background:linear-gradient(180deg,#f6f8fa 0%,#eef2f5 100%);
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVNav{
+      position:absolute;
+      top:50%;
+      transform:translateY(-50%);
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      border:none;
+      background:rgba(255,255,255,.92);
+      box-shadow:0 10px 20px rgba(15,23,42,.2);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      line-height:1;
+      color:#1f2937;
+      cursor:pointer;
+      transition:transform .2s ease, background .2s ease;
+      z-index:2;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVNav:hover{
+      transform:translateY(-50%) scale(1.06);
+      background:#fff;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVNav.prev{left:14px}
+    #ordersTableWrap .ordersTableModern .purchaseVNav.next{right:14px}
+    #ordersTableWrap .ordersTableModern .purchaseVDots{
+      position:absolute;
+      left:50%;
+      bottom:14px;
+      transform:translateX(-50%);
       display:flex;
       align-items:center;
-      justify-content:flex-end;
+      gap:8px;
+      z-index:2;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVDot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      border:none;
+      background:rgba(255,255,255,.58);
+      cursor:pointer;
+      transition:all .2s ease;
+      padding:0;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVDot.is-active{
+      width:24px;
+      background:#fff;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVCount{
+      position:absolute;
+      top:12px;
+      left:12px;
+      background:rgba(17,24,39,.58);
+      color:#fff;
+      border-radius:999px;
+      padding:4px 10px;
+      font-size:11px;
+      line-height:1.2;
+      z-index:2;
+      direction:ltr;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVBody{
+      padding:22px 18px;
+      background:linear-gradient(135deg,#f9fbfc 0%,#ffffff 72%);
+      direction:rtl;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVField{
+      padding-bottom:12px;
+      margin-bottom:12px;
+      border-bottom:1px solid #e8edf0;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVField:last-child{
+      border-bottom:none;
+      margin-bottom:0;
+      padding-bottom:0;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVLabel{
+      margin:0 0 4px;
+      font-size:12px;
+      color:#6a7680;
+      font-weight:500;
+      line-height:1.4;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVValue{
+      margin:0;
+      font-size:18px;
+      color:#111827;
+      font-weight:500;
+      line-height:1.45;
+      word-break:break-word;
+    }
+    #ordersTableWrap .ordersTableModern .purchaseVValue.paid{
+      color:#179c4a;
+      font-weight:600;
+    }
+    #ordersTableWrap .ordersTableModern .actionCell{
+      display:flex;
+      align-items:flex-start;
+      justify-content:flex-start;
       gap:6px;
       position:relative;
       width:auto;
       min-width:44px;
       text-align:right;
       flex:0 0 auto;
+      padding-top:10px;
+      z-index:3;
     }
     #ordersTableWrap .ordersTableModern th:last-child{
       width:auto;
@@ -741,7 +883,7 @@
       height:36px;
       border-radius:999px;
       border:1px solid var(--color-border);
-      background:var(--color-card);
+      background:#fff;
       font-size:18px;
       line-height:1;
       cursor:pointer;
@@ -787,7 +929,7 @@
         white-space:nowrap;
         border:0;
       }
-      #ordersTableWrap .ordersTableModern tbody tr{
+      #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow{
         display:block;
         border:1px solid var(--color-border);
         border-radius:var(--radius-lg);
@@ -797,9 +939,16 @@
         filter:none;
         margin-bottom:10px;
       }
-      #ordersTableWrap .ordersTableModern tbody tr.highlight{
+      #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow.highlight{
         box-shadow:inset 4px 0 0 #d1e8df, var(--shadow-layer-1);
         border-color:#c7ddd4;
+      }
+      #ordersTableWrap .ordersTableModern .purchaseVCard{
+        display:none;
+      }
+      #ordersTableWrap .ordersTableModern .purchaseMobileSummary{
+        display:grid;
+        gap:6px;
       }
       #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
       #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
@@ -840,16 +989,16 @@
         font-weight:600;
       }
       #ordersTableWrap .ordersTableModern tbody td.primaryCell{
-        display:block;
+        display:block !important;
       }
       #ordersTableWrap .ordersTableModern tbody td.primaryCell::before{
         content:none;
       }
-      #ordersTableWrap .ordersTableModern .primaryCell .meta{
+      #ordersTableWrap .ordersTableModern .purchaseMobileSummary .meta{
         display:grid;
         gap:4px;
       }
-      #ordersTableWrap .ordersTableModern .primaryCell .meta span::before{
+      #ordersTableWrap .ordersTableModern .purchaseMobileSummary .meta span::before{
         content:none;
       }
       #ordersTableWrap .ordersTableModern .actionCell{
@@ -3875,6 +4024,27 @@ function setupDropdowns(){
       analyzeEditImages(analyzeBtn.dataset.aiAnalyze);
       return;
     }
+    const prevCardBtn = e.target.closest("[data-card-prev]");
+    if(prevCardBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      shiftPurchaseCardSlide(prevCardBtn.dataset.cardPrev, -1);
+      return;
+    }
+    const nextCardBtn = e.target.closest("[data-card-next]");
+    if(nextCardBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      shiftPurchaseCardSlide(nextCardBtn.dataset.cardNext, 1);
+      return;
+    }
+    const dotBtn = e.target.closest("[data-card-dot]");
+    if(dotBtn){
+      e.preventDefault();
+      e.stopPropagation();
+      setPurchaseCardSlide(dotBtn.dataset.cardDot, Number(dotBtn.dataset.cardIndex || 0));
+      return;
+    }
     const menuBtn = e.target.closest("[data-actions]");
     if(menuBtn){
       e.stopPropagation();
@@ -4057,6 +4227,38 @@ function getFilteredPurchases(){
   return list;
 }
 
+function setPurchaseCardSlide(purchaseId, targetIndex){
+  if(!tbody) return;
+  const row = tbody.querySelector(`tr[data-purchase-id="${purchaseId}"]`);
+  if(!row) return;
+  const track = row.querySelector(`[data-card-track="${purchaseId}"]`);
+  if(!track) return;
+  const slides = Array.from(track.querySelectorAll(".purchaseVSlide"));
+  if(!slides.length) return;
+
+  const total = slides.length;
+  const normalized = ((Number(targetIndex) || 0) % total + total) % total;
+  track.style.setProperty("--card-index", normalized);
+  row.dataset.cardIndex = String(normalized);
+
+  row.querySelectorAll(`[data-card-dot="${purchaseId}"]`).forEach((dot, idx)=>{
+    dot.classList.toggle("is-active", idx === normalized);
+  });
+
+  const countEl = row.querySelector(`[data-card-count="${purchaseId}"]`);
+  if(countEl){
+    countEl.textContent = `${normalized + 1}/${total}`;
+  }
+}
+
+function shiftPurchaseCardSlide(purchaseId, delta){
+  if(!tbody) return;
+  const row = tbody.querySelector(`tr[data-purchase-id="${purchaseId}"]`);
+  if(!row) return;
+  const current = Number(row.dataset.cardIndex || 0);
+  setPurchaseCardSlide(purchaseId, current + delta);
+}
+
 function renderPurchasesTableWith(list){
   if(!tbody) return;
   const dataList = Array.isArray(list) ? list : [];
@@ -4066,7 +4268,6 @@ function renderPurchasesTableWith(list){
     const pickupTxt = p.pickup_point || "من نقطة الاستلام";
     const bagTxt = p.bag_size || "—";
     const noteTxt = p.note || "";
-    const purchaseIdShort = String(p.id || "").replace(/-/g, "").slice(0, 6).toUpperCase() || "—";
     const priceNum = parsePrice(p.price);
     const paidNum = parsePrice(p.paid_price ?? 0);
     let statusClass = "pending";
@@ -4079,29 +4280,98 @@ function renderPurchasesTableWith(list){
       statusLabel = "غير مدفوع";
     }
     const tr=document.createElement("tr");
+    tr.className = "purchaseCardRow";
     tr.dataset.purchaseId = p.id;
+    tr.dataset.cardIndex = "0";
     if(highlightPurchaseId && String(p.id) === String(highlightPurchaseId)){
       tr.classList.add("highlight");
     }
+
+    const imageUrls = (p.purchase_images || [])
+      .map(img=>sb.storage.from(BUCKET).getPublicUrl(img.storage_path).data.publicUrl)
+      .filter(Boolean);
+
+    const customerText = p.customer_name ? escapeHtml(p.customer_name) : "—";
+    const customerAttr = escapeAttr(p.customer_name || "");
+    const qtyText = escapeHtml(p.qty ?? "—");
+    const priceText = escapeHtml(p.price ?? "—");
+    const paidText = escapeHtml(p.paid_price ?? "—");
+    const pickupText = escapeHtml(pickupTxt);
+
+    const slidesHtml = imageUrls.map((url, idx)=>`
+      <div class="purchaseVSlide">
+        <img src="${escapeAttr(url)}" alt="صورة ${idx + 1}" data-customer="${customerAttr}">
+      </div>
+    `).join("");
+
+    const navHtml = imageUrls.length > 1 ? `
+      <button class="purchaseVNav prev" type="button" data-card-prev="${p.id}" aria-label="الصورة السابقة">‹</button>
+      <button class="purchaseVNav next" type="button" data-card-next="${p.id}" aria-label="الصورة التالية">›</button>
+      <div class="purchaseVDots">
+        ${imageUrls.map((_, idx)=>`<button class="purchaseVDot ${idx === 0 ? "is-active" : ""}" type="button" data-card-dot="${p.id}" data-card-index="${idx}" aria-label="عرض الصورة ${idx + 1}"></button>`).join("")}
+      </div>
+      <span class="purchaseVCount" data-card-count="${p.id}">1/${imageUrls.length}</span>
+    ` : "";
+
+    const mediaHtml = imageUrls.length ? `
+      <div class="purchaseVMedia thumbs" data-customer="${customerAttr}">
+        <div class="purchaseVTrack" data-card-track="${p.id}" style="--card-index:0">
+          ${slidesHtml}
+        </div>
+        ${navHtml}
+      </div>
+    ` : `
+      <div class="purchaseVMedia">
+        <div class="purchaseVPlaceholder">لا توجد صور</div>
+      </div>
+    `;
+
     tr.innerHTML=`
-      <td class="primaryCell" data-label="الطلب">
-        <div class="primaryHead">
-          <div class="order-id">طلب #${escapeHtml(purchaseIdShort)}</div>
-          <span class="pill pill--${statusClass}">${statusLabel}</span>
+      <td class="primaryCell purchaseCardCell" data-label="المشترى">
+        <div class="purchaseMobileSummary">
+          <div class="primaryHead">
+            <div class="order-id">المشترى</div>
+            <span class="pill pill--${statusClass}">${statusLabel}</span>
+          </div>
+          <div class="customer">${customerText}</div>
+          <div class="meta">
+            <span>العدد: ${qtyText}</span>
+            <span>السعر: ${priceText}</span>
+            <span>المدفوع: ${paidText}</span>
+            <span>${pickupText}</span>
+          </div>
         </div>
-        <div class="customer">${escapeHtml(p.customer_name || "")}</div>
-        <div class="meta">
-          <span>العدد: ${escapeHtml(p.qty ?? "")}</span>
-          <span>السعر: ${escapeHtml(p.price ?? "")}</span>
-          <span>المدفوع: ${escapeHtml(p.paid_price ?? "—")}</span>
-          <span>${escapeHtml(pickupTxt)}</span>
-        </div>
+        <article class="purchaseVCard">
+          ${mediaHtml}
+          <div class="purchaseVBody" dir="rtl">
+            <div class="purchaseVField">
+              <p class="purchaseVLabel">الاسم</p>
+              <p class="purchaseVValue">${customerText}</p>
+            </div>
+            <div class="purchaseVField">
+              <p class="purchaseVLabel">عدد القطع</p>
+              <p class="purchaseVValue">${qtyText}</p>
+            </div>
+            <div class="purchaseVField">
+              <p class="purchaseVLabel">السعر</p>
+              <p class="purchaseVValue">${priceText} ₪</p>
+            </div>
+            <div class="purchaseVField">
+              <p class="purchaseVLabel">السعر المدفوع</p>
+              <p class="purchaseVValue paid">${paidText} ₪</p>
+            </div>
+            <div class="purchaseVField">
+              <p class="purchaseVLabel">مكان الاستلام</p>
+              <p class="purchaseVValue">${pickupText}</p>
+            </div>
+          </div>
+        </article>
       </td>
-      <td data-label="العدد">${escapeHtml(p.qty ?? "")}</td>
-      <td data-label="السعر">${escapeHtml(p.price ?? "")}</td>
-      <td data-label="المدفوع">${escapeHtml(p.paid_price ?? "—")}</td>
+      <td data-label="العدد">${qtyText}</td>
+      <td data-label="السعر">${priceText}</td>
+      <td data-label="المدفوع">${paidText}</td>
       <td data-label="حجم الكيس">${escapeHtml(bagTxt)}</td>
-      <td data-label="مكان الاستلام">${escapeHtml(pickupTxt)}</td>
+      <td data-label="مكان الاستلام">${pickupText}</td>
       <td data-label="ملاحظة">${escapeHtml(noteTxt) || "—"}</td>
       <td class="actionCell" data-label="إجراءات">
         <button class="icon-btn menu-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
@@ -4230,6 +4500,7 @@ function renderPurchasesTableWith(list){
 
     tbody.appendChild(tr);
     tbody.appendChild(editTr);
+    setPurchaseCardSlide(p.id, 0);
 
     const editNameInput = editTr.querySelector(`[data-customer-input="${p.id}"]`);
     const editListEl = editTr.querySelector(`[data-customer-list="${p.id}"]`);
