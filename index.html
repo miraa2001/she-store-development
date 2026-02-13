@@ -2165,7 +2165,7 @@ function renderCollapsedPreview(list, previewEl, countEl, activeId){
   if(!previewEl) return;
   previewEl.innerHTML = "";
 
-  const src = Array.isArray(list) ? list.slice(0, 5) : [];
+  const src = Array.isArray(list) ? list : [];
   if(!src.length){
     for(let i=0; i<4; i++){
       const ghost = document.createElement("div");
@@ -2176,12 +2176,34 @@ function renderCollapsedPreview(list, previewEl, countEl, activeId){
     return;
   }
 
+  const monthKey = (iso)=>{
+    if(!iso) return "—";
+    const d = new Date(iso);
+    if(Number.isNaN(d.getTime())) return "—";
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    const yyyy = d.getFullYear();
+    return `${mm}/${yyyy}`;
+  };
+
+  const grouped = [];
+  const map = new Map();
   src.forEach((order)=>{
+    const key = monthKey(order?.created_at);
+    if(!map.has(key)){
+      const bucket = { key, count:0, active:false };
+      map.set(key, bucket);
+      grouped.push(bucket);
+    }
+    const bucket = map.get(key);
+    bucket.count += 1;
+    if(activeId && order?.id === activeId) bucket.active = true;
+  });
+
+  grouped.slice(0, 5).forEach((group)=>{
     const item = document.createElement("div");
-    const first = String(order?.order_name || "").trim().charAt(0) || "؟";
-    item.className = "collapsedItem" + (activeId && order?.id === activeId ? " active" : "");
-    item.title = String(order?.order_name || "");
-    item.textContent = first;
+    item.className = "collapsedItem" + (group.active ? " active" : "");
+    item.title = group.key;
+    item.textContent = String(group.count);
     previewEl.appendChild(item);
   });
 }
