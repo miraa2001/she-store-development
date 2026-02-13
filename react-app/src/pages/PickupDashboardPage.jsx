@@ -119,7 +119,7 @@ export default function PickupDashboardPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -144,7 +144,7 @@ export default function PickupDashboardPage() {
         <div className="pickup-note pickup-note-danger">
           <h2>?? ???? ???? ????</h2>
           <p>???? ????? ?????? ?????.</p>
-          <a href="#/legacy/login" className="pickup-btn">
+          <a href="#/login" className="pickup-btn">
             ??? ????? ??????
           </a>
         </div>

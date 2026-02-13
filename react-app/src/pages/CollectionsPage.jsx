@@ -179,7 +179,7 @@ export default function CollectionsPage({ embedded = false }) {
     } catch (err) {
       console.error(err);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -197,7 +197,7 @@ export default function CollectionsPage({ embedded = false }) {
         <div className="collections-note collections-note-danger">
           <h2>لا توجد جلسة نشطة</h2>
           <p>يلزم تسجيل الدخول أولًا.</p>
-          <a href="#/legacy/login" className="collections-link">
+          <a href="#/login" className="collections-link">
             فتح تسجيل الدخول
           </a>
         </div>

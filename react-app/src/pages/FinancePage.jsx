@@ -374,7 +374,7 @@ export default function FinancePage({ embedded = false }) {
     } catch (err) {
       console.error(err);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -450,7 +450,7 @@ export default function FinancePage({ embedded = false }) {
         <div className="finance-note finance-note-danger">
           <h2>?? ???? ???? ????</h2>
           <p>???? ????? ?????? ?????.</p>
-          <a href="#/legacy/login" className="finance-link">
+          <a href="#/login" className="finance-link">
             ??? ????? ??????
           </a>
         </div>

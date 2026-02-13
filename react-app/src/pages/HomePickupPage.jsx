@@ -289,7 +289,7 @@ export default function HomePickupPage({ embedded = false }) {
     } catch (err) {
       console.error(err);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -432,7 +432,7 @@ export default function HomePickupPage({ embedded = false }) {
         <div className="homepickup-note homepickup-note-danger">
           <h2>لا توجد جلسة نشطة</h2>
           <p>يلزم تسجيل الدخول أولًا.</p>
-          <a href="#/legacy/login" className="homepickup-link">
+          <a href="#/login" className="homepickup-link">
             فتح تسجيل الدخول
           </a>
         </div>

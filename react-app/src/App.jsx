@@ -30,6 +30,7 @@ function Dashboard() {
     if (pageId === "collections") return "/collections";
     if (pageId === "homepickup") return "/homepickup";
     if (pageId === "pickuppoint") return "/pickuppoint";
+    if (pageId === "login") return "/login";
     return `/legacy/${pageId}`;
   };
 
@@ -117,6 +118,7 @@ export default function App() {
       <Route path="/collections" element={<CollectionsPage />} />
       <Route path="/homepickup" element={<HomePickupPage />} />
       <Route path="/pickuppoint" element={<PickupPointPage />} />
+      <Route path="/login" element={<Navigate to="/legacy/login" replace />} />
       <Route path="/legacy/:page" element={<LegacyFrame />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

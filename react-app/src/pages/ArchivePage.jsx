@@ -208,7 +208,7 @@ export default function ArchivePage() {
     } catch (err) {
       console.error(err);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -226,7 +226,7 @@ export default function ArchivePage() {
         <div className="archive-note archive-note-danger">
           <h2>لا توجد جلسة نشطة</h2>
           <p>يلزم تسجيل الدخول أولًا.</p>
-          <a href="#/legacy/login" className="archive-link">
+          <a href="#/login" className="archive-link">
             فتح تسجيل الدخول
           </a>
         </div>

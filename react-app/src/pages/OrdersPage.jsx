@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
@@ -47,7 +47,7 @@ const NAV_ITEMS = [
   { id: "finance", label: "المالية", href: "#/finance", icon: "dollar" },
   { id: "collections", label: "المجموعات", href: "#/collections", icon: "bag" },
   { id: "homepickup", label: "استلام المنزل", href: "#/homepickup", icon: "truck" },
-  { id: "customers", label: "العملاء", href: "#/legacy/index?tab=customers", icon: "users" }
+  { id: "customers", label: "العملاء", href: "#/orders?tab=customers", icon: "users" }
 ];
 
 const ROLE_ACCESS = {
@@ -322,7 +322,6 @@ export default function OrdersPage() {
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
 
-  const frameRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -740,7 +739,7 @@ export default function OrdersPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   };
 
@@ -1198,7 +1197,7 @@ export default function OrdersPage() {
         <div className="legacy-note legacy-note-danger">
           <h2>لا توجد جلسة نشطة</h2>
           <p>يلزم تسجيل الدخول قبل استخدام واجهة React.</p>
-          <a href="#/legacy/login" className="mode auth-link">
+          <a href="#/login" className="mode auth-link">
             فتح تسجيل الدخول
           </a>
         </div>
@@ -1215,7 +1214,7 @@ export default function OrdersPage() {
             هذا الحساب لا يملك صلاحية صفحة الطلبات. سيتم تحويلك للصفحة المناسبة حسب الدور.
           </p>
           <a
-            href={profile.role === "laaura" ? "#/legacy/pickuppoint" : "#/legacy/login"}
+            href={profile.role === "laaura" ? "#/pickuppoint" : "#/login"}
             className="mode auth-link"
           >
             متابعة
@@ -1360,20 +1359,7 @@ export default function OrdersPage() {
               }
               onToast={setToast}
             />
-          ) : (
-            <>
-              <div className="legacy-note">
-                <h2>تبويب قديم (Legacy)</h2>
-                <p>هذا التبويب ما زال يعمل من النظام القديم حتى ننتهي من نقله إلى React.</p>
-              </div>
-              <iframe
-                ref={frameRef}
-                className="legacy-frame"
-                title="Legacy Orders"
-                src="legacy/index.html"
-              />
-            </>
-          )}
+          ) : null}
         </section>
       </div>
 

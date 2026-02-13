@@ -376,7 +376,7 @@ export default function PickupPointPage({ embedded = false }) {
     } catch (err) {
       console.error(err);
     } finally {
-      window.location.hash = "#/legacy/login";
+      window.location.hash = "#/login";
     }
   }
 
@@ -561,7 +561,7 @@ export default function PickupPointPage({ embedded = false }) {
         <div className="pickuppoint-note pickuppoint-note-danger">
           <h2>لا توجد جلسة نشطة</h2>
           <p>يلزم تسجيل الدخول أولًا.</p>
-          <a href="#/legacy/login" className="pickuppoint-link">
+          <a href="#/login" className="pickuppoint-link">
             فتح تسجيل الدخول
           </a>
         </div>
