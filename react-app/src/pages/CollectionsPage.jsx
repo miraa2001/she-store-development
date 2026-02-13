@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./collections-page.css";
 
@@ -17,6 +19,7 @@ export default function CollectionsPage({ embedded = false }) {
   const [error, setError] = useState("");
   const [homeList, setHomeList] = useState([]);
   const [pickupList, setPickupList] = useState([]);
+  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -141,13 +144,7 @@ export default function CollectionsPage({ embedded = false }) {
   }, [loadOrderCollections, profile.role, selectedOrderId]);
 
   async function signOut() {
-    try {
-      await sb.auth.signOut();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      window.location.hash = "#/login";
-    }
+    await signOutAndRedirect();
   }
 
   if (profile.loading) {
@@ -199,18 +196,11 @@ export default function CollectionsPage({ embedded = false }) {
               </button>
             </div>
             <div className="collections-sidebar-content">
-              <a href="#/orders" onClick={() => setSidebarOpen(false)}>
-                الطلبيات
-              </a>
-              <a href="#/pickup-dashboard" onClick={() => setSidebarOpen(false)}>
-                الاستلام والتحصيل
-              </a>
-              <a href="#/archive" onClick={() => setSidebarOpen(false)}>
-                الأرشيف
-              </a>
-              <a href="#/finance" onClick={() => setSidebarOpen(false)}>
-                المالية
-              </a>
+              {sidebarLinks.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                  {item.label}
+                </a>
+              ))}
               <button type="button" className="danger" onClick={signOut}>
                 تسجيل خروج
               </button>

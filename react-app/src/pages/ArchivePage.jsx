@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./archive-page.css";
 
@@ -23,6 +25,7 @@ export default function ArchivePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cleanupMsg, setCleanupMsg] = useState("");
+  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -170,13 +173,7 @@ export default function ArchivePage() {
   }, [loadArchive, profile.authenticated, profile.loading, profile.role]);
 
   async function signOut() {
-    try {
-      await sb.auth.signOut();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      window.location.hash = "#/login";
-    }
+    await signOutAndRedirect();
   }
 
   if (profile.loading) {
@@ -224,23 +221,16 @@ export default function ArchivePage() {
           <button type="button" className="archive-menu-btn danger" onClick={() => setSidebarOpen(false)}>
             ✕
           </button>
-        </div>
-        <div className="archive-sidebar-content">
-          <a href="#/orders" onClick={() => setSidebarOpen(false)}>
-            الطلبيات
-          </a>
-          <a href="#/pickup-dashboard" onClick={() => setSidebarOpen(false)}>
-            الاستلام والتحصيل
-          </a>
-          <a href="#/archive" onClick={() => setSidebarOpen(false)}>
-            الأرشيف
-          </a>
-          <a href="#/finance" onClick={() => setSidebarOpen(false)}>
-            المالية
-          </a>
-          <button type="button" className="danger" onClick={signOut}>
-            تسجيل خروج
-          </button>
+            </div>
+            <div className="archive-sidebar-content">
+              {sidebarLinks.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                  {item.label}
+                </a>
+              ))}
+              <button type="button" className="danger" onClick={signOut}>
+                تسجيل خروج
+              </button>
         </div>
       </aside>
 

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./pickuppoint-page.css";
 
@@ -128,6 +130,10 @@ export default function PickupPointPage({ embedded = false }) {
   const isRahaf = profile.role === "rahaf";
   const isLaaura = profile.role === "laaura";
   const canAccess = isRahaf || isLaaura;
+  const sidebarLinks = useMemo(
+    () => (isRahaf ? getPickupSidebarLinks(profile.role) : []),
+    [isRahaf, profile.role]
+  );
 
   const listItems = useMemo(() => {
     if (isLaaura) return buildOrderGroups(orders);
@@ -338,13 +344,7 @@ export default function PickupPointPage({ embedded = false }) {
   }, [orders, search]);
 
   async function signOut() {
-    try {
-      await sb.auth.signOut();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      window.location.hash = "#/login";
-    }
+    await signOutAndRedirect();
   }
 
   async function togglePicked(purchaseId, checked) {
@@ -563,22 +563,11 @@ export default function PickupPointPage({ embedded = false }) {
               </button>
             </div>
             <div className="pickuppoint-sidebar-content">
-              {isRahaf ? (
-                <>
-                  <a href="#/orders" onClick={() => setSidebarOpen(false)}>
-                    الطلبيات
-                  </a>
-                  <a href="#/pickup-dashboard" onClick={() => setSidebarOpen(false)}>
-                    الاستلام والتحصيل
-                  </a>
-                  <a href="#/archive" onClick={() => setSidebarOpen(false)}>
-                    الأرشيف
-                  </a>
-                  <a href="#/finance" onClick={() => setSidebarOpen(false)}>
-                    المالية
-                  </a>
-                </>
-              ) : null}
+              {sidebarLinks.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                  {item.label}
+                </a>
+              ))}
               <button type="button" className="danger" onClick={signOut}>
                 تسجيل خروج
               </button>
