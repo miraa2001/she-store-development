@@ -6,3 +6,9 @@ node_modules/
 dist/
 react-app/node_modules/
 react-app/dist/
+.env
+.env.*
+!.env.example
+react-app/.env
+react-app/.env.*
+!react-app/.env.example

@@ -1,5 +1,11 @@
 ﻿import { Link, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import OrdersPage from "./pages/OrdersPage";
+import PickupDashboardPage from "./pages/PickupDashboardPage";
+import FinancePage from "./pages/FinancePage";
+import ArchivePage from "./pages/ArchivePage";
+import CollectionsPage from "./pages/CollectionsPage";
+import HomePickupPage from "./pages/HomePickupPage";
+import PickupPointPage from "./pages/PickupPointPage";
 
 const pages = [
   { id: "index", title: "الطلبات", file: "index.html", note: "لوحة الطلبات الرئيسية" },
@@ -16,6 +22,17 @@ const pages = [
 const byId = Object.fromEntries(pages.map((p) => [p.id, p]));
 
 function Dashboard() {
+  const targetRoute = (pageId) => {
+    if (pageId === "index") return "/orders";
+    if (pageId === "pickup-dashboard") return "/pickup-dashboard";
+    if (pageId === "finance") return "/finance";
+    if (pageId === "archive") return "/archive";
+    if (pageId === "collections") return "/collections";
+    if (pageId === "homepickup") return "/homepickup";
+    if (pageId === "pickuppoint") return "/pickuppoint";
+    return `/legacy/${pageId}`;
+  };
+
   return (
     <main className="app-shell">
       <header className="hero">
@@ -32,6 +49,9 @@ function Dashboard() {
           <Link to="/orders" className="btn">
             فتح الطلبات (React Native)
           </Link>
+          <Link to="/pickup-dashboard" className="btn">
+            فتح لوحة الاستلام (React Native)
+          </Link>
           <Link to="/legacy/index" className="btn btn-ghost">
             فتح الصفحة القديمة
           </Link>
@@ -43,7 +63,7 @@ function Dashboard() {
           <article key={page.id} className="card">
             <h2>{page.title}</h2>
             <p>{page.note}</p>
-            <Link to={`/legacy/${page.id}`} className="btn">
+            <Link to={targetRoute(page.id)} className="btn">
               فتح
             </Link>
           </article>
@@ -91,6 +111,12 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Dashboard />} />
       <Route path="/orders" element={<OrdersPage />} />
+      <Route path="/pickup-dashboard" element={<PickupDashboardPage />} />
+      <Route path="/finance" element={<FinancePage />} />
+      <Route path="/archive" element={<ArchivePage />} />
+      <Route path="/collections" element={<CollectionsPage />} />
+      <Route path="/homepickup" element={<HomePickupPage />} />
+      <Route path="/pickuppoint" element={<PickupPointPage />} />
       <Route path="/legacy/:page" element={<LegacyFrame />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

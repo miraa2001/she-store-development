@@ -2004,7 +2004,7 @@ function formatILS(n){
   const fixed = x.toFixed(2);
   return fixed.endsWith(".00") ? String(Math.round(x)) : fixed;
 }
-const GEMINI_API_KEY = "AIzaSyAKpilMIowuNsDBjsX9DpO6x5sffImuHXk";
+const GEMINI_API_KEY = (window.GEMINI_API_KEY || localStorage.getItem("GEMINI_API_KEY") || "").trim();
 const GEMINI_MODEL_ID = "gemini-3-flash-preview";
 const GEMINI_PROMPT = [
   "You are analyzing a shopping cart screenshot (like SHEIN).",

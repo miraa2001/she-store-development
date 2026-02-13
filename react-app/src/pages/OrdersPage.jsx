@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import "./orders-page.css";
-import { fetchOrdersWithSummary, formatILS, groupOrdersByMonth, parsePrice } from "../lib/orders";
+import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
 import { getCurrentUserProfile } from "../lib/auth";
 import { sb } from "../lib/supabaseClient";
 import {
@@ -32,15 +32,20 @@ import { exportOrderPdf } from "../lib/pdfExport";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
+import CommandHeader from "../components/orders/CommandHeader";
+import OrdersSidebar from "../components/orders/OrdersSidebar";
+import OrdersTab from "../components/orders/OrdersTab";
+import PurchaseFormModal from "../components/orders/PurchaseFormModal";
+import LightboxModal from "../components/orders/LightboxModal";
 
 const NAV_ITEMS = [
   { id: "orders", label: "الطلبات", href: "#/orders", icon: "package" },
-  { id: "pickup-dashboard", label: "لوحة الاستلام", href: "#/legacy/pickup-dashboard", icon: "map" },
-  { id: "pickuppoint", label: "نقطة الاستلام", href: "#/legacy/pickuppoint", icon: "home" },
-  { id: "archive", label: "الأرشيف", href: "#/legacy/archive", icon: "archive" },
-  { id: "finance", label: "المالية", href: "#/legacy/finance", icon: "dollar" },
-  { id: "collections", label: "المجموعات", href: "#/legacy/collections", icon: "bag" },
-  { id: "homepickup", label: "استلام المنزل", href: "#/legacy/homepickup", icon: "truck" },
+  { id: "pickup-dashboard", label: "لوحة الاستلام", href: "#/pickup-dashboard", icon: "map" },
+  { id: "pickuppoint", label: "نقطة الاستلام", href: "#/pickuppoint", icon: "home" },
+  { id: "archive", label: "الأرشيف", href: "#/archive", icon: "archive" },
+  { id: "finance", label: "المالية", href: "#/finance", icon: "dollar" },
+  { id: "collections", label: "المجموعات", href: "#/collections", icon: "bag" },
+  { id: "homepickup", label: "استلام المنزل", href: "#/homepickup", icon: "truck" },
   { id: "customers", label: "العملاء", href: "#/legacy/index?tab=customers", icon: "users" }
 ];
 
@@ -1210,325 +1215,68 @@ export default function OrdersPage() {
         </button>
       </aside>
 
-      <header className="command-header">
-        <div className="command-main">
-          {isRahaf ? (
-            <div className="tabs-shell" role="tablist" aria-label="التبويبات">
-              <button
-                className={`tab ${activeTab === "orders" ? "active" : ""}`}
-                onClick={() => setActiveTab("orders")}
-              >
-                الطلبات
-              </button>
-              <button
-                className={`tab ${activeTab === "view" ? "active" : ""}`}
-                onClick={() => setActiveTab("view")}
-              >
-                العرض
-              </button>
-              <button
-                className={`tab ${activeTab === "customers" ? "active" : ""}`}
-                onClick={() => setActiveTab("customers")}
-              >
-                العملاء
-              </button>
-            </div>
-          ) : (
-            <div className="readonly-chip">وضع العرض فقط</div>
-          )}
-
-          <div className="search-shell">
-            <Icon name="search" className="search-icon" />
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="بحث باسم الطلب..."
-            />
-            {search ? (
-              <span className="search-count">
-                <b>{searchCount}</b>
-                <small>نتيجة</small>
-              </span>
-            ) : null}
-          </div>
-        </div>
-
-        <div className="command-actions">
-          {isRahaf ? (
-            <div className="mode-shell">
-              <button className={`mode ${editMode ? "active" : ""}`} onClick={() => setEditMode(true)}>
-                تعديل / إضافة
-              </button>
-              <button className={`mode ${!editMode ? "active" : ""}`} onClick={() => setEditMode(false)}>
-                عرض فقط
-              </button>
-            </div>
-          ) : null}
-
-          <button type="button" className="icon-btn" onClick={() => setGlobalOpen(true)}>
-            <Icon name="menu" className="icon" />
-          </button>
-        </div>
-      </header>
+      <CommandHeader
+        isRahaf={isRahaf}
+        activeTab={activeTab}
+        onActiveTabChange={setActiveTab}
+        search={search}
+        onSearchChange={setSearch}
+        searchCount={searchCount}
+        editMode={editMode}
+        onEditModeChange={setEditMode}
+        onOpenSidebar={() => setGlobalOpen(true)}
+        Icon={Icon}
+      />
 
       <div className="workspace">
-        {!collapsed ? (
-          <aside className="workspace-sidebar" style={{ width: sidebarWidth }}>
-            <button
-              className="resize-handle"
-              type="button"
-              onMouseDown={(event) => {
-                event.preventDefault();
-                setResizing(true);
-              }}
-              aria-label="تغيير عرض القائمة"
-            />
-
-            <div className="workspace-head">
-              <div className="workspace-brand">
-                <span className="cube-wrap"><Icon name="package" className="icon" /></span>
-                <div>
-                  <h3>الطلبات</h3>
-                  <p>{totalOrders} طلب</p>
-                </div>
-              </div>
-
-              <button className="icon-btn tiny" onClick={() => setCollapsed(true)}>
-                <Icon name="chevron-right" className="icon" />
-              </button>
-            </div>
-
-            <div className="workspace-list">
-              {ordersLoading ? (
-                <div className="workspace-empty">جاري تحميل الطلبات...</div>
-              ) : null}
-
-              {!ordersLoading && ordersError ? (
-                <div className="workspace-empty workspace-error">{ordersError}</div>
-              ) : null}
-
-              {!ordersLoading && !ordersError && !groupedOrders.length ? (
-                <div className="workspace-empty">لا توجد نتائج مطابقة.</div>
-              ) : null}
-
-              {!ordersLoading && !ordersError
-                ? groupedOrders.map((group) => (
-                    <section key={group.month} className="group-block">
-                      <div className="month-chip">
-                        <Icon name="calendar" className="icon" />
-                        <span>{group.month}</span>
-                        <b>({group.orders.length})</b>
-                      </div>
-
-                      <div className="group-orders">
-                        {group.orders.map((order) => {
-                          const selected = String(selectedOrderId) === String(order.id);
-
-                          return (
-                            <button
-                              key={order.id}
-                              type="button"
-                              className={`order-row ${selected ? "selected" : ""}`}
-                              onClick={() => {
-                                setSelectedOrderId(order.id);
-                                if (isRahaf) setActiveTab("orders");
-                              }}
-                            >
-                              <div className="order-main">
-                                <strong>{order.name}</strong>
-                                <span>#{order.orderNo}</span>
-                              </div>
-
-                              <div className="order-meta">
-                                <b>{order.amountLabel}</b>
-                                <small className={`status ${order.status}`}>{statusLabel(order.status)}</small>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))
-                : null}
-            </div>
-          </aside>
-        ) : (
-          <aside className="workspace-collapsed">
-            <button className="icon-btn collapsed-expand" onClick={() => setCollapsed(false)}>
-              <Icon name="chevron-left" className="icon" />
-            </button>
-
-            <div className="collapsed-pill active-pill">
-              <Icon name="package" className="icon" />
-              <b>{totalOrders}</b>
-            </div>
-
-            {groupedOrders.slice(0, 4).map((group) => (
-              <div key={group.month} className="collapsed-pill">{group.orders.length}</div>
-            ))}
-          </aside>
-        )}
+        <OrdersSidebar
+          collapsed={collapsed}
+          sidebarWidth={sidebarWidth}
+          onStartResize={() => setResizing(true)}
+          groupedOrders={groupedOrders}
+          ordersLoading={ordersLoading}
+          ordersError={ordersError}
+          selectedOrderId={selectedOrderId}
+          onSelectOrder={setSelectedOrderId}
+          isRahaf={isRahaf}
+          onForceOrdersTab={() => setActiveTab("orders")}
+          totalOrders={totalOrders}
+          statusLabel={statusLabel}
+          onExpand={() => setCollapsed(false)}
+          onCollapse={() => setCollapsed(true)}
+          Icon={Icon}
+        />
 
         <section className="workspace-main">
           {activeTab === "orders" ? (
-            <>
-              <div className="order-detail-header">
-                <div>
-                  <h2>{selectedOrder?.name || "اختاري طلبًا"}</h2>
-                  <p>
-                    عدد المشتريات: {purchaseStats.count} — مجموع القطع: {purchaseStats.totalQty} — مجموع الأسعار:{" "}
-                    {formatILS(purchaseStats.totalPrice)} ₪
-                  </p>
-                </div>
-
-                <div className="order-detail-actions">
-                  <input
-                    className="purchase-search"
-                    value={purchaseSearch}
-                    onChange={(event) => setPurchaseSearch(event.target.value)}
-                    placeholder="بحث داخل المشتريات..."
-                  />
-
-                  {isRahaf ? (
-                    <label className="arrived-toggle-chip">
-                      <input type="checkbox" checked={!!selectedOrder?.arrived} onChange={handleToggleArrived} />
-                      <span>تم وصول الطلب</span>
-                    </label>
-                  ) : null}
-
-                  {isRahaf && editMode ? (
-                    <button className="btn-primary" type="button" onClick={openAddModal}>
-                      + إضافة مشترى
-                    </button>
-                  ) : null}
-
-                  <button className="btn-ghost-light" type="button" onClick={exportPdfNative} disabled={pdfExporting}>
-                    {pdfExporting ? "جاري التصدير..." : "تصدير PDF"}
-                  </button>
-                  {isRahaf && editMode ? (
-                    <button className="btn-ghost-light" type="button" onClick={handleGeminiToolbarAction}>
-                      Gemini
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              {customersError ? <div className="workspace-empty workspace-error">{customersError}</div> : null}
-              {purchasesLoading ? <div className="workspace-empty">جاري تحميل المشتريات...</div> : null}
-              {purchasesError ? <div className="workspace-empty workspace-error">{purchasesError}</div> : null}
-
-              {!purchasesLoading && !purchasesError && !filteredPurchases.length ? (
-                <div className="workspace-empty">لا توجد مشتريات مطابقة.</div>
-              ) : null}
-
-              {!purchasesLoading && !purchasesError && filteredPurchases.length ? (
-                <div className="purchase-cards-grid">
-                  {filteredPurchases.map((purchase) => {
-                    const state = paymentState(purchase);
-                    const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
-
-                    return (
-                      <article key={purchase.id} className="purchase-card" data-menu-root>
-                        <div className="purchase-card-head">
-                          <div>
-                            <h3>{purchase.customer_name || "—"}</h3>
-                            <p>
-                              {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
-                            </p>
-                          </div>
-
-                          <div className="purchase-head-actions">
-                            <span className={`status-chip ${state.key}`}>{state.label}</span>
-
-                            {isRahaf && editMode ? (
-                              <div className="purchase-menu-wrap" data-menu-root>
-                                <button
-                                  type="button"
-                                  className="icon-btn menu-dots"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    setMenuPurchaseId((prev) => (prev === purchase.id ? "" : purchase.id));
-                                  }}
-                                  aria-label="إجراءات"
-                                >
-                                  ⋯
-                                </button>
-
-                                {String(menuPurchaseId) === String(purchase.id) ? (
-                                  <div className="purchase-menu-pop">
-                                    <button type="button" onClick={() => openEditModal(purchase)}>
-                                      تعديل
-                                    </button>
-                                    <button type="button" onClick={() => handleMarkPaid(purchase)}>
-                                      تعديل المدفوع
-                                    </button>
-                                    <button type="button" className="danger" onClick={() => handleDeletePurchase(purchase)}>
-                                      حذف
-                                    </button>
-                                  </div>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-
-                        <div className="purchase-meta-list">
-                          <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
-                          <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
-                          <span>حجم الكيس: {purchase.bag_size || "—"}</span>
-                          <span>ملاحظة: {purchase.note || "—"}</span>
-                        </div>
-
-                        {purchase.links?.length ? (
-                          <div className="purchase-links-wrap">
-                            {purchase.links.map((link, index) => (
-                              <a key={`${purchase.id}-link-${index}`} href={link} target="_blank" rel="noreferrer">
-                                رابط {index + 1}
-                              </a>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {purchase.images?.length ? (
-                          <div className="purchase-image-strip">
-                            {purchase.images.map((img, imageIndex) => (
-                              <button
-                                key={img.id || `${purchase.id}-img-${imageIndex}`}
-                                type="button"
-                                className="purchase-image-thumb"
-                                onClick={() =>
-                                  setLightbox({
-                                    open: true,
-                                    images: purchase.images,
-                                    index: imageIndex,
-                                    title: purchase.customer_name || "صورة"
-                                  })
-                                }
-                              >
-                                <img src={img.url} alt="صورة المشترى" />
-                              </button>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="purchase-empty-images">لا توجد صور</div>
-                        )}
-
-                        {canShowWhatsapp ? (
-                          <div className="wa-actions-row">
-                            <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => inquirePickupViaWhatsapp(purchase)}>
-                              استعلام عن نقطة الاستلام❓
-                            </button>
-                            <button type="button" className="wa-btn wa-btn-notify" onClick={() => notifyViaWhatsapp(purchase)}>
-                              اعلام بوصول الطلب🔔
-                            </button>
-                          </div>
-                        ) : null}
-                      </article>
-                    );
-                  })}
-                </div>
-              ) : null}
-            </>
+            <OrdersTab
+              selectedOrder={selectedOrder}
+              purchaseStats={purchaseStats}
+              purchaseSearch={purchaseSearch}
+              onPurchaseSearchChange={setPurchaseSearch}
+              isRahaf={isRahaf}
+              editMode={editMode}
+              onToggleArrived={handleToggleArrived}
+              onOpenAddModal={openAddModal}
+              onExportPdf={exportPdfNative}
+              pdfExporting={pdfExporting}
+              onGeminiAction={handleGeminiToolbarAction}
+              customersError={customersError}
+              purchasesLoading={purchasesLoading}
+              purchasesError={purchasesError}
+              filteredPurchases={filteredPurchases}
+              paymentState={paymentState}
+              menuPurchaseId={menuPurchaseId}
+              onTogglePurchaseMenu={(purchaseId) =>
+                setMenuPurchaseId((prev) => (String(prev) === String(purchaseId) ? "" : purchaseId))
+              }
+              onEditPurchase={openEditModal}
+              onMarkPaid={handleMarkPaid}
+              onDeletePurchase={handleDeletePurchase}
+              onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
+              onInquireWhatsapp={inquirePickupViaWhatsapp}
+              onNotifyWhatsapp={notifyViaWhatsapp}
+            />
           ) : activeTab === "customers" ? (
             <CustomersTab
               customerSearch={customerSearch}
@@ -1577,266 +1325,52 @@ export default function OrdersPage() {
         </section>
       </div>
 
-      {formOpen ? (
-        <div className="purchase-modal-backdrop" onClick={closeFormModal}>
-          <div className="purchase-modal-card" onClick={(event) => event.stopPropagation()}>
-            <div className="purchase-modal-head">
-              <h3>{formMode === "add" ? "إضافة مشترى" : "تعديل المشترى"}</h3>
-              <button type="button" className="icon-btn tiny" onClick={closeFormModal}>
-                <Icon name="close" className="icon" />
-              </button>
-            </div>
+      <PurchaseFormModal
+        open={formOpen}
+        formMode={formMode}
+        formState={formState}
+        customers={customers}
+        customersLoading={customersLoading}
+        formSaving={formSaving}
+        formAiRunning={formAiRunning}
+        formAiStatus={formAiStatus}
+        formUploadProgress={formUploadProgress}
+        formError={formError}
+        newFilePreviews={newFilePreviews}
+        maxImages={MAX_IMAGES}
+        bagOptions={BAG_OPTIONS}
+        pickupOptions={PICKUP_OPTIONS}
+        onClose={closeFormModal}
+        onSubmit={submitPurchaseForm}
+        onCustomerChange={onCustomerChange}
+        onUpdateForm={updateForm}
+        onAddLinkInput={addLinkInput}
+        onRemoveLinkInput={removeLinkInput}
+        onUpdateLinkValue={updateLinkValue}
+        onAddNewImages={addNewImages}
+        onAnalyzeWithGemini={analyzeFormImagesWithGemini}
+        onToggleExistingImageRemoval={toggleExistingImageRemoval}
+        onRemoveNewImage={removeNewImage}
+        Icon={Icon}
+      />
 
-            <form className="purchase-modal-body" onSubmit={submitPurchaseForm}>
-              <div className="modal-grid-two">
-                <label>
-                  <span>الزبون</span>
-                  <select
-                    value={formState.customerId}
-                    onChange={(event) => onCustomerChange(event.target.value)}
-                    disabled={customersLoading || formSaving}
-                  >
-                    <option value="">اختاري الزبون</option>
-                    {customers.map((customer) => (
-                      <option key={customer.id} value={customer.id}>
-                        {customer.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  <span>عدد القطع</span>
-                  <input
-                    type="number"
-                    min="1"
-                    max="200"
-                    value={formState.qty}
-                    onChange={(event) => updateForm({ qty: event.target.value })}
-                    disabled={formSaving}
-                  />
-                </label>
-
-                <label>
-                  <span>السعر</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formState.price}
-                    onChange={(event) => updateForm({ price: event.target.value })}
-                    disabled={formSaving}
-                  />
-                </label>
-
-                <label>
-                  <span>المدفوع</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formState.paidPrice}
-                    onChange={(event) => updateForm({ paidPrice: event.target.value })}
-                    disabled={formSaving}
-                  />
-                </label>
-
-                <label>
-                  <span>حجم الكيس</span>
-                  <select
-                    value={formState.bagSize}
-                    onChange={(event) => updateForm({ bagSize: event.target.value })}
-                    disabled={formSaving}
-                  >
-                    {BAG_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  <span>مكان الاستلام</span>
-                  <select
-                    value={formState.pickupPoint}
-                    onChange={(event) => updateForm({ pickupPoint: event.target.value })}
-                    disabled={formSaving}
-                  >
-                    {PICKUP_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <label>
-                <span>ملاحظة</span>
-                <textarea
-                  value={formState.note}
-                  onChange={(event) => updateForm({ note: event.target.value })}
-                  placeholder="اكتبي أي ملاحظة..."
-                  disabled={formSaving}
-                />
-              </label>
-
-              <div className="modal-links-head">
-                <strong>روابط السلة</strong>
-                <div className="row-inline">
-                  <button type="button" className="btn-ghost-light" onClick={addLinkInput} disabled={formSaving}>
-                    + رابط
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost-light"
-                    onClick={removeLinkInput}
-                    disabled={formSaving || formState.links.length <= 1}
-                  >
-                    − رابط
-                  </button>
-                </div>
-              </div>
-
-              <div className="modal-links-grid">
-                {formState.links.map((link, index) => (
-                  <input
-                    key={`form-link-${index}`}
-                    value={link}
-                    onChange={(event) => updateLinkValue(index, event.target.value)}
-                    placeholder={`رابط ${index + 1}`}
-                    disabled={formSaving}
-                  />
-                ))}
-              </div>
-
-              <div className="modal-images-wrap">
-                <div className="modal-images-head">
-                  <strong>الصور ({formState.newFiles.length}/{MAX_IMAGES})</strong>
-                  <div className="modal-images-actions">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(event) => {
-                        addNewImages(event.target.files);
-                        event.target.value = "";
-                      }}
-                      disabled={formSaving || formAiRunning}
-                    />
-                    <button
-                      type="button"
-                      className="btn-ghost-light"
-                      onClick={analyzeFormImagesWithGemini}
-                      disabled={formSaving || formAiRunning}
-                    >
-                      {formAiRunning ? "جاري التحليل..." : "تحليل Gemini"}
-                    </button>
-                  </div>
-                </div>
-
-                {formMode === "edit" && formState.existingImages.length ? (
-                  <div className="modal-existing-images">
-                    {formState.existingImages.map((img) => {
-                      const removed = formState.removeImageIds.includes(img.id);
-                      return (
-                        <button
-                          key={img.id}
-                          type="button"
-                          className={`modal-existing-image ${removed ? "removed" : ""}`}
-                          onClick={() => toggleExistingImageRemoval(img.id)}
-                          disabled={formSaving || formAiRunning}
-                        >
-                          <img src={img.url} alt="صورة موجودة" />
-                          <span>{removed ? "سيتم الحذف" : "موجودة"}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {formState.newFiles.length ? (
-                  <div className="modal-new-images">
-                    {newFilePreviews.map((item, index) => (
-                      <div key={item.key} className="modal-new-image">
-                        <img src={item.url} alt="صورة جديدة" />
-                        <button type="button" onClick={() => removeNewImage(index)} disabled={formSaving || formAiRunning}>
-                          حذف
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              {formAiStatus.text ? (
-                <div className={`modal-help ${formAiStatus.isError ? "modal-help-error" : ""}`}>
-                  {formAiStatus.text}
-                </div>
-              ) : null}
-              {formUploadProgress ? <div className="modal-help">{formUploadProgress}</div> : null}
-              {formError ? <div className="modal-error">{formError}</div> : null}
-
-              <div className="purchase-modal-foot">
-                <button type="submit" className="btn-primary" disabled={formSaving || formAiRunning}>
-                  {formSaving ? "جاري الحفظ..." : "حفظ"}
-                </button>
-                <button type="button" className="btn-ghost-light" onClick={closeFormModal} disabled={formSaving || formAiRunning}>
-                  إلغاء
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
-
-      {lightbox.open && lightbox.images.length ? (
-        <div className="purchase-modal-backdrop" onClick={() => setLightbox({ open: false, images: [], index: 0, title: "" })}>
-          <div className="lightbox-card" onClick={(event) => event.stopPropagation()}>
-            <div className="lightbox-head">
-              <strong>{lightbox.title}</strong>
-              <button
-                type="button"
-                className="icon-btn tiny"
-                onClick={() => setLightbox({ open: false, images: [], index: 0, title: "" })}
-              >
-                <Icon name="close" className="icon" />
-              </button>
-            </div>
-
-            <div className="lightbox-body">
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() =>
-                  setLightbox((prev) => ({
-                    ...prev,
-                    index: (prev.index - 1 + prev.images.length) % prev.images.length
-                  }))
-                }
-              >
-                <Icon name="chevron-right" className="icon" />
-              </button>
-
-              <img src={lightbox.images[lightbox.index]?.url} alt="صورة" />
-
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={() =>
-                  setLightbox((prev) => ({
-                    ...prev,
-                    index: (prev.index + 1) % prev.images.length
-                  }))
-                }
-              >
-                <Icon name="chevron-left" className="icon" />
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <LightboxModal
+        lightbox={lightbox}
+        onClose={() => setLightbox({ open: false, images: [], index: 0, title: "" })}
+        onPrev={() =>
+          setLightbox((prev) => ({
+            ...prev,
+            index: (prev.index - 1 + prev.images.length) % prev.images.length
+          }))
+        }
+        onNext={() =>
+          setLightbox((prev) => ({
+            ...prev,
+            index: (prev.index + 1) % prev.images.length
+          }))
+        }
+        Icon={Icon}
+      />
 
       {toast ? (
         <div className={`toast toast-${toast.type || "info"}`}>
