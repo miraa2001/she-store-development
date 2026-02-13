@@ -1,15 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./finance-page.css";
 
 function getOrderDate(order) {
   if (order?.order_date) {
-    const date = new Date(`${order.order_date}T00:00:00`);
-    if (!Number.isNaN(date.getTime())) return date;
+    const d = new Date(`${order.order_date}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) return d;
   }
-
   const fallback = new Date(order?.created_at || Date.now());
   return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
 }
@@ -22,238 +23,139 @@ function monthLabel(date) {
   return date.toLocaleDateString("ar", { month: "long", year: "numeric" });
 }
 
-function createEmptyStats() {
-  return {
-    collected: 0,
-    pending: 0,
-    notPicked: 0,
-    expected: 0,
-    purchaseCount: 0,
-    pickupTotals: new Map(),
-    dailyCollected: new Map()
-  };
+function monthNames() {
+  return ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 }
 
-function buildOrderStats(purchases) {
-  const map = new Map();
-
-  (purchases || []).forEach((purchase) => {
-    const orderId = purchase.order_id;
-    if (!orderId) return;
-
-    if (!map.has(orderId)) {
-      map.set(orderId, createEmptyStats());
-    }
-
-    const stats = map.get(orderId);
-    const amount = parsePrice(purchase.paid_price ?? purchase.price);
-    const pickupPoint = String(purchase.pickup_point || "").trim();
-
-    stats.purchaseCount += 1;
-    stats.expected += amount;
-    if (pickupPoint) {
-      stats.pickupTotals.set(pickupPoint, (stats.pickupTotals.get(pickupPoint) || 0) + amount);
-    }
-
-    if (purchase.collected) {
-      stats.collected += amount;
-      const collectedAt = new Date(purchase.collected_at || "");
-      if (!Number.isNaN(collectedAt.getTime())) {
-        const day = collectedAt.getDate();
-        stats.dailyCollected.set(day, (stats.dailyCollected.get(day) || 0) + amount);
-      }
-    } else if (purchase.picked_up) {
-      stats.pending += amount;
-    } else {
-      stats.notPicked += amount;
-    }
-  });
-
-  return map;
-}
-
-function buildMonthData(orderRows) {
-  const map = new Map();
-
-  orderRows.forEach((order) => {
-    const date = getOrderDate(order);
-    const key = monthKey(date);
-
-    if (!map.has(key)) {
-      map.set(key, {
-        key,
-        label: monthLabel(date),
-        year: date.getFullYear(),
-        monthIndex: date.getMonth(),
-        collected: 0,
-        expected: 0,
-        spent: 0,
-        purchaseCount: 0,
-        orderCount: 0,
-        pickupTotals: new Map(),
-        dailyCollected: new Map(),
-        dailySpent: new Map()
-      });
-    }
-
-    const month = map.get(key);
-    month.collected += order.collected;
-    month.expected += order.expected;
-    month.spent += order.spentAmount;
-    month.purchaseCount += order.purchaseCount;
-    month.orderCount += 1;
-
-    order.pickupTotals.forEach((value, pickupPoint) => {
-      month.pickupTotals.set(pickupPoint, (month.pickupTotals.get(pickupPoint) || 0) + value);
-    });
-
-    let dailyCollectedTotal = 0;
-    order.dailyCollected.forEach((value, day) => {
-      dailyCollectedTotal += value;
-      month.dailyCollected.set(day, (month.dailyCollected.get(day) || 0) + value);
-    });
-
-    if (order.collected > dailyCollectedTotal) {
-      const fallbackDay = date.getDate();
-      const missing = order.collected - dailyCollectedTotal;
-      month.dailyCollected.set(fallbackDay, (month.dailyCollected.get(fallbackDay) || 0) + missing);
-    }
-
-    if (order.spentAmount > 0) {
-      const spentDay = date.getDate();
-      month.dailySpent.set(spentDay, (month.dailySpent.get(spentDay) || 0) + order.spentAmount);
-    }
-  });
-
-  const years = Array.from(new Set(Array.from(map.values()).map((item) => item.year))).sort((a, b) => a - b);
-  return { map, years };
-}
-
-function topPickupPoint(pickupTotals) {
-  let label = "?";
+function topPickupPoint(map) {
+  let top = "—";
   let max = 0;
-
-  pickupTotals.forEach((value, key) => {
+  map.forEach((value, key) => {
     if (value > max) {
       max = value;
-      label = key;
+      top = key;
     }
   });
-
-  return label;
+  return top;
 }
 
 export default function FinancePage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [orders, setOrders] = useState([]);
-  const [purchases, setPurchases] = useState([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [orderStatsMap, setOrderStatsMap] = useState(new Map());
+
   const [activeTab, setActiveTab] = useState("orders");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [spentInput, setSpentInput] = useState("");
-  const [spentSaving, setSpentSaving] = useState(false);
   const [spentMessage, setSpentMessage] = useState("");
+  const [savingSpent, setSavingSpent] = useState(false);
+
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonthKey, setSelectedMonthKey] = useState("");
-  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
-  const [chartMode, setChartMode] = useState("status");
+  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
 
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setSidebarOpen(false);
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, []);
-
-  const loadFinanceData = useCallback(async () => {
-    setLoadingData(true);
+  const loadData = useCallback(async () => {
+    setLoading(true);
     setError("");
-
     try {
       const [ordersRes, purchasesRes] = await Promise.all([
-        sb
-          .from("orders")
-          .select("id, order_name, order_date, created_at, spent_amount")
-          .order("created_at", { ascending: false }),
-        sb
-          .from("purchases")
-          .select("order_id, price, paid_price, pickup_point, collected, picked_up, collected_at")
+        sb.from("orders").select("id, order_name, order_date, created_at, spent_amount").order("created_at", { ascending: false }),
+        sb.from("purchases").select("order_id, price, paid_price, pickup_point, collected, picked_up")
       ]);
 
       if (ordersRes.error) throw ordersRes.error;
       if (purchasesRes.error) throw purchasesRes.error;
 
-      const orderRows = (ordersRes.data || []).map((order) => ({
-        ...order,
-        spent_amount: parsePrice(order.spent_amount)
-      }));
+      const orderRows = (ordersRes.data || []).map((o) => ({ ...o, spent_amount: parsePrice(o.spent_amount) }));
+      const stats = new Map();
+
+      (purchasesRes.data || []).forEach((p) => {
+        if (!p.order_id) return;
+        if (!stats.has(p.order_id)) {
+          stats.set(p.order_id, { collected: 0, expected: 0, purchaseCount: 0, pickupTotals: new Map() });
+        }
+        const s = stats.get(p.order_id);
+        const value = parsePrice(p.paid_price ?? p.price);
+        s.expected += value;
+        s.purchaseCount += 1;
+        if (p.collected) s.collected += value;
+        const pickup = String(p.pickup_point || "").trim();
+        if (pickup) {
+          s.pickupTotals.set(pickup, (s.pickupTotals.get(pickup) || 0) + value);
+        }
+      });
 
       setOrders(orderRows);
-      setPurchases(purchasesRes.data || []);
+      setOrderStatsMap(stats);
     } catch (err) {
       console.error(err);
       setOrders([]);
-      setPurchases([]);
-      setError("???? ????? ?????? ???????.");
+      setOrderStatsMap(new Map());
+      setError("تعذر تحميل بيانات المالية.");
     } finally {
-      setLoadingData(false);
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    if (profile.loading || !profile.authenticated || profile.role !== "rahaf") return;
-    loadFinanceData();
-  }, [loadFinanceData, profile.authenticated, profile.loading, profile.role]);
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-  const orderStats = useMemo(() => buildOrderStats(purchases), [purchases]);
+  useEffect(() => {
+    if (profile.loading || !profile.authenticated || profile.role !== "rahaf") return;
+    loadData();
+  }, [loadData, profile.authenticated, profile.loading, profile.role]);
 
   const orderRows = useMemo(() => {
     return orders.map((order) => {
-      const stats = orderStats.get(order.id) || createEmptyStats();
-      const collected = stats.collected;
-      const expected = stats.expected;
-      const pending = Math.max(0, expected - collected);
-      const spentAmount = parsePrice(order.spent_amount);
-      const netCollected = collected - spentAmount;
-      const netExpected = expected - spentAmount;
-      const progressPct = expected > 0 ? Math.round((collected / expected) * 100) : 0;
-      const isComplete = pending === 0 && expected > 0;
-
+      const stats = orderStatsMap.get(order.id) || { collected: 0, expected: 0, purchaseCount: 0, pickupTotals: new Map() };
+      const spent = parsePrice(order.spent_amount);
+      const pending = Math.max(0, stats.expected - stats.collected);
       return {
         id: order.id,
-        orderName: order.order_name || "",
-        orderDate: order.order_date,
+        name: order.order_name || "طلبية",
         createdAt: order.created_at,
-        spentAmount,
-        collected,
+        orderDate: order.order_date,
+        spent,
+        collected: stats.collected,
+        expected: stats.expected,
         pending,
-        expected,
-        netCollected,
-        netExpected,
-        progressPct,
         purchaseCount: stats.purchaseCount,
-        pickupTotals: stats.pickupTotals,
-        dailyCollected: stats.dailyCollected,
-        statusVariant: expected === 0 ? "neutral" : isComplete ? (netCollected < 0 ? "danger" : "success") : "warning",
-        statusLabel:
-          expected === 0
-            ? "?? ???? ???????"
-            : isComplete
-              ? netCollected < 0
-                ? "??? ????"
-                : "??? ????"
-              : "??? ???????"
+        pickupTotals: stats.pickupTotals
       };
     });
-  }, [orderStats, orders]);
+  }, [orderStatsMap, orders]);
 
-  const groupedOrders = useMemo(() => {
+  const selectedOrder = useMemo(
+    () => orderRows.find((o) => String(o.id) === String(selectedOrderId)) || null,
+    [orderRows, selectedOrderId]
+  );
+
+  useEffect(() => {
+    if (!orderRows.length) {
+      setSelectedOrderId("");
+      return;
+    }
+    setSelectedOrderId((prev) => (prev && orderRows.some((o) => String(o.id) === String(prev)) ? prev : orderRows[0].id));
+  }, [orderRows]);
+
+  useEffect(() => {
+    if (!selectedOrder) {
+      setSpentInput("");
+      return;
+    }
+    setSpentInput(selectedOrder.spent ? String(selectedOrder.spent) : "");
+    setSpentMessage("");
+  }, [selectedOrder]);
+
+  const monthSummary = useMemo(() => {
     const map = new Map();
     orderRows.forEach((order) => {
       const date = getOrderDate(order);
@@ -262,193 +164,83 @@ export default function FinancePage({ embedded = false }) {
         map.set(key, {
           key,
           label: monthLabel(date),
-          orders: [],
+          year: date.getFullYear(),
+          monthIndex: date.getMonth(),
+          orders: 0,
+          purchases: 0,
           collected: 0,
-          expected: 0
+          expected: 0,
+          spent: 0,
+          pickupTotals: new Map()
         });
       }
-
-      const group = map.get(key);
-      group.orders.push(order);
-      group.collected += order.collected;
-      group.expected += order.expected;
+      const item = map.get(key);
+      item.orders += 1;
+      item.purchases += order.purchaseCount;
+      item.collected += order.collected;
+      item.expected += order.expected;
+      item.spent += order.spent;
+      order.pickupTotals.forEach((value, pickup) => {
+        item.pickupTotals.set(pickup, (item.pickupTotals.get(pickup) || 0) + value);
+      });
     });
-
-    return Array.from(map.values()).sort((a, b) => b.key.localeCompare(a.key));
-  }, [orderRows]);
-
-  const selectedOrder = useMemo(
-    () => orderRows.find((order) => String(order.id) === String(selectedOrderId)) || null,
-    [orderRows, selectedOrderId]
-  );
-
-  const monthBundle = useMemo(() => buildMonthData(orderRows), [orderRows]);
-
-  useEffect(() => {
-    if (!orderRows.length) {
-      setSelectedOrderId("");
-      return;
-    }
-    setSelectedOrderId((prev) => (prev && orderRows.some((order) => String(order.id) === String(prev)) ? prev : orderRows[0].id));
+    const years = Array.from(new Set(Array.from(map.values()).map((m) => m.year))).sort((a, b) => a - b);
+    return { map, years };
   }, [orderRows]);
 
   useEffect(() => {
-    if (!selectedOrder) {
-      setSpentInput("");
-      return;
-    }
-    setSpentInput(selectedOrder.spentAmount ? String(selectedOrder.spentAmount) : "");
-    setSpentMessage("");
-  }, [selectedOrder]);
-
-  useEffect(() => {
-    const years = monthBundle.years;
-    if (!years.length) {
+    if (!monthSummary.years.length) {
       setSelectedYear(null);
       setSelectedMonthKey("");
       return;
     }
-
-    setSelectedYear((prev) => {
-      if (prev !== null && years.includes(prev)) return prev;
-      return years[years.length - 1];
-    });
-  }, [monthBundle.years]);
+    setSelectedYear((prev) => (prev !== null && monthSummary.years.includes(prev) ? prev : monthSummary.years[monthSummary.years.length - 1]));
+  }, [monthSummary.years]);
 
   useEffect(() => {
-    if (selectedYear === null) {
-      setSelectedMonthKey("");
-      return;
-    }
-
-    const monthKeysInYear = Array.from(monthBundle.map.values())
-      .filter((item) => item.year === selectedYear)
-      .map((item) => item.key)
+    if (selectedYear === null) return;
+    const monthKeys = Array.from(monthSummary.map.values())
+      .filter((m) => m.year === selectedYear)
+      .map((m) => m.key)
       .sort();
-
-    if (!monthKeysInYear.length) {
+    if (!monthKeys.length) {
       setSelectedMonthKey("");
       return;
     }
+    setSelectedMonthKey((prev) => (prev && monthKeys.includes(prev) ? prev : monthKeys[monthKeys.length - 1]));
+  }, [monthSummary.map, selectedYear]);
 
-    setSelectedMonthKey((prev) => (prev && monthKeysInYear.includes(prev) ? prev : monthKeysInYear[monthKeysInYear.length - 1]));
-  }, [monthBundle.map, selectedYear]);
-
-  const selectedMonth = useMemo(() => {
-    if (!selectedMonthKey) return null;
-    return monthBundle.map.get(selectedMonthKey) || null;
-  }, [monthBundle.map, selectedMonthKey]);
-
-  async function signOut() {
-    try {
-      await sb.auth.signOut();
-    } catch (err) {
-      console.error(err);
-    } finally {
-      window.location.hash = "#/login";
-    }
-  }
+  const selectedMonth = useMemo(() => (selectedMonthKey ? monthSummary.map.get(selectedMonthKey) || null : null), [monthSummary.map, selectedMonthKey]);
 
   async function saveSpent() {
-    if (!selectedOrder || spentSaving) return;
-
-    const raw = spentInput.trim();
-    const value = raw === "" ? 0 : Number(raw);
-    if (raw !== "" && (!Number.isFinite(value) || value < 0)) {
-      setSpentMessage("??????? ??? ????.");
+    if (!selectedOrder || savingSpent) return;
+    const value = spentInput.trim() === "" ? 0 : Number(spentInput);
+    if (!Number.isFinite(value) || value < 0) {
+      setSpentMessage("المصروف غير صحيح.");
       return;
     }
-
-    setSpentSaving(true);
-    setSpentMessage("???? ?????...");
+    setSavingSpent(true);
+    setSpentMessage("جاري الحفظ...");
     const { error: updateError } = await sb.from("orders").update({ spent_amount: value }).eq("id", selectedOrder.id);
     if (updateError) {
       console.error(updateError);
-      setSpentMessage("??? ?????.");
-      setSpentSaving(false);
+      setSpentMessage("فشل الحفظ.");
+      setSavingSpent(false);
       return;
     }
-
-    setOrders((prev) =>
-      prev.map((order) => (String(order.id) === String(selectedOrder.id) ? { ...order, spent_amount: value } : order))
-    );
-    setSpentMessage("?? ?");
-    setSpentSaving(false);
+    setOrders((prev) => prev.map((o) => (String(o.id) === String(selectedOrder.id) ? { ...o, spent_amount: value } : o)));
+    setSavingSpent(false);
+    setSpentMessage("تم ✅");
     window.setTimeout(() => setSpentMessage(""), 1500);
   }
 
-  function monthNames() {
-    return [
-      "?????",
-      "??????",
-      "????",
-      "?????",
-      "????",
-      "?????",
-      "?????",
-      "?????",
-      "??????",
-      "??????",
-      "??????",
-      "??????"
-    ];
+  async function signOut() {
+    await signOutAndRedirect();
   }
 
-  function monthDaySeries(month) {
-    if (!month) return [];
-    const days = new Date(month.year, month.monthIndex + 1, 0).getDate();
-    const values = [];
-    for (let day = 1; day <= days; day += 1) {
-      const collected = month.dailyCollected.get(day) || 0;
-      const spent = month.dailySpent.get(day) || 0;
-      const value = chartMode === "profit" ? collected - spent : collected;
-      values.push({ day, value });
-    }
-    return values;
-  }
-
-  if (profile.loading) {
-    return (
-      <div className="finance-page finance-state" dir="rtl">
-        <div className="finance-note">???? ?????? ?? ??????...</div>
-      </div>
-    );
-  }
-
-  if (!profile.authenticated) {
-    return (
-      <div className="finance-page finance-state" dir="rtl">
-        <div className="finance-note finance-note-danger">
-          <h2>?? ???? ???? ????</h2>
-          <p>???? ????? ?????? ?????.</p>
-          <a href="#/login" className="finance-link">
-            ??? ????? ??????
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  if (profile.role !== "rahaf") {
-    return (
-      <div className="finance-page finance-state" dir="rtl">
-        <div className="finance-note finance-note-danger">
-          <h2>?? ???? ??????</h2>
-          <p>??? ?????? ????? ????? ??? ???.</p>
-          <a href="#/orders" className="finance-link">
-            ?????? ????????
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  const outstanding = selectedOrder ? Math.max(0, selectedOrder.expected - selectedOrder.collected) : 0;
-  const monthOutstanding = selectedMonth ? Math.max(0, selectedMonth.expected - selectedMonth.collected) : 0;
-  const monthProgress = selectedMonth && selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0;
-  const monthSeries = monthDaySeries(selectedMonth);
-  const monthPeak = monthSeries.reduce((max, item) => Math.max(max, Math.abs(item.value)), 0);
-  const monthHasSeries = monthSeries.some((item) => item.value !== 0);
+  if (profile.loading) return <div className="finance-page finance-state"><div className="finance-note">جاري التحقق من الجلسة...</div></div>;
+  if (!profile.authenticated) return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد جلسة نشطة</h2><p>يلزم تسجيل الدخول أولًا.</p><a href="#/login" className="finance-link">فتح تسجيل الدخول</a></div></div>;
+  if (profile.role !== "rahaf") return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد صلاحية</h2><p>هذه الصفحة متاحة لحساب رهف فقط.</p><a href="#/orders" className="finance-link">العودة للطلبيات</a></div></div>;
 
   return (
     <div className={`finance-page ${embedded ? "embedded" : ""}`} dir="rtl">
@@ -456,187 +248,55 @@ export default function FinancePage({ embedded = false }) {
         <>
           <div className={`finance-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
           <aside className={`finance-sidebar ${sidebarOpen ? "open" : ""}`}>
-            <div className="finance-sidebar-head">
-              <b>???????</b>
-              <button type="button" className="finance-menu-btn danger" onClick={() => setSidebarOpen(false)}>
-                ?
-              </button>
-            </div>
+            <div className="finance-sidebar-head"><b>القائمة</b><button type="button" className="finance-menu-btn danger" onClick={() => setSidebarOpen(false)}>✕</button></div>
             <div className="finance-sidebar-content">
-              <a href="#/orders" onClick={() => setSidebarOpen(false)}>
-                ????????
-              </a>
-              <a href="#/pickup-dashboard" onClick={() => setSidebarOpen(false)}>
-                ???????? ????????
-              </a>
-              <a href="#/archive" onClick={() => setSidebarOpen(false)}>
-                ???????
-              </a>
-              <a href="#/finance" onClick={() => setSidebarOpen(false)}>
-                ???????
-              </a>
-              <button type="button" className="danger" onClick={signOut}>
-                ????? ????
-              </button>
+              {sidebarLinks.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                  {item.label}
+                </a>
+              ))}
+              <button type="button" className="danger" onClick={signOut}>تسجيل خروج</button>
             </div>
           </aside>
         </>
       ) : null}
-
       <div className="finance-wrap">
-        {!embedded ? (
-          <div className="finance-topbar">
-            <div className="finance-brand">
-              <b>???????</b>
-              <div className="finance-muted">???? ????????? ??????????</div>
-            </div>
-            <button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>
-              ?
-            </button>
-          </div>
-        ) : null}
-
-        <div className="finance-tabs">
-          <button
-            type="button"
-            className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`}
-            onClick={() => setActiveTab("orders")}
-          >
-            ????? ???????
-          </button>
-          <button
-            type="button"
-            className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`}
-            onClick={() => setActiveTab("months")}
-          >
-            ????? ????
-          </button>
-        </div>
-
+        {!embedded ? <div className="finance-topbar"><div className="finance-brand"><b>المالية</b><div className="finance-muted">ملخص المصروفات والإيرادات</div></div><button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>☰</button></div> : null}
+        <div className="finance-tabs"><button type="button" className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>احصاء الطلبات</button><button type="button" className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`} onClick={() => setActiveTab("months")}>احصاء شهري</button></div>
         {error ? <div className="finance-error">{error}</div> : null}
-        {loadingData ? <div className="finance-loading">???? ????? ????????...</div> : null}
-
-        {!loadingData && activeTab === "orders" ? (
+        {loading ? <div className="finance-loading">جاري تحميل البيانات...</div> : null}
+        {!loading && activeTab === "orders" ? (
           <div className="finance-grid">
             <aside className="finance-card finance-list-card">
-              <div className="finance-row">
-                <b>????????</b>
-                <span className="finance-pill">{orderRows.length}</span>
-              </div>
-              {!orderRows.length ? (
-                <div className="finance-empty">
-                  ?? ???? ??????
-                  <div className="finance-refresh-row">
-                    <button type="button" className="finance-btn" onClick={loadFinanceData}>
-                      ?????
-                    </button>
-                  </div>
-                </div>
-              ) : (
+              <div className="finance-row"><b>الطلبيات</b><span className="finance-pill">{orderRows.length}</span></div>
+              {!orderRows.length ? <div className="finance-empty">لا يوجد بيانات<div className="finance-refresh-row"><button type="button" className="finance-btn" onClick={loadData}>تحديث</button></div></div> : (
                 <div className="finance-order-groups">
-                  {groupedOrders.map((group) => (
-                    <div key={group.key} className="finance-order-group">
-                      <div className="finance-group-head">
-                        <div className="finance-group-title">{group.label}</div>
-                        <div className="finance-group-pills">
-                          <span className="finance-pill">???????: {group.orders.length}</span>
-                          <span className="finance-pill">??: {formatILS(group.collected)}</span>
-                          <span className="finance-pill">?????: {formatILS(Math.max(0, group.expected - group.collected))}</span>
-                        </div>
-                      </div>
-                      {group.orders.map((order) => (
-                        <button
-                          key={order.id}
-                          type="button"
-                          className={`finance-order-item ${String(order.id) === String(selectedOrderId) ? "active" : ""}`}
-                          onClick={() => setSelectedOrderId(order.id)}
-                        >
-                          <span>{order.orderName || "?????"}</span>
-                          <span className="finance-pill">???</span>
-                        </button>
-                      ))}
-                    </div>
+                  {orderRows.map((order) => (
+                    <button key={order.id} type="button" className={`finance-order-item ${String(order.id) === String(selectedOrderId) ? "active" : ""}`} onClick={() => setSelectedOrderId(order.id)}>
+                      <span>{order.name}</span><span className="finance-pill">فتح</span>
+                    </button>
                   ))}
                 </div>
               )}
             </aside>
-
             <main className="finance-card">
-              {!selectedOrder ? (
-                <div className="finance-empty">?????? ????? ?? ???????</div>
-              ) : (
+              {!selectedOrder ? <div className="finance-empty">اختاري طلبية من القائمة</div> : (
                 <>
-                  <div className="finance-row">
-                    <b>{selectedOrder.orderName || "?????"}</b>
-                    <span className={`finance-status ${selectedOrder.statusVariant}`}>{selectedOrder.statusLabel}</span>
-                  </div>
-
+                  <div className="finance-row"><b>{selectedOrder.name}</b><span className={`finance-status ${selectedOrder.pending === 0 && selectedOrder.expected > 0 ? "success" : selectedOrder.expected === 0 ? "neutral" : "warning"}`}>{selectedOrder.expected === 0 ? "لا يوجد مشتريات" : selectedOrder.pending === 0 ? "مكتمل" : "قيد التحصيل"}</span></div>
                   <div className="finance-kpi-grid">
-                    <div className="finance-kpi">
-                      <div className="label">?? ??????</div>
-                      <div className="value">{formatILS(selectedOrder.collected)}</div>
-                    </div>
-                    <div className="finance-kpi">
-                      <div className="label">????? ???????</div>
-                      <div className="value">{formatILS(outstanding)}</div>
-                    </div>
-                    <div className="finance-kpi">
-                      <div className="label">?????? ?????</div>
-                      <div className="value">{formatILS(selectedOrder.expected)}</div>
-                    </div>
+                    <div className="finance-kpi"><div className="label">تم تحصيله</div><div className="value">{formatILS(selectedOrder.collected)}</div></div>
+                    <div className="finance-kpi"><div className="label">متبقي للتحصيل</div><div className="value">{formatILS(selectedOrder.pending)}</div></div>
+                    <div className="finance-kpi"><div className="label">إجمالي متوقع</div><div className="value">{formatILS(selectedOrder.expected)}</div></div>
                   </div>
-
-                  <div className="finance-progress-wrap">
-                    {selectedOrder.expected > 0 ? (
-                      <>
-                        <div className="finance-progress-head">
-                          <span>{formatILS(selectedOrder.collected)} ?? {formatILS(selectedOrder.expected)} ?? ???????</span>
-                          <span>{selectedOrder.progressPct}% ?????</span>
-                        </div>
-                        <div className="finance-progress">
-                          <span style={{ width: `${selectedOrder.progressPct}%` }} />
-                        </div>
-                      </>
-                    ) : (
-                      <div className="finance-muted">?? ???? ????? ???</div>
-                    )}
-                  </div>
-
                   <div className="finance-kpi-grid compact">
-                    {selectedOrder.pending === 0 && selectedOrder.expected > 0 ? (
-                      <div className="finance-kpi">
-                        <div className="label">???? ?????</div>
-                        <div className={`value ${selectedOrder.netCollected < 0 ? "neg" : ""}`}>
-                          {formatILS(selectedOrder.netCollected)}
-                        </div>
-                      </div>
-                    ) : null}
-                    <div className="finance-kpi">
-                      <div className="label">{selectedOrder.netExpected < 0 ? "???????" : "???? ?????"}</div>
-                      <div className={`value ${selectedOrder.netExpected < 0 ? "neg" : ""}`}>
-                        {formatILS(selectedOrder.netExpected)}
-                      </div>
-                    </div>
-                    <div className="finance-kpi">
-                      <div className="label">???????</div>
-                      <div className="value">{formatILS(selectedOrder.spentAmount)}</div>
-                    </div>
+                    <div className="finance-kpi"><div className="label">صافي محصّل</div><div className={`value ${selectedOrder.collected - selectedOrder.spent < 0 ? "neg" : ""}`}>{formatILS(selectedOrder.collected - selectedOrder.spent)}</div></div>
+                    <div className="finance-kpi"><div className="label">صافي متوقع</div><div className={`value ${selectedOrder.expected - selectedOrder.spent < 0 ? "neg" : ""}`}>{formatILS(selectedOrder.expected - selectedOrder.spent)}</div></div>
+                    <div className="finance-kpi"><div className="label">المصروف</div><div className="value">{formatILS(selectedOrder.spent)}</div></div>
                   </div>
-
                   <div className="finance-spent-row">
-                    <label htmlFor="financeSpentInput">???????:</label>
-                    <input
-                      id="financeSpentInput"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={spentInput}
-                      onChange={(event) => setSpentInput(event.target.value)}
-                      placeholder="??????? ??? ???????"
-                    />
-                    <button type="button" className="finance-btn primary" onClick={saveSpent} disabled={spentSaving}>
-                      {spentSaving ? "???? ?????..." : "??? ???????"}
-                    </button>
+                    <label htmlFor="financeSpentInput">المصروف:</label>
+                    <input id="financeSpentInput" type="number" step="0.01" min="0" value={spentInput} onChange={(e) => setSpentInput(e.target.value)} placeholder="المصروف على الطلبية" />
+                    <button type="button" className="finance-btn primary" onClick={saveSpent} disabled={savingSpent}>{savingSpent ? "جاري الحفظ..." : "حفظ المصروف"}</button>
                     {spentMessage ? <span className="finance-muted">{spentMessage}</span> : null}
                   </div>
                 </>
@@ -644,189 +304,41 @@ export default function FinancePage({ embedded = false }) {
             </main>
           </div>
         ) : null}
-
-        {!loadingData && activeTab === "months" ? (
+        {!loading && activeTab === "months" ? (
           <main className="finance-card">
-            <div className="finance-row center">
-              <div className="finance-section-title">???? ????</div>
-              <button type="button" className="finance-btn" onClick={() => setMonthPickerOpen((prev) => !prev)}>
-                {monthPickerOpen ? "????? ?????? ?????" : "?????? ?????"}
-              </button>
+            <div className="finance-row center"><div className="finance-section-title">ملخص شهري</div></div>
+            <div className="finance-month-picker">
+              <div className="finance-month-header">
+                <button type="button" className="finance-btn mini" disabled={!monthSummary.years.length || selectedYear === monthSummary.years[0]} onClick={() => setSelectedYear((v) => (v === null ? v : monthSummary.years[Math.max(0, monthSummary.years.indexOf(v) - 1)]))}>‹</button>
+                <b>{selectedYear ?? "—"}</b>
+                <button type="button" className="finance-btn mini" disabled={!monthSummary.years.length || selectedYear === monthSummary.years[monthSummary.years.length - 1]} onClick={() => setSelectedYear((v) => (v === null ? v : monthSummary.years[Math.min(monthSummary.years.length - 1, monthSummary.years.indexOf(v) + 1)]))}>›</button>
+              </div>
+              <div className="finance-month-grid">
+                {monthNames().map((name, idx) => {
+                  const key = `${selectedYear}-${String(idx + 1).padStart(2, "0")}`;
+                  const hasData = monthSummary.map.has(key);
+                  return <button key={name} type="button" className={`finance-month-btn ${selectedMonthKey === key ? "active" : ""}`} disabled={!hasData} onClick={() => setSelectedMonthKey(key)}>{name}</button>;
+                })}
+              </div>
             </div>
-
-            {monthPickerOpen ? (
-              <div className="finance-month-picker">
-                <div className="finance-month-header">
-                  <button
-                    type="button"
-                    className="finance-btn mini"
-                    disabled={!monthBundle.years.length || selectedYear === monthBundle.years[0]}
-                    onClick={() =>
-                      setSelectedYear((prev) => {
-                        if (prev === null) return prev;
-                        const idx = monthBundle.years.indexOf(prev);
-                        if (idx <= 0) return prev;
-                        return monthBundle.years[idx - 1];
-                      })
-                    }
-                  >
-                    ?
-                  </button>
-                  <b>{selectedYear ?? "?"}</b>
-                  <button
-                    type="button"
-                    className="finance-btn mini"
-                    disabled={!monthBundle.years.length || selectedYear === monthBundle.years[monthBundle.years.length - 1]}
-                    onClick={() =>
-                      setSelectedYear((prev) => {
-                        if (prev === null) return prev;
-                        const idx = monthBundle.years.indexOf(prev);
-                        if (idx < 0 || idx >= monthBundle.years.length - 1) return prev;
-                        return monthBundle.years[idx + 1];
-                      })
-                    }
-                  >
-                    ?
-                  </button>
-                </div>
-                <div className="finance-month-grid">
-                  {monthNames().map((name, idx) => {
-                    const key = `${selectedYear}-${String(idx + 1).padStart(2, "0")}`;
-                    const hasData = monthBundle.map.has(key);
-                    return (
-                      <button
-                        key={name}
-                        type="button"
-                        className={`finance-month-btn ${selectedMonthKey === key ? "active" : ""}`}
-                        disabled={!hasData}
-                        onClick={() => {
-                          setSelectedMonthKey(key);
-                          setMonthPickerOpen(false);
-                        }}
-                      >
-                        {name}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : null}
-
-            {!selectedMonth ? (
-              <div className="finance-empty">
-                ?? ???? ?????? ?????
-                <div className="finance-refresh-row">
-                  <button type="button" className="finance-btn" onClick={loadFinanceData}>
-                    ?????
-                  </button>
-                </div>
-              </div>
-            ) : (
+            {!selectedMonth ? <div className="finance-empty">لا يوجد بيانات شهرية</div> : (
               <div className="finance-month-shell">
-                <div className="finance-row">
-                  <b>{selectedMonth.label}</b>
-                  <span className={`finance-status ${monthOutstanding === 0 && selectedMonth.expected > 0 ? "success" : selectedMonth.expected === 0 ? "neutral" : "warning"}`}>
-                    {selectedMonth.expected === 0 ? "?? ???? ???????" : monthOutstanding === 0 ? "?????" : "??? ???????"}
-                  </span>
-                </div>
-
+                <div className="finance-row"><b>{selectedMonth.label}</b><span className={`finance-status ${selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected ? "success" : "warning"}`}>{selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected ? "مكتمل" : "قيد التحصيل"}</span></div>
                 <div className="finance-health-row">
-                  <span className="finance-pill">???????: {selectedMonth.orderCount}</span>
-                  <span className="finance-pill">?????????: {selectedMonth.purchaseCount}</span>
-                  <span className="finance-pill">???? ???????: {monthProgress}%</span>
-                  <span className="finance-pill">???? ????: {topPickupPoint(selectedMonth.pickupTotals)}</span>
+                  <span className="finance-pill">الطلبات: {selectedMonth.orders}</span>
+                  <span className="finance-pill">المشتريات: {selectedMonth.purchases}</span>
+                  <span className="finance-pill">نسبة التحصيل: {selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0}%</span>
+                  <span className="finance-pill">أكبر نقطة: {topPickupPoint(selectedMonth.pickupTotals)}</span>
                 </div>
-
                 <div className="finance-kpi-grid">
-                  <div className="finance-kpi">
-                    <div className="label">?? ??????</div>
-                    <div className="value">{formatILS(selectedMonth.collected)}</div>
-                  </div>
-                  <div className="finance-kpi">
-                    <div className="label">????? ???????</div>
-                    <div className="value">{formatILS(monthOutstanding)}</div>
-                  </div>
-                  <div className="finance-kpi">
-                    <div className="label">?????? ?????</div>
-                    <div className="value">{formatILS(selectedMonth.expected)}</div>
-                  </div>
+                  <div className="finance-kpi"><div className="label">تم تحصيله</div><div className="value">{formatILS(selectedMonth.collected)}</div></div>
+                  <div className="finance-kpi"><div className="label">متبقي للتحصيل</div><div className="value">{formatILS(Math.max(0, selectedMonth.expected - selectedMonth.collected))}</div></div>
+                  <div className="finance-kpi"><div className="label">إجمالي متوقع</div><div className="value">{formatILS(selectedMonth.expected)}</div></div>
                 </div>
-
-                <div className="finance-progress-wrap">
-                  {selectedMonth.expected > 0 ? (
-                    <>
-                      <div className="finance-progress-head">
-                        <span>{formatILS(selectedMonth.collected)} ?? {formatILS(selectedMonth.expected)} ?? ???????</span>
-                        <span>{monthProgress}% ?????</span>
-                      </div>
-                      <div className="finance-progress">
-                        <span style={{ width: `${monthProgress}%` }} />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="finance-muted">?? ???? ????? ???</div>
-                  )}
-                </div>
-
                 <div className="finance-kpi-grid compact">
-                  {monthOutstanding === 0 && selectedMonth.expected > 0 ? (
-                    <div className="finance-kpi">
-                      <div className="label">???? ?????</div>
-                      <div className={`value ${selectedMonth.collected - selectedMonth.spent < 0 ? "neg" : ""}`}>
-                        {formatILS(selectedMonth.collected - selectedMonth.spent)}
-                      </div>
-                    </div>
-                  ) : null}
-                  <div className="finance-kpi">
-                    <div className="label">{selectedMonth.expected - selectedMonth.spent < 0 ? "???????" : "???? ?????"}</div>
-                    <div className={`value ${selectedMonth.expected - selectedMonth.spent < 0 ? "neg" : ""}`}>
-                      {formatILS(selectedMonth.expected - selectedMonth.spent)}
-                    </div>
-                  </div>
-                  <div className="finance-kpi">
-                    <div className="label">???????</div>
-                    <div className="value">{formatILS(selectedMonth.spent)}</div>
-                  </div>
-                </div>
-
-                <div className="finance-segmented">
-                  <button
-                    type="button"
-                    className={chartMode === "status" ? "active" : ""}
-                    onClick={() => setChartMode("status")}
-                  >
-                    ???? ???????
-                  </button>
-                  <button
-                    type="button"
-                    className={chartMode === "profit" ? "active" : ""}
-                    onClick={() => setChartMode("profit")}
-                  >
-                    ???????
-                  </button>
-                </div>
-
-                <div className="finance-chart-card">
-                  {!monthHasSeries ? (
-                    <div className="finance-muted">
-                      {chartMode === "profit" ? "?? ???? ???? ???? ???" : "?? ???? ????? ???? ??? ????? ???"}
-                    </div>
-                  ) : (
-                    <div className="finance-day-bars">
-                      {monthSeries.map((point) => {
-                        const heightPct = monthPeak ? Math.max(6, Math.round((Math.abs(point.value) / monthPeak) * 100)) : 0;
-                        return (
-                          <div key={point.day} className="finance-day-bar-wrap" title={`??? ${point.day}: ${formatILS(point.value)}`}>
-                            <span
-                              className={`finance-day-bar ${point.value < 0 ? "neg" : ""}`}
-                              style={{ height: `${heightPct}%` }}
-                            />
-                            <small>{point.day}</small>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <div className="finance-kpi"><div className="label">صافي محصّل</div><div className={`value ${selectedMonth.collected - selectedMonth.spent < 0 ? "neg" : ""}`}>{formatILS(selectedMonth.collected - selectedMonth.spent)}</div></div>
+                  <div className="finance-kpi"><div className="label">صافي متوقع</div><div className={`value ${selectedMonth.expected - selectedMonth.spent < 0 ? "neg" : ""}`}>{formatILS(selectedMonth.expected - selectedMonth.spent)}</div></div>
+                  <div className="finance-kpi"><div className="label">المصروف</div><div className="value">{formatILS(selectedMonth.spent)}</div></div>
                 </div>
               </div>
             )}

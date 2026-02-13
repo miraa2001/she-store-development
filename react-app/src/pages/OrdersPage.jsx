@@ -31,6 +31,8 @@ import {
 } from "../lib/whatsapp";
 import { exportOrderPdf } from "../lib/pdfExport";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
+import { getOrdersNavItems, getRoleLabel } from "../lib/navigation";
+import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
 import CommandHeader from "../components/orders/CommandHeader";
@@ -38,24 +40,6 @@ import OrdersSidebar from "../components/orders/OrdersSidebar";
 import OrdersTab from "../components/orders/OrdersTab";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import LightboxModal from "../components/orders/LightboxModal";
-
-const NAV_ITEMS = [
-  { id: "orders", label: "الطلبات", href: "#/orders", icon: "package" },
-  { id: "pickup-dashboard", label: "لوحة الاستلام", href: "#/pickup-dashboard", icon: "map" },
-  { id: "pickuppoint", label: "نقطة الاستلام", href: "#/pickuppoint", icon: "home" },
-  { id: "archive", label: "الأرشيف", href: "#/archive", icon: "archive" },
-  { id: "finance", label: "المالية", href: "#/finance", icon: "dollar" },
-  { id: "collections", label: "المجموعات", href: "#/collections", icon: "bag" },
-  { id: "homepickup", label: "استلام المنزل", href: "#/homepickup", icon: "truck" },
-  { id: "customers", label: "العملاء", href: "#/orders?tab=customers", icon: "users" }
-];
-
-const ROLE_ACCESS = {
-  rahaf: ["orders", "pickup-dashboard", "archive", "finance", "customers", "collections"],
-  reem: ["orders", "pickup-dashboard", "customers", "homepickup"],
-  rawand: ["orders", "pickup-dashboard", "customers", "homepickup"],
-  laaura: ["orders", "pickuppoint"]
-};
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const PICKUP_OPTIONS = ["من البيت", "توصيل", "من نقطة الاستلام"];
@@ -256,14 +240,6 @@ function statusLabel(status) {
   return "قيد الانتظار";
 }
 
-function roleLabel(role) {
-  if (role === "rahaf") return "رهف";
-  if (role === "reem") return "ريم";
-  if (role === "rawand") return "روند";
-  if (role === "laaura") return "لارا";
-  return "مستخدم";
-}
-
 export default function OrdersPage() {
   const [globalOpen, setGlobalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -331,10 +307,7 @@ export default function OrdersPage() {
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
   const allowedTabs = isRahaf ? ["orders", "view", "customers"] : ["orders"];
 
-  const visibleNavItems = useMemo(() => {
-    const allowed = ROLE_ACCESS[profile.role] || ["orders"];
-    return NAV_ITEMS.filter((item) => allowed.includes(item.id));
-  }, [profile.role]);
+  const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -700,13 +673,7 @@ export default function OrdersPage() {
   };
 
   const signOut = async () => {
-    try {
-      await sb.auth.signOut();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      window.location.hash = "#/login";
-    }
+    await signOutAndRedirect();
   };
 
   const clearFormAiStatus = useCallback(() => {
@@ -1203,7 +1170,7 @@ export default function OrdersPage() {
             <span className="brand-icon">SS</span>
             <div>
               <h2>She-Store</h2>
-              <p>{roleLabel(profile.role)}</p>
+              <p>{getRoleLabel(profile.role)}</p>
             </div>
           </div>
           <button type="button" className="icon-btn" onClick={() => setGlobalOpen(false)}>

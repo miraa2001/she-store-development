@@ -28,16 +28,16 @@ async function loadGeminiClient() {
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("???? ????? ??????."));
+    reader.onerror = () => reject(new Error("تعذر قراءة الصورة."));
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== "string") {
-        reject(new Error("?????? ?????? ??? ?????."));
+        reject(new Error("بيانات الصورة غير صالحة."));
         return;
       }
       const base64 = result.split(",")[1];
       if (!base64) {
-        reject(new Error("???? ????? ??????."));
+        reject(new Error("تعذر تحويل الصورة."));
         return;
       }
       resolve(base64);
@@ -49,16 +49,16 @@ function fileToBase64(file) {
 function blobToBase64(blob) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("???? ????? ??????."));
+    reader.onerror = () => reject(new Error("تعذر قراءة الصورة."));
     reader.onload = () => {
       const result = reader.result;
       if (typeof result !== "string") {
-        reject(new Error("?????? ?????? ??? ?????."));
+        reject(new Error("بيانات الصورة غير صالحة."));
         return;
       }
       const base64 = result.split(",")[1];
       if (!base64) {
-        reject(new Error("???? ????? ??????."));
+        reject(new Error("تعذر تحويل الصورة."));
         return;
       }
       resolve(base64);
@@ -70,7 +70,7 @@ function blobToBase64(blob) {
 async function urlToBase64(url) {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error("???? ????? ???? ?????.");
+    throw new Error("تعذر تحميل إحدى الصور.");
   }
   const blob = await res.blob();
   const data = await blobToBase64(blob);
@@ -125,12 +125,12 @@ export function resolveTotalFromGemini(result) {
 export async function runGeminiCartAnalysis({ files = [], urls = [], onProgress }) {
   const apiKey = getApiKey();
   if (!apiKey) {
-    throw new Error("????? Gemini ??? ?????. ????? VITE_GEMINI_API_KEY ???? ??? .env.");
+    throw new Error("مفتاح Gemini غير مضبوط. أضيفي VITE_GEMINI_API_KEY داخل ملف .env.");
   }
 
   const { GoogleGenAI, Type } = await loadGeminiClient();
   if (!GoogleGenAI || !Type) {
-    throw new Error("???? ????? ????? Gemini.");
+    throw new Error("تعذر تحميل مكتبة Gemini.");
   }
 
   const client = new GoogleGenAI({ apiKey });
@@ -138,7 +138,7 @@ export async function runGeminiCartAnalysis({ files = [], urls = [], onProgress 
   const imageParts = [];
 
   for (let i = 0; i < files.length; i += 1) {
-    onProgress?.(`????? ???? ????? ${i + 1}/${files.length}...`);
+    onProgress?.(`تحويل صورة جديدة ${i + 1}/${files.length}...`);
     const data = await fileToBase64(files[i]);
     imageParts.push({
       inlineData: {
@@ -149,7 +149,7 @@ export async function runGeminiCartAnalysis({ files = [], urls = [], onProgress 
   }
 
   for (let i = 0; i < urls.length; i += 1) {
-    onProgress?.(`????? ???? ?????? ${i + 1}/${urls.length}...`);
+    onProgress?.(`تحميل صورة محفوظة ${i + 1}/${urls.length}...`);
     const imgData = await urlToBase64(urls[i]);
     imageParts.push({
       inlineData: {
@@ -160,10 +160,10 @@ export async function runGeminiCartAnalysis({ files = [], urls = [], onProgress 
   }
 
   if (!imageParts.length) {
-    throw new Error("?? ???? ??? ???????.");
+    throw new Error("لا توجد صور للتحليل.");
   }
 
-  onProgress?.("????? ????? ??? Gemini...");
+  onProgress?.("إرسال الصور إلى Gemini...");
   const response = await client.models.generateContent({
     model: GEMINI_MODEL_ID,
     contents: [
@@ -180,12 +180,12 @@ export async function runGeminiCartAnalysis({ files = [], urls = [], onProgress 
 
   const rawText = getResponseText(response);
   if (!rawText) {
-    throw new Error("?? ???? ??????? ?? ?????.");
+    throw new Error("لم يرجع النموذج أي نتيجة.");
   }
 
   try {
     return JSON.parse(rawText);
   } catch {
-    throw new Error("???? ????? ????? ???????. ???? ???? ????.");
+    throw new Error("تعذر قراءة نتيجة التحليل. جربي صورة أوضح.");
   }
 }

@@ -1,49 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
-import { sb } from "../lib/supabaseClient";
+import { getPickupDashboardTabs, getPickupSidebarLinks, getRoleLabel } from "../lib/navigation";
+import { signOutAndRedirect } from "../lib/session";
 import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
 import CollectionsPage from "./CollectionsPage";
 import "./pickup-dashboard-page.css";
 
 const TAB_CONFIG = {
-  home: { id: "home", label: "?????? ?????" },
+  home: { id: "home", label: "مستلمو البيت" },
   aura: { id: "aura", label: "La Aura" },
-  collections: { id: "collections", label: "????? ???????" }
+  collections: { id: "collections", label: "تحصيل المبالغ" }
 };
-
-function roleLabel(role) {
-  if (role === "rahaf") return "???";
-  if (role === "reem") return "???";
-  if (role === "rawand") return "????";
-  if (role === "laaura") return "????";
-  return "??????";
-}
-
-function getRoleTabs(role) {
-  if (role === "rahaf") return ["home", "aura", "collections"];
-  if (role === "reem" || role === "rawand") return ["home"];
-  if (role === "laaura") return ["aura"];
-  return [];
-}
-
-function getRoleSidebarLinks(role) {
-  if (role === "rahaf") {
-    return [
-      { label: "????????", href: "#/orders" },
-      { label: "???????? ????????", href: "#/pickup-dashboard" },
-      { label: "???????", href: "#/archive" },
-      { label: "???????", href: "#/finance" }
-    ];
-  }
-  if (role === "reem" || role === "rawand") {
-    return [
-      { label: "????????", href: "#/orders" },
-      { label: "???????? ????????", href: "#/pickup-dashboard" }
-    ];
-  }
-  return [];
-}
 
 export default function PickupDashboardPage() {
   const { profile } = useAuthProfile();
@@ -51,8 +19,8 @@ export default function PickupDashboardPage() {
   const [activeTab, setActiveTab] = useState("home");
   const [loadedTabs, setLoadedTabs] = useState([]);
 
-  const roleTabs = useMemo(() => getRoleTabs(profile.role), [profile.role]);
-  const sidebarLinks = useMemo(() => getRoleSidebarLinks(profile.role), [profile.role]);
+  const roleTabs = useMemo(() => getPickupDashboardTabs(profile.role), [profile.role]);
+  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
   const showSidebar = profile.role !== "laaura";
 
   useEffect(() => {
@@ -69,22 +37,14 @@ export default function PickupDashboardPage() {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === "Escape") {
-        setSidebarOpen(false);
-      }
+      if (event.key === "Escape") setSidebarOpen(false);
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
   async function signOut() {
-    try {
-      await sb.auth.signOut();
-    } catch (error) {
-      console.error(error);
-    } finally {
-      window.location.hash = "#/login";
-    }
+    await signOutAndRedirect();
   }
 
   function renderPanel(tabId) {
@@ -97,7 +57,7 @@ export default function PickupDashboardPage() {
   if (profile.loading) {
     return (
       <div className="pickup-page pickup-state">
-        <div className="pickup-note">???? ?????? ?? ??????...</div>
+        <div className="pickup-note">جاري التحقق من الجلسة...</div>
       </div>
     );
   }
@@ -106,10 +66,10 @@ export default function PickupDashboardPage() {
     return (
       <div className="pickup-page pickup-state">
         <div className="pickup-note pickup-note-danger">
-          <h2>?? ???? ???? ????</h2>
-          <p>???? ????? ?????? ?????.</p>
+          <h2>لا توجد جلسة نشطة</h2>
+          <p>يلزم تسجيل الدخول أولًا.</p>
           <a href="#/login" className="pickup-btn">
-            ??? ????? ??????
+            فتح تسجيل الدخول
           </a>
         </div>
       </div>
@@ -120,10 +80,10 @@ export default function PickupDashboardPage() {
     return (
       <div className="pickup-page pickup-state">
         <div className="pickup-note pickup-note-danger">
-          <h2>?? ???? ??????</h2>
-          <p>??? ?????? ?? ???? ?????? ???? ???????? ????????.</p>
+          <h2>لا توجد صلاحية</h2>
+          <p>هذا الحساب لا يملك صلاحية لوحة الاستلام والتحصيل.</p>
           <a href="#/orders" className="pickup-btn">
-            ?????? ????????
+            العودة للطلبيات
           </a>
         </div>
       </div>
@@ -137,9 +97,9 @@ export default function PickupDashboardPage() {
           <div className={`pickup-sidebar-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
           <aside className={`pickup-sidebar ${sidebarOpen ? "open" : ""}`}>
             <div className="pickup-sidebar-head">
-              <b>???????</b>
+              <b>القائمة</b>
               <button type="button" className="pickup-btn pickup-btn-icon danger" onClick={() => setSidebarOpen(false)}>
-                ?
+                ✕
               </button>
             </div>
             <div className="pickup-sidebar-content">
@@ -149,7 +109,7 @@ export default function PickupDashboardPage() {
                 </a>
               ))}
               <button type="button" className="danger" onClick={signOut}>
-                ????? ????
+                تسجيل خروج
               </button>
             </div>
           </aside>
@@ -159,18 +119,18 @@ export default function PickupDashboardPage() {
       <div className="pickup-wrap">
         <div className="pickup-topbar">
           <div className="pickup-brand">
-            <b>???????? ????????</b>
+            <b>الاستلام والتحصيل</b>
             <div className="pickup-muted">
-              {profile.role === "laaura" ? "???? La Aura" : "?? ????? + La Aura + ???????"} ? {roleLabel(profile.role)}
+              {profile.role === "laaura" ? "نقطة La Aura" : "من البيت + La Aura + التحصيل"} — {getRoleLabel(profile.role)}
             </div>
           </div>
           {showSidebar ? (
             <button type="button" className="pickup-btn pickup-btn-icon" onClick={() => setSidebarOpen(true)}>
-              ?
+              ☰
             </button>
           ) : (
             <button type="button" className="pickup-btn danger" onClick={signOut}>
-              ????? ????
+              تسجيل خروج
             </button>
           )}
         </div>
