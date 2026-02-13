@@ -511,6 +511,16 @@
       position:sticky;top:0;background:var(--color-card);z-index:5;
       padding-bottom:8px;margin-bottom:8px;border-bottom:1px solid var(--color-border)
     }
+    @media(min-width:901px){
+      .orderDetail{max-height:none;overflow:visible}
+      #ordersGrid > aside.card{
+        position:sticky;
+        top:calc(var(--cmd-h) + 14px);
+        align-self:start;
+        max-height:calc(100vh - var(--cmd-h) - 24px);
+        overflow:auto;
+      }
+    }
     @media(max-width:900px){
       .orderDetail{max-height:none;overflow:visible}
       .orderSticky{position:static}
@@ -609,12 +619,18 @@
       min-width:0;
       table-layout:fixed;
     }
+    #ordersTableWrap .ordersTableModern tbody{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:12px 14px;
+      align-items:start;
+    }
     #ordersTableWrap .ordersTableModern thead{
       display:none;
     }
     #ordersTableWrap .ordersTableModern tbody tr.purchaseCardRow{
       display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
+      grid-template-columns:minmax(0,1fr);
       align-items:start;
       gap:10px;
       padding:0;
@@ -705,7 +721,7 @@
       justify-content:center;
     }
     #ordersTableWrap .ordersTableModern .purchaseVCard{
-      width:min(100%, 420px);
+      width:min(100%, 336px);
       background:#fff;
       border:1px solid #e7ecef;
       border-radius:24px;
@@ -724,9 +740,10 @@
     }
     #ordersTableWrap .ordersTableModern .purchaseVMedia{
       position:relative;
-      height:320px;
+      height:256px;
       background:#f2f4f6;
       overflow:hidden;
+      direction:ltr;
     }
     #ordersTableWrap .ordersTableModern .purchaseVTrack{
       --card-index:0;
@@ -823,7 +840,7 @@
       direction:ltr;
     }
     #ordersTableWrap .ordersTableModern .purchaseVBody{
-      padding:22px 18px;
+      padding:18px 15px;
       background:linear-gradient(135deg,#f9fbfc 0%,#ffffff 72%);
       direction:rtl;
     }
@@ -846,7 +863,7 @@
     }
     #ordersTableWrap .ordersTableModern .purchaseVValue{
       margin:0;
-      font-size:18px;
+      font-size:16px;
       color:#111827;
       font-weight:500;
       line-height:1.45;
@@ -861,12 +878,14 @@
       align-items:flex-start;
       justify-content:flex-start;
       gap:6px;
-      position:relative;
+      position:absolute;
+      top:10px;
+      inset-inline-end:10px;
       width:auto;
       min-width:44px;
       text-align:right;
       flex:0 0 auto;
-      padding-top:10px;
+      padding-top:0;
       z-index:3;
     }
     #ordersTableWrap .ordersTableModern th:last-child{
@@ -903,21 +922,37 @@
     }
     #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow,
     #ordersTableWrap .ordersTableModern tbody tr[data-edit-row]{
-      display:table-row;
-      padding:0;
-      background:transparent;
+      display:block;
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      padding:20px;
+      background:rgba(10,14,12,.45);
       border:none;
       box-shadow:none;
-      filter:none;
-      transform:none;
+      margin:0;
+      overflow:auto;
     }
     #ordersTableWrap .ordersTableModern tbody tr.inlineEditRow td{
       padding:0;
       border:none;
       background:transparent;
       box-shadow:none;
+      display:block !important;
+    }
+    #ordersTableWrap .ordersTableModern .inlineEditBox{
+      width:min(760px, 92vw);
+      margin:38px auto;
+      background:var(--color-card);
+      border:1px solid var(--color-border);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow-lg);
     }
     @media(max-width:700px){
+      #ordersTableWrap .ordersTableModern tbody{
+        display:block;
+      }
       #ordersTableWrap .ordersTableModern thead{
         position:absolute;
         width:1px;
@@ -1002,6 +1037,9 @@
         content:none;
       }
       #ordersTableWrap .ordersTableModern .actionCell{
+        position:relative;
+        top:auto;
+        inset-inline-end:auto;
         justify-content:flex-start;
       }
       #ordersTableWrap .ordersTableModern .inlineEditBox{
@@ -2668,7 +2706,7 @@ function isLightboxOpen(){
   return lightbox && lightbox.style.display === "flex";
 }
 function getGalleryImages(img){
-  const container = img.closest(".thumbs, .editImgsRow, .preview, .miniPreview, .listThumbs");
+  const container = img.closest(".purchaseVMedia, .thumbs, .editImgsRow, .preview, .miniPreview, .listThumbs");
   let label = (img.dataset && img.dataset.customer) ? img.dataset.customer : "";
   if(!label && container && container.dataset && container.dataset.customer){
     label = container.dataset.customer || "";
@@ -2726,6 +2764,7 @@ document.addEventListener("click", (e)=>{
 
   // only thumbnails (avoid random icons if any)
   if(
+    img.closest(".purchaseVMedia") ||
     img.closest(".thumbs") ||
     img.closest(".editImgsRow") ||
     img.closest(".editThumb") ||
@@ -4018,6 +4057,13 @@ function setupDropdowns(){
   dropdownsBound = true;
 
   tbody.addEventListener("click", (e)=>{
+    const editBackdrop = e.target.closest("tr[data-edit-row]");
+    if(editBackdrop && !e.target.closest(".inlineEditBox")){
+      const id = editBackdrop.dataset.editRow;
+      resetEditRow(id);
+      closeEditRow(id);
+      return;
+    }
     const analyzeBtn = e.target.closest("[data-ai-analyze]");
     if(analyzeBtn){
       e.stopPropagation();
@@ -4314,7 +4360,7 @@ function renderPurchasesTableWith(list){
     ` : "";
 
     const mediaHtml = imageUrls.length ? `
-      <div class="purchaseVMedia thumbs" data-customer="${customerAttr}">
+      <div class="purchaseVMedia" data-customer="${customerAttr}">
         <div class="purchaseVTrack" data-card-track="${p.id}" style="--card-index:0">
           ${slidesHtml}
         </div>
