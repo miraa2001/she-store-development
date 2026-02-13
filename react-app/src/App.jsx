@@ -6,6 +6,7 @@ import ArchivePage from "./pages/ArchivePage";
 import CollectionsPage from "./pages/CollectionsPage";
 import HomePickupPage from "./pages/HomePickupPage";
 import PickupPointPage from "./pages/PickupPointPage";
+import LoginPage from "./pages/LoginPage";
 
 const pages = [
   { id: "index", title: "الطلبات", file: "index.html", note: "لوحة الطلبات الرئيسية" },
@@ -118,7 +119,7 @@ export default function App() {
       <Route path="/collections" element={<CollectionsPage />} />
       <Route path="/homepickup" element={<HomePickupPage />} />
       <Route path="/pickuppoint" element={<PickupPointPage />} />
-      <Route path="/login" element={<Navigate to="/legacy/login" replace />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/legacy/:page" element={<LegacyFrame />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

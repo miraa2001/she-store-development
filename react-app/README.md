@@ -20,6 +20,7 @@ This folder is a new React/Vite app for She-Store.
 - `#/homepickup` is now native React (role guard + pickup toggles + paid-price edit + search + collect action + lightbox).
 - `#/pickuppoint` is now native React (role guard + grouped orders for lara + pickup toggles + paid-price edit + collection actions).
 - `#/pickup-dashboard` no longer embeds legacy iframes; it now mounts native React panels (`homepickup`, `pickuppoint`, `collections`) in-tab.
+- `#/login` is now native React login (Supabase sign-in with username→email mapping).
 
 ## Run
 ```bash
@@ -34,7 +35,7 @@ npm run dev
 - `#/orders` fully native React dashboard
 - `#/pickup-dashboard` native React dashboard with native embedded panels
 - `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/pickuppoint` are native React pages
-- `#/login` redirects to legacy login (temporary until native login migration)
+- `#/login` native React login
 - `#/legacy/:page` iframe wrapper for legacy pages copied under `public/legacy`
 
 ## Validation
