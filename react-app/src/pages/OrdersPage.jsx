@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
 import { getCurrentUserProfile } from "../lib/auth";
@@ -322,6 +323,8 @@ export default function OrdersPage() {
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
 
   const frameRef = useRef(null);
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const groupedOrders = useMemo(() => groupOrdersByMonth(orders, search), [orders, search]);
   const searchCount = useMemo(
@@ -333,6 +336,7 @@ export default function OrdersPage() {
   const isRahaf = profile.role === "rahaf";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
+  const allowedTabs = isRahaf ? ["orders", "view", "customers"] : ["orders"];
 
   const visibleNavItems = useMemo(() => {
     const allowed = ROLE_ACCESS[profile.role] || ["orders"];
@@ -490,10 +494,58 @@ export default function OrdersPage() {
     setActiveTab("orders");
   }, [isViewOnlyRole, profile.authenticated]);
 
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tabFromUrl = params.get("tab");
+    const modeFromUrl = params.get("mode");
+
+    if (tabFromUrl && allowedTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+
+    if (isRahaf && modeFromUrl) {
+      if (modeFromUrl === "edit" && !editMode) setEditMode(true);
+      if (modeFromUrl === "view" && editMode) setEditMode(false);
+    }
+  }, [activeTab, allowedTabs, editMode, isRahaf, location.search]);
+
+  useEffect(() => {
+    if (!profile.authenticated) return;
+
+    const params = new URLSearchParams(location.search);
+    let changed = false;
+
+    if (params.get("tab") !== activeTab) {
+      params.set("tab", activeTab);
+      changed = true;
+    }
+
+    if (isRahaf) {
+      const modeValue = editMode ? "edit" : "view";
+      if (params.get("mode") !== modeValue) {
+        params.set("mode", modeValue);
+        changed = true;
+      }
+    } else if (params.has("mode")) {
+      params.delete("mode");
+      changed = true;
+    }
+
+    if (!changed) return;
+    const query = params.toString();
+    navigate(query ? `${location.pathname}?${query}` : location.pathname, { replace: true });
+  }, [activeTab, editMode, isRahaf, location.pathname, location.search, navigate, profile.authenticated]);
+
+  useEffect(() => {
+    if (allowedTabs.includes(activeTab)) return;
+    setActiveTab("orders");
+  }, [activeTab, allowedTabs]);
+
   useEffect(() => {
     if (!profile.authenticated) return;
     if (profile.role !== "laaura") return;
-    window.location.hash = "#/legacy/pickuppoint";
+    window.location.hash = "#/pickuppoint";
   }, [profile.authenticated, profile.role]);
 
   useEffect(() => {
