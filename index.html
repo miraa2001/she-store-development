@@ -527,17 +527,76 @@
     }
     .actionCell{position:relative}
     .actionMenu{
-      position:absolute;inset-inline-end:0;top:36px;min-width:160px;
-      background:var(--color-card);border:1px solid var(--color-border);border-radius:var(--radius-md);
-      box-shadow:0 8px 16px rgba(0,0,0,.08);padding:6px;display:none;z-index:20
+      position:absolute;
+      inset-inline-end:0;
+      top:42px;
+      min-width:210px;
+      display:none;
+      flex-direction:column;
+      justify-content:center;
+      gap:4px;
+      padding:8px;
+      border-radius:12px;
+      background:linear-gradient(180deg,#577f73 0%, #4a6f65 100%);
+      border:1px solid #6d9488;
+      box-shadow:0 14px 24px rgba(15,23,42,.26);
+      z-index:30;
     }
-    .actionMenu.open{display:block}
+    .actionMenu.open{display:flex}
     .actionMenu button{
-      width:100%;text-align:right;border:none;background:transparent;padding:8px;border-radius:8px;
-      font-family:inherit;cursor:pointer
+      width:100%;
+      background-color:transparent;
+      border:none;
+      color:#f4fbf8;
+      display:flex;
+      position:relative;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      border-radius:8px;
+      padding:10px 10px;
+      text-align:right;
+      font-family:inherit;
+      line-height:1.2;
     }
-    .actionMenu button:hover{background:var(--table-row-hover)}
-    .actionMenu .danger{color:#b00020}
+    .actionMenu button svg{
+      width:16px;
+      height:16px;
+      flex:0 0 16px;
+    }
+    .actionMenu button svg path{
+      fill:currentColor;
+    }
+    .actionMenu button:not(:active):hover,
+    .actionMenu button:focus-visible{
+      background-color:rgba(255,255,255,.12);
+      outline:none;
+    }
+    .actionMenu button:active{
+      background-color:rgba(255,255,255,.2);
+      outline:none;
+    }
+    .actionMenu button::before{
+      content:"";
+      position:absolute;
+      top:5px;
+      inset-inline-start:-8px;
+      width:4px;
+      height:80%;
+      background-color:var(--brand);
+      border-radius:5px;
+      opacity:0;
+    }
+    .actionMenu button:focus-visible::before,
+    .actionMenu button:active::before{
+      opacity:1;
+    }
+    .actionMenu .danger{
+      color:#ffe3ea;
+    }
+    .actionMenu .danger svg path{
+      fill:#ffd2dd;
+    }
     .orderHeadActions #deleteOrderBtn{
       border-color:#efc5c5;
       color:#a63434;
@@ -621,8 +680,8 @@
     }
     #ordersTableWrap .ordersTableModern tbody{
       display:grid;
-      grid-template-columns:repeat(2, minmax(0, 1fr));
-      gap:12px 14px;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:10px 12px;
       align-items:start;
     }
     #ordersTableWrap .ordersTableModern thead{
@@ -721,7 +780,7 @@
       justify-content:center;
     }
     #ordersTableWrap .ordersTableModern .purchaseVCard{
-      width:min(100%, 336px);
+      width:min(100%, 268px);
       background:#fff;
       border:1px solid #e7ecef;
       border-radius:24px;
@@ -740,7 +799,7 @@
     }
     #ordersTableWrap .ordersTableModern .purchaseVMedia{
       position:relative;
-      height:256px;
+      height:205px;
       background:#f2f4f6;
       overflow:hidden;
       direction:ltr;
@@ -840,13 +899,13 @@
       direction:ltr;
     }
     #ordersTableWrap .ordersTableModern .purchaseVBody{
-      padding:18px 15px;
+      padding:15px 12px;
       background:linear-gradient(135deg,#f9fbfc 0%,#ffffff 72%);
       direction:rtl;
     }
     #ordersTableWrap .ordersTableModern .purchaseVField{
-      padding-bottom:12px;
-      margin-bottom:12px;
+      padding-bottom:10px;
+      margin-bottom:10px;
       border-bottom:1px solid #e8edf0;
     }
     #ordersTableWrap .ordersTableModern .purchaseVField:last-child{
@@ -856,14 +915,14 @@
     }
     #ordersTableWrap .ordersTableModern .purchaseVLabel{
       margin:0 0 4px;
-      font-size:12px;
+      font-size:11px;
       color:#6a7680;
       font-weight:500;
       line-height:1.4;
     }
     #ordersTableWrap .ordersTableModern .purchaseVValue{
       margin:0;
-      font-size:16px;
+      font-size:14px;
       color:#111827;
       font-weight:500;
       line-height:1.45;
@@ -4422,9 +4481,18 @@ function renderPurchasesTableWith(list){
       <td class="actionCell" data-label="إجراءات">
         <button class="icon-btn menu-btn" data-actions="${p.id}" aria-label="إجراءات" aria-haspopup="menu" aria-expanded="false">⋯</button>
         <div class="actionMenu" data-menu="${p.id}" role="menu">
-          <button type="button" data-action="edit" data-id="${p.id}">تعديل</button>
-          <button type="button" data-action="paid" data-id="${p.id}">تعديل المدفوع</button>
-          <button type="button" class="danger" data-action="delete" data-id="${p.id}">حذف</button>
+          <button class="value" type="button" data-action="edit" data-id="${p.id}" role="menuitem">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17.25V21h3.75l11-11-3.75-3.75-11 11zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-1.96 1.96 3.75 3.75 2.13-1.79z"/></svg>
+            تعديل
+          </button>
+          <button class="value" type="button" data-action="paid" data-id="${p.id}" role="menuitem">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 7H3a1 1 0 0 0-1 1v8a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a1 1 0 0 0-1-1zm-2 8H5a1 1 0 1 1 0-2h14a1 1 0 1 1 0 2zm0-4H5a1 1 0 1 1 0-2h14a1 1 0 1 1 0 2zM16 3H8a1 1 0 0 0 0 2h8a1 1 0 1 0 0-2z"/></svg>
+            تعديل المدفوع
+          </button>
+          <button class="value danger" type="button" data-action="delete" data-id="${p.id}" role="menuitem">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L6 7zm3-4h6l1 2h4v2H4V5h4l1-2z"/></svg>
+            حذف
+          </button>
         </div>
       </td>
     `;
