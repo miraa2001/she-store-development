@@ -2,3 +2,7 @@ UI_SPEC.md
 Redesign Header and Sidebar
 Redesign Header and Sidebar/*
 Redesign Header and Sidebar.zip
+node_modules/
+dist/
+react-app/node_modules/
+react-app/dist/

@@ -1,0 +1,1853 @@
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import "./orders-page.css";
+import { fetchOrdersWithSummary, formatILS, groupOrdersByMonth, parsePrice } from "../lib/orders";
+import { getCurrentUserProfile } from "../lib/auth";
+import { sb } from "../lib/supabaseClient";
+import {
+  createPurchaseWithRelations,
+  deletePurchaseById,
+  fetchPurchasesByOrder,
+  markPurchasePaidPrice,
+  restoreDeletedPurchase,
+  sanitizeLinks,
+  updatePurchaseWithRelations
+} from "../lib/purchases";
+import {
+  CUSTOMER_CITIES,
+  CUSTOMER_PICKUP_OPTIONS,
+  createCustomer,
+  customerFriendlyError,
+  deleteCustomer,
+  fetchCustomers,
+  isValidCustomerPhone,
+  normalizePhone,
+  updateCustomer
+} from "../lib/customers";
+import {
+  buildArrivalNotifyMessage,
+  buildPickupInquiryMessage,
+  resolvePurchaseWhatsappTarget
+} from "../lib/whatsapp";
+import { exportOrderPdf } from "../lib/pdfExport";
+import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
+import CustomersTab from "../components/tabs/CustomersTab";
+import ViewTab from "../components/tabs/ViewTab";
+
+const NAV_ITEMS = [
+  { id: "orders", label: "الطلبات", href: "#/orders", icon: "package" },
+  { id: "pickup-dashboard", label: "لوحة الاستلام", href: "#/legacy/pickup-dashboard", icon: "map" },
+  { id: "pickuppoint", label: "نقطة الاستلام", href: "#/legacy/pickuppoint", icon: "home" },
+  { id: "archive", label: "الأرشيف", href: "#/legacy/archive", icon: "archive" },
+  { id: "finance", label: "المالية", href: "#/legacy/finance", icon: "dollar" },
+  { id: "collections", label: "المجموعات", href: "#/legacy/collections", icon: "bag" },
+  { id: "homepickup", label: "استلام المنزل", href: "#/legacy/homepickup", icon: "truck" },
+  { id: "customers", label: "العملاء", href: "#/legacy/index?tab=customers", icon: "users" }
+];
+
+const ROLE_ACCESS = {
+  rahaf: ["orders", "pickup-dashboard", "archive", "finance", "customers", "collections"],
+  reem: ["orders", "pickup-dashboard", "customers", "homepickup"],
+  rawand: ["orders", "pickup-dashboard", "customers", "homepickup"],
+  laaura: ["orders", "pickuppoint"]
+};
+
+const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
+const PICKUP_OPTIONS = ["من البيت", "توصيل", "من نقطة الاستلام"];
+const MAX_IMAGES = 10;
+
+function paymentState(purchase) {
+  const priceNum = parsePrice(purchase.price);
+  const paidNum = parsePrice(purchase.paid_price || 0);
+
+  if (priceNum > 0 && paidNum >= priceNum) return { key: "completed", label: "مكتمل" };
+  if (paidNum <= 0) return { key: "issue", label: "غير مدفوع" };
+  return { key: "pending", label: "قيد التحصيل" };
+}
+
+function createEmptyForm(orderId, customers) {
+  const firstCustomer = Array.isArray(customers) && customers.length ? customers[0] : null;
+
+  return {
+    purchaseId: "",
+    orderId: orderId || "",
+    customerId: firstCustomer?.id || "",
+    customerName: firstCustomer?.name || "",
+    qty: 1,
+    price: "",
+    paidPrice: "",
+    bagSize: "كيس صغير",
+    pickupPoint: firstCustomer?.usual_pickup_point || "من نقطة الاستلام",
+    note: "",
+    links: [""],
+    newFiles: [],
+    existingImages: [],
+    removeImageIds: []
+  };
+}
+
+
+function Icon({ name, className = "" }) {
+  const common = {
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: "2",
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+    viewBox: "0 0 24 24"
+  };
+
+  if (name === "menu") {
+    return (
+      <svg className={className} {...common}>
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <line x1="4" y1="6" x2="20" y2="6" />
+        <line x1="4" y1="18" x2="20" y2="18" />
+      </svg>
+    );
+  }
+
+  if (name === "close") {
+    return (
+      <svg className={className} {...common}>
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+  }
+
+  if (name === "search") {
+    return (
+      <svg className={className} {...common}>
+        <circle cx="11" cy="11" r="8" />
+        <path d="m21 21-4.3-4.3" />
+      </svg>
+    );
+  }
+
+  if (name === "package") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M16.5 9.4 7.55 4.24" />
+        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+        <path d="m3.3 7 8.7 5 8.7-5" />
+        <path d="M12 22V12" />
+      </svg>
+    );
+  }
+
+  if (name === "map") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M12 22s7-5.7 7-12a7 7 0 1 0-14 0c0 6.3 7 12 7 12z" />
+        <circle cx="12" cy="10" r="2.5" />
+      </svg>
+    );
+  }
+
+  if (name === "home") {
+    return (
+      <svg className={className} {...common}>
+        <path d="m3 10 9-7 9 7" />
+        <path d="M9 22V12h6v10" />
+        <path d="M3 10v12h18V10" />
+      </svg>
+    );
+  }
+
+  if (name === "archive") {
+    return (
+      <svg className={className} {...common}>
+        <rect x="3" y="4" width="18" height="4" rx="1" />
+        <path d="M5 8v11a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8" />
+        <path d="M10 12h4" />
+      </svg>
+    );
+  }
+
+  if (name === "dollar") {
+    return (
+      <svg className={className} {...common}>
+        <line x1="12" y1="2" x2="12" y2="22" />
+        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14.5a3.5 3.5 0 0 1 0 7H7" />
+      </svg>
+    );
+  }
+
+  if (name === "users") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+        <circle cx="8.5" cy="7" r="4" />
+        <path d="M20 8v6" />
+        <path d="M23 11h-6" />
+      </svg>
+    );
+  }
+
+  if (name === "bag") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M6 8h12l-1 12H7L6 8Z" />
+        <path d="M9 8a3 3 0 0 1 6 0" />
+      </svg>
+    );
+  }
+
+  if (name === "truck") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M10 17h4V5H2v12h3" />
+        <path d="M14 9h4l4 4v4h-3" />
+        <circle cx="7" cy="17" r="2" />
+        <circle cx="17" cy="17" r="2" />
+      </svg>
+    );
+  }
+
+  if (name === "logout") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="M16 17l5-5-5-5" />
+        <path d="M21 12H9" />
+      </svg>
+    );
+  }
+
+  if (name === "calendar") {
+    return (
+      <svg className={className} {...common}>
+        <path d="M8 2v4" />
+        <path d="M16 2v4" />
+        <rect x="3" y="4" width="18" height="18" rx="2" />
+        <path d="M3 10h18" />
+      </svg>
+    );
+  }
+
+  if (name === "chevron-left") {
+    return (
+      <svg className={className} {...common}>
+        <path d="m15 18-6-6 6-6" />
+      </svg>
+    );
+  }
+
+  if (name === "chevron-right") {
+    return (
+      <svg className={className} {...common}>
+        <path d="m9 18 6-6-6-6" />
+      </svg>
+    );
+  }
+
+  return null;
+}
+
+function statusLabel(status) {
+  if (status === "completed") return "مكتمل";
+  if (status === "processing") return "قيد التنفيذ";
+  return "قيد الانتظار";
+}
+
+function roleLabel(role) {
+  if (role === "rahaf") return "رهف";
+  if (role === "reem") return "ريم";
+  if (role === "rawand") return "روند";
+  if (role === "laaura") return "لارا";
+  return "مستخدم";
+}
+
+export default function OrdersPage() {
+  const [globalOpen, setGlobalOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [resizing, setResizing] = useState(false);
+  const [activeTab, setActiveTab] = useState("orders");
+  const [search, setSearch] = useState("");
+  const [editMode, setEditMode] = useState(true);
+  const [selectedOrderId, setSelectedOrderId] = useState("");
+
+  const [profile, setProfile] = useState({
+    loading: true,
+    authenticated: false,
+    role: "viewer",
+    email: ""
+  });
+
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
+  const [purchaseSearch, setPurchaseSearch] = useState("");
+
+  const [purchases, setPurchases] = useState([]);
+  const [purchasesLoading, setPurchasesLoading] = useState(false);
+  const [purchasesError, setPurchasesError] = useState("");
+
+  const [customers, setCustomers] = useState([]);
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [customersError, setCustomersError] = useState("");
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [customerForm, setCustomerForm] = useState({
+    name: "",
+    phone: "",
+    city: CUSTOMER_CITIES[0],
+    pickup: CUSTOMER_PICKUP_OPTIONS[2]
+  });
+  const [customerFormMessage, setCustomerFormMessage] = useState("");
+  const [customerFormSaving, setCustomerFormSaving] = useState(false);
+  const [editingCustomerId, setEditingCustomerId] = useState("");
+  const [editingCustomerForm, setEditingCustomerForm] = useState(null);
+
+  const [menuPurchaseId, setMenuPurchaseId] = useState("");
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [formMode, setFormMode] = useState("add");
+  const [formState, setFormState] = useState(() => createEmptyForm("", []));
+  const [formSaving, setFormSaving] = useState(false);
+  const [formError, setFormError] = useState("");
+  const [formUploadProgress, setFormUploadProgress] = useState("");
+  const [formAiStatus, setFormAiStatus] = useState({ text: "", isError: false });
+  const [formAiRunning, setFormAiRunning] = useState(false);
+  const [pdfExporting, setPdfExporting] = useState(false);
+  const [newFilePreviews, setNewFilePreviews] = useState([]);
+
+  const [toast, setToast] = useState(null);
+  const [deleteSnapshot, setDeleteSnapshot] = useState(null);
+  const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
+
+  const frameRef = useRef(null);
+
+  const groupedOrders = useMemo(() => groupOrdersByMonth(orders, search), [orders, search]);
+  const searchCount = useMemo(
+    () => groupedOrders.reduce((sum, group) => sum + group.orders.length, 0),
+    [groupedOrders]
+  );
+
+  const totalOrders = orders.length;
+  const isRahaf = profile.role === "rahaf";
+  const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
+  const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
+
+  const visibleNavItems = useMemo(() => {
+    const allowed = ROLE_ACCESS[profile.role] || ["orders"];
+    return NAV_ITEMS.filter((item) => allowed.includes(item.id));
+  }, [profile.role]);
+
+  const selectedOrder = useMemo(
+    () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
+    [orders, selectedOrderId]
+  );
+
+  const filteredPurchases = useMemo(() => {
+    const q = String(purchaseSearch || "").trim().toLowerCase();
+    if (!q) return purchases;
+
+    return purchases.filter((item) => {
+      const customer = String(item.customer_name || "").toLowerCase();
+      const note = String(item.note || "").toLowerCase();
+      return customer.includes(q) || note.includes(q);
+    });
+  }, [purchaseSearch, purchases]);
+
+  const purchaseStats = useMemo(() => {
+    const count = purchases.length;
+    const totalQty = purchases.reduce((sum, item) => sum + Number(item.qty || 0), 0);
+    const totalPrice = purchases.reduce((sum, item) => sum + parsePrice(item.price), 0);
+    return { count, totalQty, totalPrice };
+  }, [purchases]);
+
+  const filteredCustomers = useMemo(() => {
+    const query = String(customerSearch || "").trim().toLowerCase();
+    if (!query) return customers;
+
+    return customers.filter((customer) => {
+      const name = String(customer.name || "").toLowerCase();
+      const phone = String(customer.phone || "").toLowerCase();
+      const city = String(customer.city || "").toLowerCase();
+      return name.includes(query) || phone.includes(query) || city.includes(query);
+    });
+  }, [customerSearch, customers]);
+
+  const refreshOrders = useCallback(async (preferredId = "") => {
+    setOrdersLoading(true);
+    setOrdersError("");
+
+    try {
+      const data = await fetchOrdersWithSummary();
+      setOrders(data);
+      setSelectedOrderId((prev) => {
+        const candidate = preferredId || prev;
+        if (candidate && data.some((order) => String(order.id) === String(candidate))) {
+          return candidate;
+        }
+        return data[0]?.id || "";
+      });
+    } catch (error) {
+      console.error(error);
+      setOrdersError("فشل تحميل الطلبات من قاعدة البيانات.");
+    } finally {
+      setOrdersLoading(false);
+    }
+  }, []);
+
+  const refreshCustomers = useCallback(async () => {
+    setCustomersLoading(true);
+    setCustomersError("");
+
+    try {
+      const list = await fetchCustomers();
+      setCustomers(list || []);
+      setEditingCustomerId((prev) =>
+        prev && (list || []).some((customer) => String(customer.id) === String(prev)) ? prev : ""
+      );
+    } catch (error) {
+      console.error(error);
+      setCustomersError("فشل تحميل بيانات العملاء.");
+    } finally {
+      setCustomersLoading(false);
+    }
+  }, []);
+
+  const refreshPurchases = useCallback(async (orderId) => {
+    if (!orderId) {
+      setPurchases([]);
+      setPurchasesLoading(false);
+      return;
+    }
+
+    setPurchasesLoading(true);
+    setPurchasesError("");
+
+    try {
+      const list = await fetchPurchasesByOrder(orderId);
+      setPurchases(list || []);
+    } catch (error) {
+      console.error(error);
+      setPurchasesError("فشل تحميل المشتريات.");
+    } finally {
+      setPurchasesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function init() {
+      try {
+        const result = await getCurrentUserProfile();
+        if (!mounted) return;
+
+        setProfile({
+          loading: false,
+          authenticated: result.authenticated,
+          role: result.role,
+          email: result.email
+        });
+      } catch (error) {
+        console.error(error);
+        if (!mounted) return;
+        setProfile({ loading: false, authenticated: false, role: "viewer", email: "" });
+      }
+    }
+
+    init();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!profile.authenticated) {
+      setOrdersLoading(false);
+      setCustomersLoading(false);
+      return;
+    }
+
+    if (!canUseOrdersWorkbench) {
+      setOrders([]);
+      setOrdersLoading(false);
+      setCustomers([]);
+      setCustomersLoading(false);
+      setOrdersError("هذا الحساب لا يملك صلاحية صفحة الطلبات.");
+      return;
+    }
+
+    refreshOrders();
+    refreshCustomers();
+  }, [canUseOrdersWorkbench, profile.authenticated, refreshCustomers, refreshOrders]);
+
+  useEffect(() => {
+    if (!profile.authenticated) return;
+    if (!isViewOnlyRole) return;
+    setEditMode(false);
+    setActiveTab("orders");
+  }, [isViewOnlyRole, profile.authenticated]);
+
+  useEffect(() => {
+    if (!profile.authenticated) return;
+    if (profile.role !== "laaura") return;
+    window.location.hash = "#/legacy/pickuppoint";
+  }, [profile.authenticated, profile.role]);
+
+  useEffect(() => {
+    if (activeTab !== "orders") return;
+    refreshPurchases(selectedOrderId);
+  }, [activeTab, refreshPurchases, selectedOrderId]);
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const onMove = (event) => {
+      const next = window.innerWidth - event.clientX;
+      if (next >= 280 && next <= 500) {
+        setSidebarWidth(next);
+      }
+    };
+
+    const onUp = () => setResizing(false);
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, [resizing]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(null), 5000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  useEffect(() => {
+    const onDocClick = (event) => {
+      if (!event.target.closest("[data-menu-root]")) {
+        setMenuPurchaseId("");
+      }
+    };
+
+    document.addEventListener("click", onDocClick);
+    return () => {
+      document.removeEventListener("click", onDocClick);
+    };
+  }, []);
+
+  useEffect(() => {
+    const previews = formState.newFiles.map((file) => ({
+      key: `${file.name}-${file.size}-${file.lastModified}`,
+      url: URL.createObjectURL(file)
+    }));
+
+    setNewFilePreviews(previews);
+
+    return () => {
+      previews.forEach((item) => URL.revokeObjectURL(item.url));
+    };
+  }, [formState.newFiles]);
+
+  const handleCreateCustomer = async (event) => {
+    event.preventDefault();
+    setCustomerFormMessage("");
+
+    const name = String(customerForm.name || "").trim();
+    const phone = normalizePhone(customerForm.phone);
+    const city = String(customerForm.city || "").trim();
+    const pickup = String(customerForm.pickup || "").trim();
+
+    if (!name) {
+      setCustomerFormMessage("الاسم مطلوب.");
+      return;
+    }
+    if (!phone) {
+      setCustomerFormMessage("رقم الهاتف مطلوب.");
+      return;
+    }
+    if (!isValidCustomerPhone(phone)) {
+      setCustomerFormMessage("رقم الهاتف يجب أن يبدأ بـ 970 أو 972.");
+      return;
+    }
+    if (!city) {
+      setCustomerFormMessage("اختاري المدينة.");
+      return;
+    }
+
+    setCustomerFormSaving(true);
+    setCustomerFormMessage("جاري الحفظ...");
+
+    try {
+      await createCustomer({
+        name,
+        phone,
+        city,
+        usual_pickup_point: pickup
+      });
+
+      setCustomerForm({
+        name: "",
+        phone: "",
+        city: CUSTOMER_CITIES[0],
+        pickup: CUSTOMER_PICKUP_OPTIONS[2]
+      });
+      setCustomerFormMessage("تم ✅");
+      await refreshCustomers();
+      setToast({ type: "success", text: "تم حفظ العميل." });
+    } catch (error) {
+      console.error(error);
+      setCustomerFormMessage(customerFriendlyError(error, "فشل إضافة العميل."));
+    } finally {
+      setCustomerFormSaving(false);
+    }
+  };
+
+  const beginEditCustomer = (customer) => {
+    setEditingCustomerId(customer.id);
+    setEditingCustomerForm({
+      name: customer.name || "",
+      phone: customer.phone || "",
+      city: customer.city || CUSTOMER_CITIES[0],
+      pickup: customer.usual_pickup_point || CUSTOMER_PICKUP_OPTIONS[2]
+    });
+  };
+
+  const cancelEditCustomer = () => {
+    setEditingCustomerId("");
+    setEditingCustomerForm(null);
+  };
+
+  const saveEditCustomer = async (customerId) => {
+    if (!editingCustomerForm) return;
+
+    const name = String(editingCustomerForm.name || "").trim();
+    const phone = normalizePhone(editingCustomerForm.phone);
+    const city = String(editingCustomerForm.city || "").trim();
+    const pickup = String(editingCustomerForm.pickup || "").trim();
+
+    if (!name) {
+      setToast({ type: "warn", text: "الاسم مطلوب." });
+      return;
+    }
+    if (!phone) {
+      setToast({ type: "warn", text: "رقم الهاتف مطلوب." });
+      return;
+    }
+    if (!isValidCustomerPhone(phone)) {
+      setToast({ type: "warn", text: "رقم الهاتف يجب أن يبدأ بـ 970 أو 972." });
+      return;
+    }
+    if (!city) {
+      setToast({ type: "warn", text: "اختاري المدينة." });
+      return;
+    }
+
+    try {
+      await updateCustomer(customerId, {
+        name,
+        phone,
+        city,
+        usual_pickup_point: pickup
+      });
+
+      setToast({ type: "success", text: "تم تحديث العميل." });
+      cancelEditCustomer();
+      await refreshCustomers();
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: customerFriendlyError(error, "فشل تحديث العميل.") });
+    }
+  };
+
+  const handleDeleteCustomer = async (customer) => {
+    const ok = window.confirm(`هل تريدين حذف العميل${customer?.name ? ` (${customer.name})` : ""}؟`);
+    if (!ok) return;
+
+    try {
+      await deleteCustomer(customer.id);
+      setToast({ type: "success", text: "تم حذف العميل." });
+      if (String(editingCustomerId) === String(customer.id)) {
+        cancelEditCustomer();
+      }
+      await refreshCustomers();
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: customerFriendlyError(error, "فشل حذف العميل.") });
+    }
+  };
+
+  const signOut = async () => {
+    try {
+      await sb.auth.signOut();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      window.location.hash = "#/legacy/login";
+    }
+  };
+
+  const clearFormAiStatus = useCallback(() => {
+    setFormAiStatus({ text: "", isError: false });
+  }, []);
+
+  const openAddModal = () => {
+    if (!selectedOrder) return;
+    setFormMode("add");
+    setFormState(createEmptyForm(selectedOrder.id, customers));
+    setFormError("");
+    setFormUploadProgress("");
+    clearFormAiStatus();
+    setFormOpen(true);
+  };
+
+  const openEditModal = (purchase) => {
+    setFormMode("edit");
+    setFormState({
+      purchaseId: purchase.id,
+      orderId: purchase.order_id,
+      customerId: purchase.customer_id || "",
+      customerName: purchase.customer_name || "",
+      qty: purchase.qty ?? 1,
+      price: purchase.price ?? "",
+      paidPrice: purchase.paid_price ?? purchase.price ?? "",
+      bagSize: purchase.bag_size || "كيس صغير",
+      pickupPoint: purchase.pickup_point || "من نقطة الاستلام",
+      note: purchase.note || "",
+      links: purchase.links?.length ? purchase.links : [""],
+      newFiles: [],
+      existingImages: purchase.images || [],
+      removeImageIds: []
+    });
+    setFormError("");
+    setFormUploadProgress("");
+    clearFormAiStatus();
+    setFormOpen(true);
+    setMenuPurchaseId("");
+  };
+
+  const closeFormModal = () => {
+    if (formSaving || formAiRunning) return;
+    setFormOpen(false);
+    setFormError("");
+    setFormUploadProgress("");
+    clearFormAiStatus();
+  };
+
+  const updateForm = (patch) => {
+    setFormState((prev) => ({ ...prev, ...patch }));
+  };
+
+  const updateLinkValue = (index, value) => {
+    setFormState((prev) => {
+      const links = [...prev.links];
+      links[index] = value;
+      return { ...prev, links };
+    });
+  };
+
+  const addLinkInput = () => {
+    setFormState((prev) => ({ ...prev, links: [...prev.links, ""] }));
+    clearFormAiStatus();
+  };
+
+  const removeLinkInput = () => {
+    setFormState((prev) => {
+      if (prev.links.length <= 1) return prev;
+      return { ...prev, links: prev.links.slice(0, -1) };
+    });
+    clearFormAiStatus();
+  };
+
+  const addNewImages = (files) => {
+    const picked = Array.from(files || []).filter(
+      (file) => file && file.type && file.type.startsWith("image/")
+    );
+    if (!picked.length) return;
+
+    setFormState((prev) => {
+      const remainingExisting =
+        prev.existingImages.filter((img) => !prev.removeImageIds.includes(img.id)).length;
+      const allowed = Math.max(0, MAX_IMAGES - remainingExisting - prev.newFiles.length);
+      const toAdd = picked.slice(0, allowed);
+
+      if (!toAdd.length) {
+        setFormError(`الحد الأقصى للصور هو ${MAX_IMAGES}.`);
+        return prev;
+      }
+
+      return { ...prev, newFiles: [...prev.newFiles, ...toAdd] };
+    });
+    clearFormAiStatus();
+  };
+
+  const removeNewImage = (index) => {
+    setFormState((prev) => ({
+      ...prev,
+      newFiles: prev.newFiles.filter((_, i) => i !== index)
+    }));
+    clearFormAiStatus();
+  };
+
+  const toggleExistingImageRemoval = (imageId) => {
+    setFormState((prev) => {
+      const ids = prev.removeImageIds.includes(imageId)
+        ? prev.removeImageIds.filter((id) => id !== imageId)
+        : [...prev.removeImageIds, imageId];
+      return { ...prev, removeImageIds: ids };
+    });
+    clearFormAiStatus();
+  };
+
+  const onCustomerChange = (customerId) => {
+    const customer = customers.find((item) => String(item.id) === String(customerId));
+    setFormState((prev) => ({
+      ...prev,
+      customerId,
+      customerName: customer?.name || "",
+      pickupPoint: customer?.usual_pickup_point || prev.pickupPoint
+    }));
+  };
+
+  const submitPurchaseForm = async (event) => {
+    event.preventDefault();
+
+    if (!selectedOrder) {
+      setFormError("اختاري طلبًا أولًا.");
+      return;
+    }
+
+    const qty = Number(formState.qty);
+    const price = Number(formState.price);
+    const paidPrice = Number(formState.paidPrice);
+
+    if (!formState.customerId) {
+      setFormError("اختاري الزبون.");
+      return;
+    }
+    if (!Number.isInteger(qty) || qty < 1 || qty > 200) {
+      setFormError("عدد القطع يجب أن يكون بين 1 و 200.");
+      return;
+    }
+    if (!Number.isFinite(price) || price < 0) {
+      setFormError("السعر غير صالح.");
+      return;
+    }
+    if (!Number.isFinite(paidPrice) || paidPrice < 0) {
+      setFormError("السعر المدفوع غير صالح.");
+      return;
+    }
+
+    const normalizedLinks = sanitizeLinks(formState.links);
+    setFormSaving(true);
+    setFormError("");
+    setFormUploadProgress("");
+
+    try {
+      if (formMode === "add") {
+        const result = await createPurchaseWithRelations({
+          purchase: {
+            order_id: selectedOrder.id,
+            customer_id: formState.customerId,
+            customer_name: formState.customerName,
+            qty,
+            price,
+            paid_price: paidPrice,
+            bag_size: formState.bagSize,
+            pickup_point: formState.pickupPoint,
+            note: formState.note.trim()
+          },
+          links: normalizedLinks,
+          files: formState.newFiles,
+          onUploadProgress: (done, total) => {
+            setFormUploadProgress(`جاري رفع الصور ${done}/${total}...`);
+          }
+        });
+
+        if (result.uploadErrors.length) {
+          setToast({ type: "warn", text: "تمت الإضافة مع أخطاء في بعض الصور." });
+        } else {
+          setToast({ type: "success", text: "تمت إضافة المشترى." });
+        }
+      } else {
+        const removeImages = formState.existingImages.filter((img) =>
+          formState.removeImageIds.includes(img.id)
+        );
+
+        await updatePurchaseWithRelations({
+          purchaseId: formState.purchaseId,
+          purchasePatch: {
+            order_id: selectedOrder.id,
+            customer_id: formState.customerId,
+            customer_name: formState.customerName,
+            qty,
+            price,
+            paid_price: paidPrice,
+            bag_size: formState.bagSize,
+            pickup_point: formState.pickupPoint,
+            note: formState.note.trim()
+          },
+          links: normalizedLinks,
+          removeImages,
+          newFiles: formState.newFiles,
+          onUploadProgress: (done, total) => {
+            setFormUploadProgress(`جاري رفع الصور ${done}/${total}...`);
+          }
+        });
+
+        setToast({ type: "success", text: "تم تحديث المشترى." });
+      }
+
+      await refreshPurchases(selectedOrder.id);
+      await refreshOrders(selectedOrder.id);
+      setFormOpen(false);
+      setFormUploadProgress("");
+      clearFormAiStatus();
+    } catch (error) {
+      console.error(error);
+      setFormError(error?.message || "تعذر حفظ البيانات.");
+    } finally {
+      setFormSaving(false);
+    }
+  };
+
+  const handleDeletePurchase = async (purchase) => {
+    const ok = window.confirm("هل تريدين حذف هذا المشترى؟");
+    if (!ok) return;
+
+    setMenuPurchaseId("");
+
+    try {
+      await deletePurchaseById(purchase.id);
+
+      setDeleteSnapshot({
+        purchase: {
+          id: purchase.id,
+          order_id: purchase.order_id,
+          customer_id: purchase.customer_id,
+          customer_name: purchase.customer_name,
+          qty: purchase.qty,
+          price: purchase.price,
+          paid_price: purchase.paid_price,
+          bag_size: purchase.bag_size,
+          pickup_point: purchase.pickup_point,
+          note: purchase.note,
+          created_at: purchase.created_at
+        },
+        links: purchase.links || [],
+        images: (purchase.images || []).map((img) => ({
+          id: img.id,
+          storage_path: img.storage_path
+        }))
+      });
+
+      setToast({ type: "info", text: "تم حذف المشترى.", action: "تراجع" });
+      await refreshPurchases(selectedOrder.id);
+      await refreshOrders(selectedOrder.id);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: "فشل حذف المشترى." });
+    }
+  };
+
+  const undoDeletePurchase = async () => {
+    if (!deleteSnapshot || !selectedOrder) return;
+
+    try {
+      await restoreDeletedPurchase(deleteSnapshot);
+      setDeleteSnapshot(null);
+      setToast({ type: "success", text: "تم التراجع عن الحذف." });
+      await refreshPurchases(selectedOrder.id);
+      await refreshOrders(selectedOrder.id);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: "فشل التراجع عن الحذف." });
+    }
+  };
+
+  const handleMarkPaid = async (purchase) => {
+    try {
+      await markPurchasePaidPrice(purchase.id, parsePrice(purchase.price));
+      setToast({ type: "success", text: "تم تحديث المدفوع." });
+      setMenuPurchaseId("");
+      await refreshPurchases(selectedOrder.id);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: "فشل تحديث المدفوع." });
+    }
+  };
+
+  const handleToggleArrived = async () => {
+    if (!selectedOrder || !isRahaf) return;
+
+    const next = !selectedOrder.arrived;
+
+    try {
+      const { error } = await sb.from("orders").update({ arrived: next }).eq("id", selectedOrder.id);
+      if (error) throw error;
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          String(order.id) === String(selectedOrder.id)
+            ? { ...order, arrived: next, status: next ? "completed" : "pending" }
+            : order
+        )
+      );
+      setToast({ type: "success", text: next ? "تم تعليم الطلب كواصل." : "تمت إزالة حالة الوصول." });
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: "فشل تحديث حالة الوصول." });
+    }
+  };
+
+  const notifyViaWhatsapp = async (purchase) => {
+    if (!selectedOrder?.arrived || !isRahaf) {
+      setToast({ type: "warn", text: "يجب أن تكون الطلبية واصلة أولًا." });
+      return;
+    }
+
+    try {
+      const target = await resolvePurchaseWhatsappTarget(purchase);
+      const message = buildArrivalNotifyMessage({
+        pickupPoint: purchase.pickup_point,
+        price: purchase.price,
+        customerName: target.customerName
+      });
+      const url = `https://wa.me/${target.phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "تعذر فتح واتساب." });
+    }
+  };
+
+  const inquirePickupViaWhatsapp = async (purchase) => {
+    if (!selectedOrder?.arrived || !isRahaf) {
+      setToast({ type: "warn", text: "يجب أن تكون الطلبية واصلة أولًا." });
+      return;
+    }
+
+    try {
+      const target = await resolvePurchaseWhatsappTarget(purchase);
+      const message = buildPickupInquiryMessage();
+      const url = `https://wa.me/${target.phone}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "تعذر فتح واتساب." });
+    }
+  };
+
+  const analyzeFormImagesWithGemini = async () => {
+    if (!formOpen) {
+      setToast({ type: "warn", text: "افتحي نموذج الإضافة/التعديل أولًا." });
+      return;
+    }
+    if (!hasGeminiKey()) {
+      setFormAiStatus({ text: "مفتاح Gemini غير مضبوط.", isError: true });
+      return;
+    }
+
+    const files = formState.newFiles || [];
+    const existingUrls =
+      formMode === "edit"
+        ? (formState.existingImages || [])
+            .filter((img) => !formState.removeImageIds.includes(img.id))
+            .map((img) => img.url)
+            .filter(Boolean)
+        : [];
+
+    if (!files.length && !existingUrls.length) {
+      setFormAiStatus({ text: "أضيفي صورًا أولًا.", isError: true });
+      return;
+    }
+
+    setFormAiRunning(true);
+    setFormAiStatus({ text: "جاري التحليل...", isError: false });
+    setFormError("");
+
+    try {
+      const result = await runGeminiCartAnalysis({
+        files,
+        urls: existingUrls,
+        onProgress: (text) => setFormAiStatus({ text, isError: false })
+      });
+
+      const total = resolveTotalFromGemini(result);
+      if (!Number.isFinite(total) || total <= 0) {
+        throw new Error("لم يتم العثور على أسعار واضحة. جربي صورًا أوضح.");
+      }
+
+      const rounded = Math.round(total);
+      setFormState((prev) => ({
+        ...prev,
+        price: String(rounded),
+        paidPrice: String(rounded)
+      }));
+      setFormAiStatus({ text: `تم احتساب السعر: ${rounded}`, isError: false });
+    } catch (error) {
+      setFormAiStatus({ text: error?.message || "فشل التحليل.", isError: true });
+    } finally {
+      setFormAiRunning(false);
+    }
+  };
+
+  const handleGeminiToolbarAction = () => {
+    if (!isRahaf || !editMode) return;
+    if (!selectedOrder) {
+      setToast({ type: "warn", text: "اختاري طلبًا أولًا." });
+      return;
+    }
+    if (!formOpen) {
+      openAddModal();
+      setFormAiStatus({ text: "أضيفي صورًا ثم اضغطي «تحليل Gemini».", isError: false });
+      return;
+    }
+    analyzeFormImagesWithGemini();
+  };
+
+  const exportPdfNative = async () => {
+    if (!selectedOrder) return;
+    if (pdfExporting) return;
+
+    setPdfExporting(true);
+    try {
+      await exportOrderPdf({
+        order: selectedOrder,
+        purchases
+      });
+      setToast({ type: "success", text: "تم تصدير ملف PDF." });
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "فشل تصدير PDF." });
+    } finally {
+      setPdfExporting(false);
+    }
+  };
+
+  if (profile.loading) {
+    return (
+      <div className="orders-page orders-loading-screen" dir="rtl">
+        <div className="legacy-note">
+          <h2>جاري التحقق من الجلسة...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile.authenticated) {
+    return (
+      <div className="orders-page orders-loading-screen" dir="rtl">
+        <div className="legacy-note legacy-note-danger">
+          <h2>لا توجد جلسة نشطة</h2>
+          <p>يلزم تسجيل الدخول قبل استخدام واجهة React.</p>
+          <a href="#/legacy/login" className="mode auth-link">
+            فتح تسجيل الدخول
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canUseOrdersWorkbench) {
+    return (
+      <div className="orders-page orders-loading-screen" dir="rtl">
+        <div className="legacy-note legacy-note-danger">
+          <h2>لا يمكن فتح صفحة الطلبات</h2>
+          <p>
+            هذا الحساب لا يملك صلاحية صفحة الطلبات. سيتم تحويلك للصفحة المناسبة حسب الدور.
+          </p>
+          <a
+            href={profile.role === "laaura" ? "#/legacy/pickuppoint" : "#/legacy/login"}
+            className="mode auth-link"
+          >
+            متابعة
+          </a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="orders-page" dir="rtl">
+      <div
+        className={`global-overlay ${globalOpen ? "open" : ""}`}
+        onClick={() => setGlobalOpen(false)}
+      />
+
+      <aside className={`global-sidebar ${globalOpen ? "open" : ""}`}>
+        <div className="global-sidebar-head">
+          <div className="brand-chip">
+            <span className="brand-icon">SS</span>
+            <div>
+              <h2>She-Store</h2>
+              <p>{roleLabel(profile.role)}</p>
+            </div>
+          </div>
+          <button type="button" className="icon-btn" onClick={() => setGlobalOpen(false)}>
+            <Icon name="close" className="icon" />
+          </button>
+        </div>
+
+        <nav className="global-sidebar-nav">
+          {visibleNavItems.map((item) => (
+            <a
+              key={item.id}
+              className={`nav-item ${item.id === "orders" ? "active" : ""}`}
+              href={item.href}
+            >
+              <span className="icon-wrap">
+                <Icon name={item.icon} className="icon" />
+              </span>
+              <span>{item.label}</span>
+            </a>
+          ))}
+        </nav>
+
+        <button type="button" className="logout-btn" onClick={signOut}>
+          <Icon name="logout" className="icon" />
+          <span>تسجيل الخروج</span>
+        </button>
+      </aside>
+
+      <header className="command-header">
+        <div className="command-main">
+          {isRahaf ? (
+            <div className="tabs-shell" role="tablist" aria-label="التبويبات">
+              <button
+                className={`tab ${activeTab === "orders" ? "active" : ""}`}
+                onClick={() => setActiveTab("orders")}
+              >
+                الطلبات
+              </button>
+              <button
+                className={`tab ${activeTab === "view" ? "active" : ""}`}
+                onClick={() => setActiveTab("view")}
+              >
+                العرض
+              </button>
+              <button
+                className={`tab ${activeTab === "customers" ? "active" : ""}`}
+                onClick={() => setActiveTab("customers")}
+              >
+                العملاء
+              </button>
+            </div>
+          ) : (
+            <div className="readonly-chip">وضع العرض فقط</div>
+          )}
+
+          <div className="search-shell">
+            <Icon name="search" className="search-icon" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="بحث باسم الطلب..."
+            />
+            {search ? (
+              <span className="search-count">
+                <b>{searchCount}</b>
+                <small>نتيجة</small>
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="command-actions">
+          {isRahaf ? (
+            <div className="mode-shell">
+              <button className={`mode ${editMode ? "active" : ""}`} onClick={() => setEditMode(true)}>
+                تعديل / إضافة
+              </button>
+              <button className={`mode ${!editMode ? "active" : ""}`} onClick={() => setEditMode(false)}>
+                عرض فقط
+              </button>
+            </div>
+          ) : null}
+
+          <button type="button" className="icon-btn" onClick={() => setGlobalOpen(true)}>
+            <Icon name="menu" className="icon" />
+          </button>
+        </div>
+      </header>
+
+      <div className="workspace">
+        {!collapsed ? (
+          <aside className="workspace-sidebar" style={{ width: sidebarWidth }}>
+            <button
+              className="resize-handle"
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault();
+                setResizing(true);
+              }}
+              aria-label="تغيير عرض القائمة"
+            />
+
+            <div className="workspace-head">
+              <div className="workspace-brand">
+                <span className="cube-wrap"><Icon name="package" className="icon" /></span>
+                <div>
+                  <h3>الطلبات</h3>
+                  <p>{totalOrders} طلب</p>
+                </div>
+              </div>
+
+              <button className="icon-btn tiny" onClick={() => setCollapsed(true)}>
+                <Icon name="chevron-right" className="icon" />
+              </button>
+            </div>
+
+            <div className="workspace-list">
+              {ordersLoading ? (
+                <div className="workspace-empty">جاري تحميل الطلبات...</div>
+              ) : null}
+
+              {!ordersLoading && ordersError ? (
+                <div className="workspace-empty workspace-error">{ordersError}</div>
+              ) : null}
+
+              {!ordersLoading && !ordersError && !groupedOrders.length ? (
+                <div className="workspace-empty">لا توجد نتائج مطابقة.</div>
+              ) : null}
+
+              {!ordersLoading && !ordersError
+                ? groupedOrders.map((group) => (
+                    <section key={group.month} className="group-block">
+                      <div className="month-chip">
+                        <Icon name="calendar" className="icon" />
+                        <span>{group.month}</span>
+                        <b>({group.orders.length})</b>
+                      </div>
+
+                      <div className="group-orders">
+                        {group.orders.map((order) => {
+                          const selected = String(selectedOrderId) === String(order.id);
+
+                          return (
+                            <button
+                              key={order.id}
+                              type="button"
+                              className={`order-row ${selected ? "selected" : ""}`}
+                              onClick={() => {
+                                setSelectedOrderId(order.id);
+                                if (isRahaf) setActiveTab("orders");
+                              }}
+                            >
+                              <div className="order-main">
+                                <strong>{order.name}</strong>
+                                <span>#{order.orderNo}</span>
+                              </div>
+
+                              <div className="order-meta">
+                                <b>{order.amountLabel}</b>
+                                <small className={`status ${order.status}`}>{statusLabel(order.status)}</small>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                : null}
+            </div>
+          </aside>
+        ) : (
+          <aside className="workspace-collapsed">
+            <button className="icon-btn collapsed-expand" onClick={() => setCollapsed(false)}>
+              <Icon name="chevron-left" className="icon" />
+            </button>
+
+            <div className="collapsed-pill active-pill">
+              <Icon name="package" className="icon" />
+              <b>{totalOrders}</b>
+            </div>
+
+            {groupedOrders.slice(0, 4).map((group) => (
+              <div key={group.month} className="collapsed-pill">{group.orders.length}</div>
+            ))}
+          </aside>
+        )}
+
+        <section className="workspace-main">
+          {activeTab === "orders" ? (
+            <>
+              <div className="order-detail-header">
+                <div>
+                  <h2>{selectedOrder?.name || "اختاري طلبًا"}</h2>
+                  <p>
+                    عدد المشتريات: {purchaseStats.count} — مجموع القطع: {purchaseStats.totalQty} — مجموع الأسعار:{" "}
+                    {formatILS(purchaseStats.totalPrice)} ₪
+                  </p>
+                </div>
+
+                <div className="order-detail-actions">
+                  <input
+                    className="purchase-search"
+                    value={purchaseSearch}
+                    onChange={(event) => setPurchaseSearch(event.target.value)}
+                    placeholder="بحث داخل المشتريات..."
+                  />
+
+                  {isRahaf ? (
+                    <label className="arrived-toggle-chip">
+                      <input type="checkbox" checked={!!selectedOrder?.arrived} onChange={handleToggleArrived} />
+                      <span>تم وصول الطلب</span>
+                    </label>
+                  ) : null}
+
+                  {isRahaf && editMode ? (
+                    <button className="btn-primary" type="button" onClick={openAddModal}>
+                      + إضافة مشترى
+                    </button>
+                  ) : null}
+
+                  <button className="btn-ghost-light" type="button" onClick={exportPdfNative} disabled={pdfExporting}>
+                    {pdfExporting ? "جاري التصدير..." : "تصدير PDF"}
+                  </button>
+                  {isRahaf && editMode ? (
+                    <button className="btn-ghost-light" type="button" onClick={handleGeminiToolbarAction}>
+                      Gemini
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+
+              {customersError ? <div className="workspace-empty workspace-error">{customersError}</div> : null}
+              {purchasesLoading ? <div className="workspace-empty">جاري تحميل المشتريات...</div> : null}
+              {purchasesError ? <div className="workspace-empty workspace-error">{purchasesError}</div> : null}
+
+              {!purchasesLoading && !purchasesError && !filteredPurchases.length ? (
+                <div className="workspace-empty">لا توجد مشتريات مطابقة.</div>
+              ) : null}
+
+              {!purchasesLoading && !purchasesError && filteredPurchases.length ? (
+                <div className="purchase-cards-grid">
+                  {filteredPurchases.map((purchase) => {
+                    const state = paymentState(purchase);
+                    const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
+
+                    return (
+                      <article key={purchase.id} className="purchase-card" data-menu-root>
+                        <div className="purchase-card-head">
+                          <div>
+                            <h3>{purchase.customer_name || "—"}</h3>
+                            <p>
+                              {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
+                            </p>
+                          </div>
+
+                          <div className="purchase-head-actions">
+                            <span className={`status-chip ${state.key}`}>{state.label}</span>
+
+                            {isRahaf && editMode ? (
+                              <div className="purchase-menu-wrap" data-menu-root>
+                                <button
+                                  type="button"
+                                  className="icon-btn menu-dots"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    setMenuPurchaseId((prev) => (prev === purchase.id ? "" : purchase.id));
+                                  }}
+                                  aria-label="إجراءات"
+                                >
+                                  ⋯
+                                </button>
+
+                                {String(menuPurchaseId) === String(purchase.id) ? (
+                                  <div className="purchase-menu-pop">
+                                    <button type="button" onClick={() => openEditModal(purchase)}>
+                                      تعديل
+                                    </button>
+                                    <button type="button" onClick={() => handleMarkPaid(purchase)}>
+                                      تعديل المدفوع
+                                    </button>
+                                    <button type="button" className="danger" onClick={() => handleDeletePurchase(purchase)}>
+                                      حذف
+                                    </button>
+                                  </div>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="purchase-meta-list">
+                          <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
+                          <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
+                          <span>حجم الكيس: {purchase.bag_size || "—"}</span>
+                          <span>ملاحظة: {purchase.note || "—"}</span>
+                        </div>
+
+                        {purchase.links?.length ? (
+                          <div className="purchase-links-wrap">
+                            {purchase.links.map((link, index) => (
+                              <a key={`${purchase.id}-link-${index}`} href={link} target="_blank" rel="noreferrer">
+                                رابط {index + 1}
+                              </a>
+                            ))}
+                          </div>
+                        ) : null}
+
+                        {purchase.images?.length ? (
+                          <div className="purchase-image-strip">
+                            {purchase.images.map((img, imageIndex) => (
+                              <button
+                                key={img.id || `${purchase.id}-img-${imageIndex}`}
+                                type="button"
+                                className="purchase-image-thumb"
+                                onClick={() =>
+                                  setLightbox({
+                                    open: true,
+                                    images: purchase.images,
+                                    index: imageIndex,
+                                    title: purchase.customer_name || "صورة"
+                                  })
+                                }
+                              >
+                                <img src={img.url} alt="صورة المشترى" />
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="purchase-empty-images">لا توجد صور</div>
+                        )}
+
+                        {canShowWhatsapp ? (
+                          <div className="wa-actions-row">
+                            <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => inquirePickupViaWhatsapp(purchase)}>
+                              استعلام عن نقطة الاستلام❓
+                            </button>
+                            <button type="button" className="wa-btn wa-btn-notify" onClick={() => notifyViaWhatsapp(purchase)}>
+                              اعلام بوصول الطلب🔔
+                            </button>
+                          </div>
+                        ) : null}
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : null}
+            </>
+          ) : activeTab === "customers" ? (
+            <CustomersTab
+              customerSearch={customerSearch}
+              setCustomerSearch={setCustomerSearch}
+              customers={customers}
+              customersLoading={customersLoading}
+              customersError={customersError}
+              filteredCustomers={filteredCustomers}
+              customerForm={customerForm}
+              setCustomerForm={setCustomerForm}
+              customerFormMessage={customerFormMessage}
+              customerFormSaving={customerFormSaving}
+              handleCreateCustomer={handleCreateCustomer}
+              editingCustomerId={editingCustomerId}
+              editingCustomerForm={editingCustomerForm}
+              setEditingCustomerForm={setEditingCustomerForm}
+              beginEditCustomer={beginEditCustomer}
+              saveEditCustomer={saveEditCustomer}
+              cancelEditCustomer={cancelEditCustomer}
+              handleDeleteCustomer={handleDeleteCustomer}
+              cityOptions={CUSTOMER_CITIES}
+              pickupOptions={CUSTOMER_PICKUP_OPTIONS}
+            />
+          ) : activeTab === "view" ? (
+            <ViewTab
+              role={profile.role}
+              onOpenLightbox={(images, index, title) =>
+                setLightbox({ open: true, images, index, title: title || "صورة" })
+              }
+              onToast={setToast}
+            />
+          ) : (
+            <>
+              <div className="legacy-note">
+                <h2>تبويب قديم (Legacy)</h2>
+                <p>هذا التبويب ما زال يعمل من النظام القديم حتى ننتهي من نقله إلى React.</p>
+              </div>
+              <iframe
+                ref={frameRef}
+                className="legacy-frame"
+                title="Legacy Orders"
+                src="legacy/index.html"
+              />
+            </>
+          )}
+        </section>
+      </div>
+
+      {formOpen ? (
+        <div className="purchase-modal-backdrop" onClick={closeFormModal}>
+          <div className="purchase-modal-card" onClick={(event) => event.stopPropagation()}>
+            <div className="purchase-modal-head">
+              <h3>{formMode === "add" ? "إضافة مشترى" : "تعديل المشترى"}</h3>
+              <button type="button" className="icon-btn tiny" onClick={closeFormModal}>
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <form className="purchase-modal-body" onSubmit={submitPurchaseForm}>
+              <div className="modal-grid-two">
+                <label>
+                  <span>الزبون</span>
+                  <select
+                    value={formState.customerId}
+                    onChange={(event) => onCustomerChange(event.target.value)}
+                    disabled={customersLoading || formSaving}
+                  >
+                    <option value="">اختاري الزبون</option>
+                    {customers.map((customer) => (
+                      <option key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>عدد القطع</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="200"
+                    value={formState.qty}
+                    onChange={(event) => updateForm({ qty: event.target.value })}
+                    disabled={formSaving}
+                  />
+                </label>
+
+                <label>
+                  <span>السعر</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formState.price}
+                    onChange={(event) => updateForm({ price: event.target.value })}
+                    disabled={formSaving}
+                  />
+                </label>
+
+                <label>
+                  <span>المدفوع</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formState.paidPrice}
+                    onChange={(event) => updateForm({ paidPrice: event.target.value })}
+                    disabled={formSaving}
+                  />
+                </label>
+
+                <label>
+                  <span>حجم الكيس</span>
+                  <select
+                    value={formState.bagSize}
+                    onChange={(event) => updateForm({ bagSize: event.target.value })}
+                    disabled={formSaving}
+                  >
+                    {BAG_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  <span>مكان الاستلام</span>
+                  <select
+                    value={formState.pickupPoint}
+                    onChange={(event) => updateForm({ pickupPoint: event.target.value })}
+                    disabled={formSaving}
+                  >
+                    {PICKUP_OPTIONS.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <label>
+                <span>ملاحظة</span>
+                <textarea
+                  value={formState.note}
+                  onChange={(event) => updateForm({ note: event.target.value })}
+                  placeholder="اكتبي أي ملاحظة..."
+                  disabled={formSaving}
+                />
+              </label>
+
+              <div className="modal-links-head">
+                <strong>روابط السلة</strong>
+                <div className="row-inline">
+                  <button type="button" className="btn-ghost-light" onClick={addLinkInput} disabled={formSaving}>
+                    + رابط
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-ghost-light"
+                    onClick={removeLinkInput}
+                    disabled={formSaving || formState.links.length <= 1}
+                  >
+                    − رابط
+                  </button>
+                </div>
+              </div>
+
+              <div className="modal-links-grid">
+                {formState.links.map((link, index) => (
+                  <input
+                    key={`form-link-${index}`}
+                    value={link}
+                    onChange={(event) => updateLinkValue(index, event.target.value)}
+                    placeholder={`رابط ${index + 1}`}
+                    disabled={formSaving}
+                  />
+                ))}
+              </div>
+
+              <div className="modal-images-wrap">
+                <div className="modal-images-head">
+                  <strong>الصور ({formState.newFiles.length}/{MAX_IMAGES})</strong>
+                  <div className="modal-images-actions">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={(event) => {
+                        addNewImages(event.target.files);
+                        event.target.value = "";
+                      }}
+                      disabled={formSaving || formAiRunning}
+                    />
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={analyzeFormImagesWithGemini}
+                      disabled={formSaving || formAiRunning}
+                    >
+                      {formAiRunning ? "جاري التحليل..." : "تحليل Gemini"}
+                    </button>
+                  </div>
+                </div>
+
+                {formMode === "edit" && formState.existingImages.length ? (
+                  <div className="modal-existing-images">
+                    {formState.existingImages.map((img) => {
+                      const removed = formState.removeImageIds.includes(img.id);
+                      return (
+                        <button
+                          key={img.id}
+                          type="button"
+                          className={`modal-existing-image ${removed ? "removed" : ""}`}
+                          onClick={() => toggleExistingImageRemoval(img.id)}
+                          disabled={formSaving || formAiRunning}
+                        >
+                          <img src={img.url} alt="صورة موجودة" />
+                          <span>{removed ? "سيتم الحذف" : "موجودة"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {formState.newFiles.length ? (
+                  <div className="modal-new-images">
+                    {newFilePreviews.map((item, index) => (
+                      <div key={item.key} className="modal-new-image">
+                        <img src={item.url} alt="صورة جديدة" />
+                        <button type="button" onClick={() => removeNewImage(index)} disabled={formSaving || formAiRunning}>
+                          حذف
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+
+              {formAiStatus.text ? (
+                <div className={`modal-help ${formAiStatus.isError ? "modal-help-error" : ""}`}>
+                  {formAiStatus.text}
+                </div>
+              ) : null}
+              {formUploadProgress ? <div className="modal-help">{formUploadProgress}</div> : null}
+              {formError ? <div className="modal-error">{formError}</div> : null}
+
+              <div className="purchase-modal-foot">
+                <button type="submit" className="btn-primary" disabled={formSaving || formAiRunning}>
+                  {formSaving ? "جاري الحفظ..." : "حفظ"}
+                </button>
+                <button type="button" className="btn-ghost-light" onClick={closeFormModal} disabled={formSaving || formAiRunning}>
+                  إلغاء
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
+
+      {lightbox.open && lightbox.images.length ? (
+        <div className="purchase-modal-backdrop" onClick={() => setLightbox({ open: false, images: [], index: 0, title: "" })}>
+          <div className="lightbox-card" onClick={(event) => event.stopPropagation()}>
+            <div className="lightbox-head">
+              <strong>{lightbox.title}</strong>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={() => setLightbox({ open: false, images: [], index: 0, title: "" })}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="lightbox-body">
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() =>
+                  setLightbox((prev) => ({
+                    ...prev,
+                    index: (prev.index - 1 + prev.images.length) % prev.images.length
+                  }))
+                }
+              >
+                <Icon name="chevron-right" className="icon" />
+              </button>
+
+              <img src={lightbox.images[lightbox.index]?.url} alt="صورة" />
+
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={() =>
+                  setLightbox((prev) => ({
+                    ...prev,
+                    index: (prev.index + 1) % prev.images.length
+                  }))
+                }
+              >
+                <Icon name="chevron-left" className="icon" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {toast ? (
+        <div className={`toast toast-${toast.type || "info"}`}>
+          <span>{toast.text}</span>
+          {toast.action === "تراجع" ? (
+            <button type="button" onClick={undoDeletePurchase}>
+              تراجع
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  );
+}

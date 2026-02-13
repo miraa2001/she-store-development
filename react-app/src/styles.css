@@ -1,0 +1,175 @@
+﻿:root {
+  font-family: Alexandria, system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.4;
+  color: #111827;
+  background: #f3f5f4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+.app-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.hero {
+  background: #ffffff;
+  border: 1px solid #dde7e3;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 3vw, 34px);
+}
+
+.hero p {
+  margin: 0;
+  color: #556070;
+}
+
+.quick-links h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+}
+
+.quick-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hero code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #f4f7f6;
+  border: 1px solid #d9e5e0;
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  background: #ffffff;
+  border: 1px solid #dde7e3;
+  border-radius: 14px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.card h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.card p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-width: 110px;
+  border: 0;
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: linear-gradient(135deg, #4f8a7b, #3d6f61);
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-ghost {
+  background: #ffffff;
+  border: 1px solid #d6e2dd;
+  color: #1f2937;
+}
+
+.legacy-shell {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 16px;
+  gap: 12px;
+}
+
+.legacy-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid #dce7e2;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.legacy-topbar h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.legacy-topbar p {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 13px;
+}
+
+.legacy-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.legacy-frame {
+  width: 100%;
+  height: calc(100dvh - 108px);
+  border: 1px solid #dce7e2;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+@media (max-width: 760px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .legacy-shell {
+    padding: 10px;
+  }
+
+  .legacy-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .legacy-actions {
+    width: 100%;
+  }
+
+  .legacy-actions .btn {
+    flex: 1;
+  }
+}
