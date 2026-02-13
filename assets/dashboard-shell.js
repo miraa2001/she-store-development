@@ -347,8 +347,23 @@
     const sidebar = document.getElementById("sidebar");
     if(!sidebar) return;
 
+    const syncSidebarOpenState = ()=>{
+      const isOpen = sidebar.classList.contains("open") || (overlay && overlay.classList.contains("open"));
+      document.body.classList.toggle("ss-ui-sidebar-open", !!isOpen);
+    };
+
     enhanceSidebarHeader(sidebar);
     decorateSidebarContent();
+    syncSidebarOpenState();
+
+    if(sidebar.dataset.uiOpenObserved !== "1"){
+      const openObserver = new MutationObserver(syncSidebarOpenState);
+      openObserver.observe(sidebar, { attributes:true, attributeFilter:["class"] });
+      if(overlay) openObserver.observe(overlay, { attributes:true, attributeFilter:["class"] });
+      window.addEventListener("pageshow", syncSidebarOpenState);
+      window.addEventListener("resize", syncSidebarOpenState);
+      sidebar.dataset.uiOpenObserved = "1";
+    }
 
     const content = document.getElementById("sidebarContent");
     if(content && content.dataset.uiObserved !== "1"){
