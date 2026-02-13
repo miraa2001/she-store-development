@@ -2,7 +2,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { sb } from "../lib/supabaseClient";
 import {
   createPurchaseWithRelations,
@@ -273,13 +273,7 @@ export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(true);
   const [selectedOrderId, setSelectedOrderId] = useState("");
-
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer",
-    email: ""
-  });
+  const { profile } = useAuthProfile();
 
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
@@ -436,34 +430,6 @@ export default function OrdersPage() {
     } finally {
       setPurchasesLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function init() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role,
-          email: result.email
-        });
-      } catch (error) {
-        console.error(error);
-        if (!mounted) return;
-        setProfile({ loading: false, authenticated: false, role: "viewer", email: "" });
-      }
-    }
-
-    init();
-
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   useEffect(() => {

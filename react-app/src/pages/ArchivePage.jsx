@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatILS, parsePrice } from "../lib/orders";
 import { sb } from "../lib/supabaseClient";
 import "./archive-page.css";
@@ -16,11 +16,7 @@ function cleanupMessage(kind, count = 0) {
 }
 
 export default function ArchivePage() {
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer"
-  });
+  const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -37,35 +33,6 @@ export default function ArchivePage() {
     () => orders.reduce((sum, order) => sum + (order.totalPaid || 0), 0),
     [orders]
   );
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function initProfile() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role
-        });
-      } catch (err) {
-        console.error(err);
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: false,
-          role: "viewer"
-        });
-      }
-    }
-
-    initProfile();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event) => {

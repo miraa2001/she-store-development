@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { sb } from "../lib/supabaseClient";
 import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
@@ -46,12 +46,7 @@ function getRoleSidebarLinks(role) {
 }
 
 export default function PickupDashboardPage() {
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer",
-    email: ""
-  });
+  const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [loadedTabs, setLoadedTabs] = useState([]);
@@ -59,37 +54,6 @@ export default function PickupDashboardPage() {
   const roleTabs = useMemo(() => getRoleTabs(profile.role), [profile.role]);
   const sidebarLinks = useMemo(() => getRoleSidebarLinks(profile.role), [profile.role]);
   const showSidebar = profile.role !== "laaura";
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function init() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role,
-          email: result.email
-        });
-      } catch (error) {
-        console.error(error);
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: false,
-          role: "viewer",
-          email: ""
-        });
-      }
-    }
-
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const firstTab = roleTabs[0];

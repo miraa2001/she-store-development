@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatILS, parsePrice } from "../lib/orders";
 import { sb } from "../lib/supabaseClient";
 import "./collections-page.css";
@@ -8,11 +8,7 @@ const HOME_PICKUP_VALUE = "من البيت";
 const PICKUP_VALUE = "من نقطة الاستلام";
 
 export default function CollectionsPage({ embedded = false }) {
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer"
-  });
+  const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
@@ -43,35 +39,6 @@ export default function CollectionsPage({ embedded = false }) {
   );
 
   const grandTotal = homeTotal + pickupTotal;
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function initProfile() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role
-        });
-      } catch (err) {
-        console.error(err);
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: false,
-          role: "viewer"
-        });
-      }
-    }
-
-    initProfile();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event) => {

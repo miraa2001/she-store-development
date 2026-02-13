@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatILS, parsePrice } from "../lib/orders";
 import { sb } from "../lib/supabaseClient";
 import "./pickuppoint-page.css";
@@ -107,11 +107,7 @@ function notifyPickup(message) {
 }
 
 export default function PickupPointPage({ embedded = false }) {
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer"
-  });
+  const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
@@ -156,35 +152,6 @@ export default function PickupPointPage({ embedded = false }) {
         .reduce((sum, purchase) => sum + parsePrice(purchase.paid_price ?? purchase.price), 0),
     [visiblePurchases]
   );
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function initProfile() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role
-        });
-      } catch (err) {
-        console.error(err);
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: false,
-          role: "viewer"
-        });
-      }
-    }
-
-    initProfile();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event) => {

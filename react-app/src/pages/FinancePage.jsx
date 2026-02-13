@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { getCurrentUserProfile } from "../lib/auth";
+import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatILS, parsePrice } from "../lib/orders";
 import { sb } from "../lib/supabaseClient";
 import "./finance-page.css";
@@ -144,11 +144,7 @@ function topPickupPoint(pickupTotals) {
 }
 
 export default function FinancePage({ embedded = false }) {
-  const [profile, setProfile] = useState({
-    loading: true,
-    authenticated: false,
-    role: "viewer"
-  });
+  const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [purchases, setPurchases] = useState([]);
@@ -163,31 +159,6 @@ export default function FinancePage({ embedded = false }) {
   const [selectedMonthKey, setSelectedMonthKey] = useState("");
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
   const [chartMode, setChartMode] = useState("status");
-
-  useEffect(() => {
-    let mounted = true;
-
-    async function init() {
-      try {
-        const result = await getCurrentUserProfile();
-        if (!mounted) return;
-        setProfile({
-          loading: false,
-          authenticated: result.authenticated,
-          role: result.role
-        });
-      } catch (err) {
-        console.error(err);
-        if (!mounted) return;
-        setProfile({ loading: false, authenticated: false, role: "viewer" });
-      }
-    }
-
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     const onKeyDown = (event) => {
