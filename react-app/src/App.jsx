@@ -1,4 +1,5 @@
-﻿import { Link, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import SessionTimeoutGuard from "./components/SessionTimeoutGuard";
 import OrdersPage from "./pages/OrdersPage";
 import PickupDashboardPage from "./pages/PickupDashboardPage";
 import FinancePage from "./pages/FinancePage";
@@ -110,18 +111,21 @@ function LegacyFrame() {
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/orders" element={<OrdersPage />} />
-      <Route path="/pickup-dashboard" element={<PickupDashboardPage />} />
-      <Route path="/finance" element={<FinancePage />} />
-      <Route path="/archive" element={<ArchivePage />} />
-      <Route path="/collections" element={<CollectionsPage />} />
-      <Route path="/homepickup" element={<HomePickupPage />} />
-      <Route path="/pickuppoint" element={<PickupPointPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/legacy/:page" element={<LegacyFrame />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <SessionTimeoutGuard />
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/orders" element={<OrdersPage />} />
+        <Route path="/pickup-dashboard" element={<PickupDashboardPage />} />
+        <Route path="/finance" element={<FinancePage />} />
+        <Route path="/archive" element={<ArchivePage />} />
+        <Route path="/collections" element={<CollectionsPage />} />
+        <Route path="/homepickup" element={<HomePickupPage />} />
+        <Route path="/pickuppoint" element={<PickupPointPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/legacy/:page" element={<LegacyFrame />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }
