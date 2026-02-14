@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
@@ -291,6 +291,7 @@ export default function OrdersPage() {
   const [toast, setToast] = useState(null);
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
+  const hasInitializedUrlState = useRef(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -305,7 +306,10 @@ export default function OrdersPage() {
   const isRahaf = profile.role === "rahaf";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
-  const allowedTabs = isRahaf ? ["orders", "view", "customers"] : ["orders"];
+  const allowedTabs = useMemo(
+    () => (isRahaf ? ["orders", "view", "customers"] : ["orders"]),
+    [isRahaf]
+  );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
 
@@ -427,18 +431,27 @@ export default function OrdersPage() {
     const tabFromUrl = params.get("tab");
     const modeFromUrl = params.get("mode");
 
-    if (tabFromUrl && allowedTabs.includes(tabFromUrl) && tabFromUrl !== activeTab) {
-      setActiveTab(tabFromUrl);
+    if (tabFromUrl && allowedTabs.includes(tabFromUrl)) {
+      setActiveTab((prev) => (prev === tabFromUrl ? prev : tabFromUrl));
     }
 
     if (isRahaf && modeFromUrl) {
-      if (modeFromUrl === "edit" && !editMode) setEditMode(true);
-      if (modeFromUrl === "view" && editMode) setEditMode(false);
+      const shouldEdit = modeFromUrl === "edit";
+      const shouldView = modeFromUrl === "view";
+      if (shouldEdit || shouldView) {
+        setEditMode((prev) => {
+          const next = shouldEdit;
+          return prev === next ? prev : next;
+        });
+      }
     }
-  }, [activeTab, allowedTabs, editMode, isRahaf, location.search]);
+
+    hasInitializedUrlState.current = true;
+  }, [allowedTabs, isRahaf, location.search]);
 
   useEffect(() => {
     if (!profile.authenticated) return;
+    if (!hasInitializedUrlState.current) return;
 
     const params = new URLSearchParams(location.search);
     let changed = false;
@@ -462,7 +475,7 @@ export default function OrdersPage() {
     if (!changed) return;
     const query = params.toString();
     navigate(query ? `${location.pathname}?${query}` : location.pathname, { replace: true });
-  }, [activeTab, editMode, isRahaf, location.pathname, location.search, navigate, profile.authenticated]);
+  }, [activeTab, editMode, isRahaf, location.pathname, navigate, profile.authenticated]);
 
   useEffect(() => {
     if (allowedTabs.includes(activeTab)) return;

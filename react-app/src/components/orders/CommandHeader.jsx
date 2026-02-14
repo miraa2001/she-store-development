@@ -15,13 +15,13 @@ export default function CommandHeader({
       <div className="command-main">
         {isRahaf ? (
           <div className="tabs-shell" role="tablist" aria-label="التبويبات">
-            <button className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
+            <button type="button" className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
               الطلبات
             </button>
-            <button className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
+            <button type="button" className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
               العرض
             </button>
-            <button className={`tab ${activeTab === "customers" ? "active" : ""}`} onClick={() => onActiveTabChange("customers")}>
+            <button type="button" className={`tab ${activeTab === "customers" ? "active" : ""}`} onClick={() => onActiveTabChange("customers")}>
               العملاء
             </button>
           </div>
@@ -44,10 +44,10 @@ export default function CommandHeader({
       <div className="command-actions">
         {isRahaf ? (
           <div className="mode-shell">
-            <button className={`mode ${editMode ? "active" : ""}`} onClick={() => onEditModeChange(true)}>
+            <button type="button" className={`mode ${editMode ? "active" : ""}`} onClick={() => onEditModeChange(true)}>
               تعديل / إضافة
             </button>
-            <button className={`mode ${!editMode ? "active" : ""}`} onClick={() => onEditModeChange(false)}>
+            <button type="button" className={`mode ${!editMode ? "active" : ""}`} onClick={() => onEditModeChange(false)}>
               عرض فقط
             </button>
           </div>

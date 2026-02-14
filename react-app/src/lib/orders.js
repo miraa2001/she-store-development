@@ -81,7 +81,7 @@ export async function fetchOrdersWithSummary() {
     return {
       ...order,
       amountRaw: total,
-      amountLabel: `${formatILS(total)} ر.س`,
+      amountLabel: `${formatILS(total)} ₪`,
       status: order.arrived ? "completed" : "pending"
     };
   });
