@@ -1,4 +1,10 @@
+import { useState } from "react";
 import { formatILS } from "../../lib/orders";
+
+function normalizeSlideIndex(index, total) {
+  if (!total) return 0;
+  return ((Number(index) || 0) % total + total) % total;
+}
 
 export default function OrdersTab({
   selectedOrder,
@@ -26,6 +32,16 @@ export default function OrdersTab({
   onInquireWhatsapp,
   onNotifyWhatsapp
 }) {
+  const [cardSlideIndexes, setCardSlideIndexes] = useState({});
+
+  const setSlideIndex = (purchaseId, total, nextIndex) => {
+    const normalized = normalizeSlideIndex(nextIndex, total);
+    setCardSlideIndexes((prev) => {
+      if (prev[purchaseId] === normalized) return prev;
+      return { ...prev, [purchaseId]: normalized };
+    });
+  };
+
   return (
     <>
       <div className="order-detail-header">
@@ -82,96 +98,233 @@ export default function OrdersTab({
           {filteredPurchases.map((purchase) => {
             const state = paymentState(purchase);
             const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
+            const imageList = Array.isArray(purchase.images)
+              ? purchase.images.filter((img) => img?.url)
+              : [];
+            const totalImages = imageList.length;
+            const currentSlide = normalizeSlideIndex(cardSlideIndexes[purchase.id] || 0, totalImages);
 
-            return (
-              <article key={purchase.id} className="purchase-card" data-menu-root>
-                <div className="purchase-card-head">
-                  <div>
-                    <h3>{purchase.customer_name || "—"}</h3>
-                    <p>
-                      {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
-                    </p>
-                  </div>
+            const actionsNode = (
+              <div className="purchase-head-actions">
+                <span className={`status-chip ${state.key}`}>{state.label}</span>
 
-                  <div className="purchase-head-actions">
-                    <span className={`status-chip ${state.key}`}>{state.label}</span>
+                {isRahaf && editMode ? (
+                  <div className="purchase-menu-wrap" data-menu-root>
+                    <button
+                      type="button"
+                      className="icon-btn menu-dots"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onTogglePurchaseMenu(purchase.id);
+                      }}
+                      aria-label="إجراءات"
+                    >
+                      ⋯
+                    </button>
 
-                    {isRahaf && editMode ? (
-                      <div className="purchase-menu-wrap" data-menu-root>
+                    {String(menuPurchaseId) === String(purchase.id) ? (
+                      <div className="purchase-menu-pop" role="menu">
+                        <button type="button" className="value" role="menuitem" onClick={() => onEditPurchase(purchase)}>
+                          تعديل
+                        </button>
+                        <button type="button" className="value" role="menuitem" onClick={() => onMarkPaid(purchase)}>
+                          تعديل المدفوع
+                        </button>
                         <button
                           type="button"
-                          className="icon-btn menu-dots"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            onTogglePurchaseMenu(purchase.id);
-                          }}
-                          aria-label="إجراءات"
+                          className="value danger"
+                          role="menuitem"
+                          onClick={() => onDeletePurchase(purchase)}
                         >
-                          ⋯
+                          حذف
                         </button>
-
-                        {String(menuPurchaseId) === String(purchase.id) ? (
-                          <div className="purchase-menu-pop">
-                            <button type="button" onClick={() => onEditPurchase(purchase)}>
-                              تعديل
-                            </button>
-                            <button type="button" onClick={() => onMarkPaid(purchase)}>
-                              تعديل المدفوع
-                            </button>
-                            <button type="button" className="danger" onClick={() => onDeletePurchase(purchase)}>
-                              حذف
-                            </button>
-                          </div>
-                        ) : null}
                       </div>
                     ) : null}
                   </div>
-                </div>
-
-                <div className="purchase-meta-list">
-                  <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
-                  <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
-                  <span>حجم الكيس: {purchase.bag_size || "—"}</span>
-                  <span>ملاحظة: {purchase.note || "—"}</span>
-                </div>
-
-                {purchase.links?.length ? (
-                  <div className="purchase-links-wrap">
-                    {purchase.links.map((link, index) => (
-                      <a key={`${purchase.id}-link-${index}`} href={link} target="_blank" rel="noreferrer">
-                        رابط {index + 1}
-                      </a>
-                    ))}
-                  </div>
                 ) : null}
+              </div>
+            );
 
-                {purchase.images?.length ? (
-                  <div className="purchase-image-strip">
-                    {purchase.images.map((img, imageIndex) => (
-                      <button
-                        key={img.id || `${purchase.id}-img-${imageIndex}`}
-                        type="button"
-                        className="purchase-image-thumb"
-                        onClick={() => onOpenLightbox(purchase.images, imageIndex, purchase.customer_name || "صورة")}
-                      >
-                        <img src={img.url} alt="صورة المشترى" />
+            return (
+              <article key={purchase.id} className="purchase-card" data-menu-root>
+                <div className="purchase-desktop-shell">
+                  <article className="purchaseVCard">
+                    <div className="purchaseVMedia" dir="ltr">
+                      {totalImages ? (
+                        <>
+                          <div className="purchaseVTrack" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
+                            {imageList.map((img, index) => (
+                              <button
+                                key={img.id || `${purchase.id}-slide-${index}`}
+                                type="button"
+                                className="purchaseVSlide"
+                                onClick={() =>
+                                  onOpenLightbox(imageList, index, purchase.customer_name || "صورة المشترى")
+                                }
+                                aria-label={`عرض الصورة ${index + 1}`}
+                              >
+                                <img src={img.url} alt={`صورة ${index + 1}`} loading="lazy" />
+                              </button>
+                            ))}
+                          </div>
+
+                          {totalImages > 1 ? (
+                            <>
+                              <button
+                                className="purchaseVNav prev"
+                                type="button"
+                                aria-label="الصورة السابقة"
+                                onClick={() => setSlideIndex(purchase.id, totalImages, currentSlide - 1)}
+                              >
+                                ‹
+                              </button>
+                              <button
+                                className="purchaseVNav next"
+                                type="button"
+                                aria-label="الصورة التالية"
+                                onClick={() => setSlideIndex(purchase.id, totalImages, currentSlide + 1)}
+                              >
+                                ›
+                              </button>
+                              <div className="purchaseVDots">
+                                {imageList.map((img, index) => (
+                                  <button
+                                    key={img.id || `${purchase.id}-dot-${index}`}
+                                    type="button"
+                                    className={`purchaseVDot ${index === currentSlide ? "is-active" : ""}`}
+                                    aria-label={`الانتقال للصورة ${index + 1}`}
+                                    onClick={() => setSlideIndex(purchase.id, totalImages, index)}
+                                  />
+                                ))}
+                              </div>
+                            </>
+                          ) : null}
+
+                          <span className="purchaseVCount">
+                            {currentSlide + 1}/{totalImages}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="purchaseVPlaceholder">لا توجد صور</div>
+                      )}
+
+                      <div className="purchaseVOverlay">{actionsNode}</div>
+                    </div>
+
+                    <div className="purchaseVBody" dir="rtl">
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">الاسم</p>
+                        <p className="purchaseVValue">{purchase.customer_name || "—"}</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">عدد القطع</p>
+                        <p className="purchaseVValue">{purchase.qty || 0}</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">السعر</p>
+                        <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">السعر المدفوع</p>
+                        <p className="purchaseVValue paid">{formatILS(purchase.paid_price)} ₪</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">مكان الاستلام</p>
+                        <p className="purchaseVValue">{purchase.pickup_point || "—"}</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">حجم الكيس</p>
+                        <p className="purchaseVValue">{purchase.bag_size || "—"}</p>
+                      </div>
+                      {purchase.note ? (
+                        <div className="purchaseVField">
+                          <p className="purchaseVLabel">ملاحظة</p>
+                          <p className="purchaseVValue">{purchase.note}</p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    {purchase.links?.length ? (
+                      <div className="purchaseVLinks">
+                        {purchase.links.map((link, index) => (
+                          <a key={`${purchase.id}-v-link-${index}`} href={link} target="_blank" rel="noreferrer">
+                            رابط {index + 1}
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+
+                    {canShowWhatsapp ? (
+                      <div className="wa-actions-row purchaseVWa">
+                        <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
+                          استعلام عن نقطة الاستلام❓
+                        </button>
+                        <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
+                          اعلام بوصول الطلب🔔
+                        </button>
+                      </div>
+                    ) : null}
+                  </article>
+                </div>
+
+                <div className="purchase-mobile-shell">
+                  <div className="purchase-card-head">
+                    <div>
+                      <h3>{purchase.customer_name || "—"}</h3>
+                      <p>
+                        {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
+                      </p>
+                    </div>
+                    {actionsNode}
+                  </div>
+
+                  <div className="purchase-meta-list">
+                    <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
+                    <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
+                    <span>حجم الكيس: {purchase.bag_size || "—"}</span>
+                    <span>ملاحظة: {purchase.note || "—"}</span>
+                  </div>
+
+                  {purchase.links?.length ? (
+                    <div className="purchase-links-wrap">
+                      {purchase.links.map((link, index) => (
+                        <a key={`${purchase.id}-link-${index}`} href={link} target="_blank" rel="noreferrer">
+                          رابط {index + 1}
+                        </a>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {imageList.length ? (
+                    <div className="purchase-image-strip">
+                      {imageList.map((img, imageIndex) => (
+                        <button
+                          key={img.id || `${purchase.id}-img-${imageIndex}`}
+                          type="button"
+                          className="purchase-image-thumb"
+                          onClick={() =>
+                            onOpenLightbox(imageList, imageIndex, purchase.customer_name || "صورة المشترى")
+                          }
+                        >
+                          <img src={img.url} alt="صورة المشترى" loading="lazy" />
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="purchase-empty-images">لا توجد صور</div>
+                  )}
+
+                  {canShowWhatsapp ? (
+                    <div className="wa-actions-row">
+                      <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
+                        استعلام عن نقطة الاستلام❓
                       </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="purchase-empty-images">لا توجد صور</div>
-                )}
-
-                {canShowWhatsapp ? (
-                  <div className="wa-actions-row">
-                    <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                      استعلام عن نقطة الاستلام❓
-                    </button>
-                    <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                      اعلام بوصول الطلب🔔
-                    </button>
-                  </div>
-                ) : null}
+                      <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
+                        اعلام بوصول الطلب🔔
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </article>
             );
           })}
