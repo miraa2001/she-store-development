@@ -1,29 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatDMY, formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
-import { isAuraPickup } from "../lib/pickup";
+import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
+import { isAuraPickup, PICKUP_POINT } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./pickuppoint-page.css";
 
-const NTFY_TOPIC = "she-store-rahaf-2001-2014";
-
-function formatDateTime(iso) {
-  if (!iso) return "—";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  const dateText = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-  const timeText = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-  return `${dateText} ${timeText}`;
-}
-
-function formatDMY(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-}
+const AURA_PICKUP_LABEL = `${PICKUP_POINT} (La Aura)`;
 
 function getOrderDateKey(order) {
   return formatDMY(order?.placedAtPickupAt || order?.orderDate || order?.createdAt);
@@ -50,25 +36,6 @@ function buildOrderGroups(orderList) {
   });
 
   return groups;
-}
-
-function pickupMessage({ picked, customerName, price, pickupLabel }) {
-  const status = picked ? "✅" : "❌";
-  return [
-    `تم استلام الطلب ${status}`,
-    `الزبون: ${customerName || ""}`,
-    `نقطة الاستلام: ${pickupLabel || ""}`,
-    `السعر: ${formatILS(price)}`
-  ].join("\n");
-}
-
-function notifyPickup(message) {
-  return fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-    method: "POST",
-    body: message
-  }).catch((error) => {
-    console.error("NTFY ERROR:", error);
-  });
 }
 
 export default function PickupPointPage({ embedded = false }) {
@@ -328,12 +295,12 @@ export default function PickupPointPage({ embedded = false }) {
     }
 
     if (target) {
-      await notifyPickup(
-        pickupMessage({
+      await notifyPickupStatus(
+        buildPickupStatusMessage({
           picked: payload.picked_up,
           customerName: target.customer_name,
           price: target.price,
-          pickupLabel: "نقطة الاستلام (La Aura)"
+          pickupLabel: AURA_PICKUP_LABEL
         })
       );
     }
@@ -366,8 +333,9 @@ export default function PickupPointPage({ embedded = false }) {
       setCollecting(false);
       return;
     }
-
-    await notifyPickup(["تم استلام تحصيل النقود ✅", "المكان: نقطة الاستلام (La Aura)", `المبلغ: ${pendingText}`].join("\n"));
+    await notifyPickupStatus(
+      buildCollectedMoneyMessage({ pickupLabel: AURA_PICKUP_LABEL, amountText: pendingText })
+    );
     await loadOrders();
     await loadAllOrdersTotal();
     setCollecting(false);
@@ -406,8 +374,9 @@ export default function PickupPointPage({ embedded = false }) {
       setCollectingAll(false);
       return;
     }
-
-    await notifyPickup(["تم استلام تحصيل النقود ✅", "المكان: نقطة الاستلام (La Aura)", `المبلغ: ${formatILS(total)}`].join("\n"));
+    await notifyPickupStatus(
+      buildCollectedMoneyMessage({ pickupLabel: AURA_PICKUP_LABEL, amountText: formatILS(total) })
+    );
     await loadOrders();
     await loadAllOrdersTotal();
     setCollectingAll(false);

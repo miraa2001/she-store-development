@@ -1,43 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
 import { PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./homepickup-page.css";
 
 const BUCKET = "purchase-images";
-const NTFY_TOPIC = "she-store-rahaf-2001-2014";
-
-function formatDateTime(iso) {
-  if (!iso) return "—";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
-  const dateText = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
-  const timeText = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
-  return `${dateText} ${timeText}`;
-}
-
-function pickupMessage({ picked, customerName, price, pickupLabel }) {
-  const status = picked ? "✅" : "❌";
-  return [
-    `تم استلام الطلب ${status}`,
-    `الزبون: ${customerName || ""}`,
-    `نقطة الاستلام: ${pickupLabel || ""}`,
-    `السعر: ${formatILS(price)}`
-  ].join("\n");
-}
-
-function notifyPickup(message) {
-  return fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-    method: "POST",
-    body: message
-  }).catch((error) => {
-    console.error("NTFY ERROR:", error);
-  });
-}
-
 export default function HomePickupPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -275,8 +247,8 @@ export default function HomePickupPage({ embedded = false }) {
     }
 
     if (target) {
-      await notifyPickup(
-        pickupMessage({
+      await notifyPickupStatus(
+        buildPickupStatusMessage({
           picked: payload.picked_up,
           customerName: target.customer_name,
           price: target.price,
@@ -312,8 +284,9 @@ export default function HomePickupPage({ embedded = false }) {
       setCollecting(false);
       return;
     }
-
-    await notifyPickup(["تم استلام تحصيل النقود ✅", "المكان: من البيت", `المبلغ: ${pendingText}`].join("\n"));
+    await notifyPickupStatus(
+      buildCollectedMoneyMessage({ pickupLabel: PICKUP_HOME, amountText: pendingText })
+    );
     await loadPurchases(selectedOrderId);
     await loadOrders();
     setCollecting(false);
