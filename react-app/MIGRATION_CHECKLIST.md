@@ -1,6 +1,14 @@
-﻿# Regression Checklist (Legacy Parity)
+# Regression Checklist (Legacy Parity)
 
 Use this checklist after every migration step.
+
+## Current Automated Status (2026-02-14)
+- [x] React production build passes (`npm run build`).
+- [x] Native routes are wired for all staff pages.
+- [x] Global 15-minute inactivity timeout guard is enabled.
+- [x] GitHub Pages deploy workflow is configured.
+
+## Manual QA Required Before Go-Live
 
 ## Auth + Access
 - [ ] Login works from `login.html` equivalent flow.

@@ -114,7 +114,8 @@ export default function App() {
     <>
       <SessionTimeoutGuard />
       <Routes>
-        <Route path="/" element={<Dashboard />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/migration" element={<Dashboard />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/pickup-dashboard" element={<PickupDashboardPage />} />
         <Route path="/finance" element={<FinancePage />} />

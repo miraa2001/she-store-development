@@ -1,47 +1,53 @@
-﻿# React Migration (Phase 1)
+# She-Store React App
 
-This folder is a new React/Vite app for She-Store.
+This folder contains the React/Vite staff app for She-Store.
 
-## What is done
-- React app scaffolded with routing.
-- Existing static website copied into `public/legacy/`.
-- You can open legacy pages from React routes (`#/legacy/index`, `#/legacy/finance`, etc.) while we migrate page-by-page.
-- `#/orders` now reads orders from Supabase directly (auth/session + role + order totals) and is fully native React (orders/view/customers tabs).
-- `#/orders` now renders native React purchases/details UI (load, add, edit, delete, undo, image lightbox, WhatsApp actions, arrived toggle).
-- `#/orders` now renders native React customers tab (list/search/add/edit/delete + same phone validation rules).
-- `#/orders` now renders native React view tab (arrived orders list, card/list mode, bag-size edit by role, placed-at-pickup toggle, WhatsApp actions, customer search).
-- `#/orders` now exports PDF natively in React and runs Gemini image analysis natively inside add/edit purchase modal.
-- Legacy bridge iframe was removed from the orders workflow (legacy pages still available under `#/legacy/:page`).
-- Orders screen was refactored into dedicated components (`CommandHeader`, `OrdersSidebar`, `OrdersTab`, `PurchaseFormModal`, `LightboxModal`) for cleaner maintenance.
-- `#/pickup-dashboard` is now a native React page (role-aware tabs/sidebar + embedded native homepickup/pickuppoint/collections panels).
-- `#/finance` is now native React (role guard + per-order financial KPIs + monthly summary + spent editor).
-- `#/archive` is now native React (role guard + archived orders list/details + storage cleanup parity).
-- `#/collections` is now native React (role guard + collected purchases split by home/pickup with totals).
-- `#/homepickup` is now native React (role guard + pickup toggles + paid-price edit + search + collect action + lightbox).
-- `#/pickuppoint` is now native React (role guard + grouped orders for lara + pickup toggles + paid-price edit + collection actions).
-- `#/pickup-dashboard` no longer embeds legacy iframes; it now mounts native React panels (`homepickup`, `pickuppoint`, `collections`) in-tab.
-- `#/login` is now native React login (Supabase sign-in with username→email mapping).
+## What Is Done
+- Core pages are native React: `#/orders`, `#/pickup-dashboard`, `#/pickuppoint`, `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/login`.
+- Orders screen is fully native (orders/view/customers tabs, add/edit/delete, undo, lightbox, WhatsApp actions, PDF export, Gemini extraction).
+- Pickup dashboard mounts native React panels (home pickup, pickup point, collections) instead of legacy iframes.
+- Shared helpers are extracted for auth profile, navigation/session, pickup semantics/notifications, date formatting, and search utilities.
+- 15-minute inactivity session timeout is enabled app-wide.
+- Legacy pages are still available under `#/legacy/:page` as fallback.
 
-## Run
+## Local Run
 ```bash
 cd react-app
 npm install
-# copy .env.example to .env and add your Gemini key
+# copy .env.example to .env and add your values
 npm run dev
 ```
 
-## Current route model
-- `#/` migration dashboard
-- `#/orders` fully native React dashboard
-- `#/pickup-dashboard` native React dashboard with native embedded panels
-- `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/pickuppoint` are native React pages
+Required `.env` keys:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_GEMINI_API_KEY` (optional unless Gemini extraction is used)
+
+## Current Routes
+- `#/` redirects to `#/login`
+- `#/migration` migration dashboard
+- `#/orders` native React orders dashboard
+- `#/pickup-dashboard` native React pickup dashboard
+- `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/pickuppoint` native React pages
 - `#/login` native React login
-- `#/legacy/:page` iframe wrapper for legacy pages copied under `public/legacy`
+- `#/legacy/:page` legacy iframe wrapper (`public/legacy`)
 
 ## Validation
-- Use `MIGRATION_CHECKLIST.md` after each migration slice to keep behavior parity.
+- Use `MIGRATION_CHECKLIST.md` for role-based parity testing.
 
-## Next migration steps
-1. Run full parity QA from `MIGRATION_CHECKLIST.md` across all roles/routes before cutover.
-2. Decide GitHub Pages deployment model (legacy static vs `react-app/dist`) and switch branch settings.
-3. Remove or archive unused legacy JS/CSS once parity QA is complete.
+## GitHub Pages Deploy
+Workflow: `.github/workflows/deploy-react-pages.yml`
+
+1. In repo settings, set Pages source to `GitHub Actions`.
+2. Add repository secrets:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_ANON_KEY`
+   - `VITE_GEMINI_API_KEY`
+3. Push to `main` (or run workflow manually).
+4. Workflow builds `react-app` and deploys `react-app/dist`.
+
+## Go-Live
+1. Run parity QA from `MIGRATION_CHECKLIST.md` for all roles.
+2. Verify login/logout + 15-minute inactivity timeout.
+3. Verify PDF/Gemini/WhatsApp actions on production URL.
+4. Keep `#/legacy/*` only as temporary fallback until final sign-off.

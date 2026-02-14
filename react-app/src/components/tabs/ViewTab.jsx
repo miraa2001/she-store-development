@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchArrivedOrders, formatILS, updateOrderPlacedAtPickup } from "../../lib/orders";
+import { searchByName } from "../../lib/search";
 import {
   fetchPurchasesByOrder,
   searchPurchasesByCustomerName,
@@ -134,7 +135,8 @@ export default function ViewTab({ role, onOpenLightbox, onToast }) {
         if (!mounted) return;
 
         const arrivedOrderIds = new Set(orders.map((order) => String(order.id)));
-        const filtered = list.filter((item) => arrivedOrderIds.has(String(item.order_id)));
+        const filteredByOrder = list.filter((item) => arrivedOrderIds.has(String(item.order_id)));
+        const filtered = searchByName(filteredByOrder, query, (item) => [item.customer_name]);
         setSearchResults(filtered);
       } catch (error) {
         console.error(error);
