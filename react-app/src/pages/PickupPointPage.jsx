@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatDMY, formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { usePurchaseCustomerSearch } from "../hooks/usePurchaseCustomerSearch";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
@@ -51,8 +52,6 @@ export default function PickupPointPage({ embedded = false }) {
   const [collectingAll, setCollectingAll] = useState(false);
   const [allOrdersTotal, setAllOrdersTotal] = useState(0);
   const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
   const highlightTimeoutRef = useRef(null);
@@ -64,6 +63,11 @@ export default function PickupPointPage({ embedded = false }) {
     () => (isRahaf ? getPickupSidebarLinks(profile.role) : []),
     [isRahaf, profile.role]
   );
+  const { searchResults, searchLoading, clearSearchResults } = usePurchaseCustomerSearch({
+    search,
+    orders,
+    postFilter: (purchase) => isAuraPickup(purchase.pickup_point)
+  });
 
   const listItems = useMemo(() => {
     if (isLaaura) return buildOrderGroups(orders);
@@ -225,53 +229,6 @@ export default function PickupPointPage({ embedded = false }) {
     if (!selectedItem || !canAccess) return;
     loadPurchases(selectedItem);
   }, [canAccess, loadPurchases, selectedItem]);
-
-  useEffect(() => {
-    const query = search.trim();
-    if (query.length < 2) {
-      setSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
-
-    const orderIds = orders.map((order) => order.id);
-    if (!orderIds.length) {
-      setSearchResults([]);
-      setSearchLoading(false);
-      return;
-    }
-
-    const timer = window.setTimeout(async () => {
-      setSearchLoading(true);
-      try {
-        const { data, error: searchError } = await sb
-          .from("purchases")
-          .select("id, order_id, customer_name, price, created_at, pickup_point")
-          .in("order_id", orderIds)
-          .eq("collected", false)
-          .ilike("customer_name", `%${query}%`)
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (searchError) throw searchError;
-
-        const list = (data || [])
-          .filter((purchase) => isAuraPickup(purchase.pickup_point))
-          .map((purchase) => ({
-            ...purchase,
-            orderName: orders.find((order) => String(order.id) === String(purchase.order_id))?.orderName || "طلبية"
-          }));
-        setSearchResults(list);
-      } catch (err) {
-        console.error(err);
-        setSearchResults([]);
-      } finally {
-        setSearchLoading(false);
-      }
-    }, 250);
-
-    return () => window.clearTimeout(timer);
-  }, [orders, search]);
 
   async function signOut() {
     await signOutAndRedirect();
@@ -437,7 +394,7 @@ export default function PickupPointPage({ embedded = false }) {
       setSelectedItemId(`order-${targetOrder.id}`);
     }
 
-    setSearchResults([]);
+    clearSearchResults();
     setHighlightPurchaseId(result.id);
 
     if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);

@@ -13,6 +13,7 @@ import {
   sanitizeLinks,
   updatePurchaseWithRelations
 } from "../lib/purchases";
+import { searchByName } from "../lib/search";
 import {
   CUSTOMER_CITIES,
   CUSTOMER_PICKUP_OPTIONS,
@@ -314,14 +315,7 @@ export default function OrdersPage() {
   );
 
   const filteredPurchases = useMemo(() => {
-    const q = String(purchaseSearch || "").trim().toLowerCase();
-    if (!q) return purchases;
-
-    return purchases.filter((item) => {
-      const customer = String(item.customer_name || "").toLowerCase();
-      const note = String(item.note || "").toLowerCase();
-      return customer.includes(q) || note.includes(q);
-    });
+    return searchByName(purchases, purchaseSearch, (item) => [item.customer_name, item.note]);
   }, [purchaseSearch, purchases]);
 
   const purchaseStats = useMemo(() => {
@@ -332,15 +326,11 @@ export default function OrdersPage() {
   }, [purchases]);
 
   const filteredCustomers = useMemo(() => {
-    const query = String(customerSearch || "").trim().toLowerCase();
-    if (!query) return customers;
-
-    return customers.filter((customer) => {
-      const name = String(customer.name || "").toLowerCase();
-      const phone = String(customer.phone || "").toLowerCase();
-      const city = String(customer.city || "").toLowerCase();
-      return name.includes(query) || phone.includes(query) || city.includes(query);
-    });
+    return searchByName(customers, customerSearch, (customer) => [
+      customer.name,
+      customer.phone,
+      customer.city
+    ]);
   }, [customerSearch, customers]);
 
   const refreshOrders = useCallback(async (preferredId = "") => {
