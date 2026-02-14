@@ -1,4 +1,5 @@
 import { sb } from "./supabaseClient";
+import { CUSTOMER_PICKUP_OPTIONS } from "./pickup";
 
 export const CUSTOMER_CITIES = [
   "طولكرم",
@@ -13,7 +14,7 @@ export const CUSTOMER_CITIES = [
   "الداخل"
 ];
 
-export const CUSTOMER_PICKUP_OPTIONS = ["من البيت", "توصيل", "من نقطة الاستلام"];
+export { CUSTOMER_PICKUP_OPTIONS };
 
 export function normalizePhone(value) {
   const converted = String(value || "")

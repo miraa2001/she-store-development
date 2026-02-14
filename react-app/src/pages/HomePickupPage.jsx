@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./homepickup-page.css";
 
 const BUCKET = "purchase-images";
-const HOME_PICKUP_VALUE = "من البيت";
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 
 function formatDateTime(iso) {
@@ -113,7 +113,7 @@ export default function HomePickupPage({ embedded = false }) {
       const { data: pickupRows, error: pickupError } = await sb
         .from("purchases")
         .select("order_id, pickup_point, collected")
-        .eq("pickup_point", HOME_PICKUP_VALUE)
+        .eq("pickup_point", PICKUP_HOME)
         .eq("collected", false);
 
       if (pickupError) throw pickupError;
@@ -172,7 +172,7 @@ export default function HomePickupPage({ embedded = false }) {
           "id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, collected, purchase_images(storage_path)"
         )
         .eq("order_id", orderId)
-        .eq("pickup_point", HOME_PICKUP_VALUE)
+        .eq("pickup_point", PICKUP_HOME)
         .eq("collected", false)
         .order("created_at", { ascending: true });
 
@@ -229,7 +229,7 @@ export default function HomePickupPage({ embedded = false }) {
           .from("purchases")
           .select("id, order_id, customer_name, price, created_at")
           .in("order_id", orderIds)
-          .eq("pickup_point", HOME_PICKUP_VALUE)
+          .eq("pickup_point", PICKUP_HOME)
           .eq("collected", false)
           .ilike("customer_name", `%${search.trim()}%`)
           .order("created_at", { ascending: false })
@@ -280,7 +280,7 @@ export default function HomePickupPage({ embedded = false }) {
           picked: payload.picked_up,
           customerName: target.customer_name,
           price: target.price,
-          pickupLabel: HOME_PICKUP_VALUE
+          pickupLabel: PICKUP_HOME
         })
       );
     }
@@ -304,7 +304,7 @@ export default function HomePickupPage({ embedded = false }) {
       .from("purchases")
       .update({ collected: true, collected_at: new Date().toISOString() })
       .eq("order_id", selectedOrderId)
-      .eq("pickup_point", HOME_PICKUP_VALUE)
+      .eq("pickup_point", PICKUP_HOME)
       .eq("picked_up", true);
 
     if (collectError) {

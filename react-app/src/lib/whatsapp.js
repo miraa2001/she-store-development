@@ -1,5 +1,6 @@
-﻿import { sb } from "./supabaseClient";
+import { sb } from "./supabaseClient";
 import { formatILS } from "./orders";
+import { PICKUP_HOME, PICKUP_POINT } from "./pickup";
 
 function normalizePhone(value) {
   const converted = String(value || "")
@@ -34,7 +35,7 @@ export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) 
   const name = String(customerName || "").trim();
   const greeting = name ? `مرحبا ${name}💖` : "مرحبا حبيبتي💖";
 
-  if (pickupPoint === "من نقطة الاستلام") {
+  if (pickupPoint === PICKUP_POINT) {
     return [
       greeting,
       "طلبك جاهز بنقطة الاستلام",
@@ -44,7 +45,7 @@ export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) 
     ].join("\n");
   }
 
-  if (pickupPoint === "من البيت") {
+  if (pickupPoint === PICKUP_HOME) {
     return [
       greeting,
       "طلبك جاهز عندي بالبيت",

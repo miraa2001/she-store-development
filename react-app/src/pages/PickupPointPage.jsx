@@ -2,21 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { isAuraPickup } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./pickuppoint-page.css";
 
-const PICKUP_VALUE = "من نقطة الاستلام";
-const PICKUP_ALIASES = [
-  PICKUP_VALUE,
-  "من نقطه الاستلام",
-  "La Aura",
-  "la aura",
-  "LAAURA",
-  "لا اورا",
-  "لا أورا",
-  "لاورا"
-];
 const NTFY_TOPIC = "she-store-rahaf-2001-2014";
 
 function formatDateTime(iso) {
@@ -37,33 +27,6 @@ function formatDMY(iso) {
 
 function getOrderDateKey(order) {
   return formatDMY(order?.placedAtPickupAt || order?.orderDate || order?.createdAt);
-}
-
-function normalizePickup(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/\s+/g, "")
-    .replace(/[أإآ]/g, "ا");
-}
-
-function isAuraPickup(value) {
-  const normalized = normalizePickup(value || PICKUP_VALUE);
-  if (!normalized) return false;
-  if (normalized.includes("بيت") || normalized.includes("توصيل")) return false;
-
-  if (
-    PICKUP_ALIASES.some((alias) => {
-      const normalizedAlias = normalizePickup(alias);
-      return normalizedAlias && (normalized === normalizedAlias || normalized.includes(normalizedAlias));
-    })
-  ) {
-    return true;
-  }
-
-  if (normalized.includes("aura")) return true;
-  if (normalized.includes("لاورا") || normalized.includes("لااورا")) return true;
-  if (normalized.includes("نقطه") || normalized.includes("نقطة") || normalized.includes("استلام")) return true;
-  return false;
 }
 
 function buildOrderGroups(orderList) {

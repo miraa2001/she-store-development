@@ -2,12 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
+import { isAuraPickup, PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import "./collections-page.css";
-
-const HOME_PICKUP_VALUE = "من البيت";
-const PICKUP_VALUE = "من نقطة الاستلام";
 
 export default function CollectionsPage({ embedded = false }) {
   const { profile } = useAuthProfile();
@@ -69,8 +67,8 @@ export default function CollectionsPage({ embedded = false }) {
         .filter((order) => {
           const list = order.purchases || [];
           return (
-            list.some((p) => p.pickup_point === HOME_PICKUP_VALUE && p.collected) ||
-            list.some((p) => p.pickup_point === PICKUP_VALUE && p.collected)
+            list.some((p) => p.pickup_point === PICKUP_HOME && p.collected) ||
+            list.some((p) => isAuraPickup(p.pickup_point) && p.collected)
           );
         })
         .map((order) => {
@@ -120,8 +118,8 @@ export default function CollectionsPage({ embedded = false }) {
       if (purchasesError) throw purchasesError;
 
       const list = data || [];
-      setHomeList(list.filter((purchase) => purchase.pickup_point === HOME_PICKUP_VALUE && purchase.collected));
-      setPickupList(list.filter((purchase) => purchase.pickup_point === PICKUP_VALUE && purchase.collected));
+      setHomeList(list.filter((purchase) => purchase.pickup_point === PICKUP_HOME && purchase.collected));
+      setPickupList(list.filter((purchase) => isAuraPickup(purchase.pickup_point) && purchase.collected));
     } catch (err) {
       console.error(err);
       setError("تعذر تحميل بيانات التحصيل.");

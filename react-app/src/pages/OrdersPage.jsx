@@ -42,7 +42,6 @@ import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import LightboxModal from "../components/orders/LightboxModal";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
-const PICKUP_OPTIONS = ["من البيت", "توصيل", "من نقطة الاستلام"];
 const MAX_IMAGES = 10;
 
 function paymentState(purchase) {
@@ -66,7 +65,7 @@ function createEmptyForm(orderId, customers) {
     price: "",
     paidPrice: "",
     bagSize: "كيس صغير",
-    pickupPoint: firstCustomer?.usual_pickup_point || "من نقطة الاستلام",
+    pickupPoint: firstCustomer?.usual_pickup_point || CUSTOMER_PICKUP_OPTIONS[2],
     note: "",
     links: [""],
     newFiles: [],
@@ -701,7 +700,7 @@ export default function OrdersPage() {
       price: purchase.price ?? "",
       paidPrice: purchase.paid_price ?? purchase.price ?? "",
       bagSize: purchase.bag_size || "كيس صغير",
-      pickupPoint: purchase.pickup_point || "من نقطة الاستلام",
+      pickupPoint: purchase.pickup_point || CUSTOMER_PICKUP_OPTIONS[2],
       note: purchase.note || "",
       links: purchase.links?.length ? purchase.links : [""],
       newFiles: [],
@@ -1310,7 +1309,7 @@ export default function OrdersPage() {
         newFilePreviews={newFilePreviews}
         maxImages={MAX_IMAGES}
         bagOptions={BAG_OPTIONS}
-        pickupOptions={PICKUP_OPTIONS}
+        pickupOptions={CUSTOMER_PICKUP_OPTIONS}
         onClose={closeFormModal}
         onSubmit={submitPurchaseForm}
         onCustomerChange={onCustomerChange}
