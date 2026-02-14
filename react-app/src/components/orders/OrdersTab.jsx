@@ -220,28 +220,20 @@ export default function OrdersTab({
                         <p className="purchaseVLabel">عدد القطع</p>
                         <p className="purchaseVValue">{purchase.qty || 0}</p>
                       </div>
-                      <div className="purchaseVField">
-                        <p className="purchaseVLabel">السعر</p>
-                        <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
-                      </div>
-                      <div className="purchaseVField">
-                        <p className="purchaseVLabel">السعر المدفوع</p>
-                        <p className="purchaseVValue paid">{formatILS(purchase.paid_price)} ₪</p>
+                      <div className="purchaseVField purchaseVPriceRow">
+                        <div className="purchaseVPriceCol">
+                          <p className="purchaseVLabel">السعر</p>
+                          <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
+                        </div>
+                        <div className="purchaseVPriceCol">
+                          <p className="purchaseVLabel">المدفوع</p>
+                          <p className="purchaseVValue paid">{formatILS(purchase.paid_price)} ₪</p>
+                        </div>
                       </div>
                       <div className="purchaseVField">
                         <p className="purchaseVLabel">مكان الاستلام</p>
                         <p className="purchaseVValue">{purchase.pickup_point || "—"}</p>
                       </div>
-                      <div className="purchaseVField">
-                        <p className="purchaseVLabel">حجم الكيس</p>
-                        <p className="purchaseVValue">{purchase.bag_size || "—"}</p>
-                      </div>
-                      {purchase.note ? (
-                        <div className="purchaseVField">
-                          <p className="purchaseVLabel">ملاحظة</p>
-                          <p className="purchaseVValue">{purchase.note}</p>
-                        </div>
-                      ) : null}
                     </div>
 
                     {purchase.links?.length ? (
@@ -279,10 +271,9 @@ export default function OrdersTab({
                   </div>
 
                   <div className="purchase-meta-list">
+                    <span>السعر: {formatILS(purchase.price)} ₪</span>
                     <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
                     <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
-                    <span>حجم الكيس: {purchase.bag_size || "—"}</span>
-                    <span>ملاحظة: {purchase.note || "—"}</span>
                   </div>
 
                   {purchase.links?.length ? (
