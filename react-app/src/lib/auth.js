@@ -7,6 +7,37 @@ const EMAIL_ROLE_FALLBACK = {
   "laaura@she-store.com": "laaura"
 };
 
+function normalizeRole(rawRole, email = "") {
+  const role = String(rawRole || "").trim().toLowerCase();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+
+  if (!role) {
+    if (normalizedEmail.includes("rahaf")) return "rahaf";
+    if (normalizedEmail.includes("rawand")) return "rawand";
+    if (normalizedEmail.includes("reem")) return "reem";
+    if (normalizedEmail.includes("laaura") || normalizedEmail.includes("la.aura") || normalizedEmail.includes("aura")) {
+      return "laaura";
+    }
+    return "viewer";
+  }
+
+  if (role === "rahaf" || role === "owner" || role === "admin") return "rahaf";
+
+  if (role === "laaura" || role === "pickup" || role === "la aura" || role === "aura") {
+    return "laaura";
+  }
+
+  if (role === "rawand") return "rawand";
+  if (role === "reem") return "reem";
+
+  if (role === "viewer" || role === "view" || role === "readonly" || role === "read_only") {
+    if (normalizedEmail.includes("rawand")) return "rawand";
+    return "reem";
+  }
+
+  return role;
+}
+
 export async function getCurrentUserProfile() {
   const {
     data: { session }
@@ -26,7 +57,7 @@ export async function getCurrentUserProfile() {
   if (!userId) {
     return {
       authenticated: true,
-      role: EMAIL_ROLE_FALLBACK[email] || "viewer",
+      role: normalizeRole(EMAIL_ROLE_FALLBACK[email], email),
       user,
       email
     };
@@ -42,7 +73,7 @@ export async function getCurrentUserProfile() {
     console.error("role read error", error);
   }
 
-  const role = String(data?.role || EMAIL_ROLE_FALLBACK[email] || "viewer").toLowerCase();
+  const role = normalizeRole(data?.role || EMAIL_ROLE_FALLBACK[email], email);
 
   return {
     authenticated: true,
