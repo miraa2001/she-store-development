@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { formatDMY, formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { usePurchaseCustomerSearch } from "../hooks/usePurchaseCustomerSearch";
-import { getPickupSidebarLinks } from "../lib/navigation";
+import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
 import { isAuraPickup, PICKUP_POINT } from "../lib/pickup";
@@ -55,13 +56,14 @@ export default function PickupPointPage({ embedded = false }) {
   const [search, setSearch] = useState("");
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
+  const location = useLocation();
   const highlightTimeoutRef = useRef(null);
 
   const isRahaf = profile.role === "rahaf";
   const isLaaura = profile.role === "laaura";
   const canAccess = isRahaf || isLaaura;
   const sidebarLinks = useMemo(
-    () => (isRahaf ? getPickupSidebarLinks(profile.role) : []),
+    () => (isRahaf ? getOrdersNavItems(profile.role) : []),
     [isRahaf, profile.role]
   );
   const { searchResults, searchLoading, clearSearchResults } = usePurchaseCustomerSearch({
@@ -464,7 +466,7 @@ export default function PickupPointPage({ embedded = false }) {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="app-sidebar-link"
+                  className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}

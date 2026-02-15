@@ -32,7 +32,7 @@ import {
 } from "../lib/whatsapp";
 import { exportOrderPdf } from "../lib/pdfExport";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
-import { getOrdersNavItems } from "../lib/navigation";
+import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
@@ -311,6 +311,17 @@ export default function OrdersPage() {
   );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
+  const isSidebarItemActive = useCallback(
+    (href) => {
+      const customersTabActive = isNavHrefActive("#/orders?tab=customers", location);
+      const isRootOrdersItem = href === "#/orders";
+      if (isRootOrdersItem) {
+        return isNavHrefActive(href, location) && !customersTabActive;
+      }
+      return isNavHrefActive(href, location);
+    },
+    [location]
+  );
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -1193,7 +1204,7 @@ export default function OrdersPage() {
           {visibleNavItems.map((item) => (
             <a
               key={item.id}
-              className={`app-sidebar-link ${item.id === "orders" ? "active" : ""}`}
+              className={`app-sidebar-link ${isSidebarItemActive(item.href) ? "active" : ""}`}
               href={item.href}
               onClick={() => setGlobalOpen(false)}
             >

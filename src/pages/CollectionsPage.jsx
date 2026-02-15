@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
-import { getPickupSidebarLinks } from "../lib/navigation";
+import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { isAuraPickup, PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
@@ -18,7 +19,8 @@ export default function CollectionsPage({ embedded = false }) {
   const [error, setError] = useState("");
   const [homeList, setHomeList] = useState([]);
   const [pickupList, setPickupList] = useState([]);
-  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
+  const location = useLocation();
+  const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -206,7 +208,7 @@ export default function CollectionsPage({ embedded = false }) {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="app-sidebar-link"
+                  className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}

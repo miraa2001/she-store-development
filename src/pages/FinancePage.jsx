@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
-import { getPickupSidebarLinks } from "../lib/navigation";
+import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
@@ -56,7 +57,8 @@ export default function FinancePage({ embedded = false }) {
 
   const [selectedYear, setSelectedYear] = useState(null);
   const [selectedMonthKey, setSelectedMonthKey] = useState("");
-  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
+  const location = useLocation();
+  const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -263,7 +265,7 @@ export default function FinancePage({ embedded = false }) {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="app-sidebar-link"
+                  className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}

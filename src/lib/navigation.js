@@ -64,3 +64,19 @@ export function getPickupSidebarLinks(role) {
   return PICKUP_SIDEBAR_LINKS_BY_ROLE[role] || [];
 }
 
+export function isNavHrefActive(href, location) {
+  if (!href || !location) return false;
+  const normalized = href.startsWith("#") ? href.slice(1) : href;
+  const [rawPath, rawQuery = ""] = normalized.split("?");
+  const targetPath = rawPath.startsWith("/") ? rawPath : `/${rawPath}`;
+
+  if (location.pathname !== targetPath) return false;
+  if (!rawQuery) return true;
+
+  const targetParams = new URLSearchParams(rawQuery);
+  const currentParams = new URLSearchParams(location.search || "");
+  for (const [key, value] of targetParams.entries()) {
+    if (currentParams.get(key) !== value) return false;
+  }
+  return true;
+}

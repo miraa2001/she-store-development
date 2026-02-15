@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { usePurchaseCustomerSearch } from "../hooks/usePurchaseCustomerSearch";
-import { getPickupSidebarLinks } from "../lib/navigation";
+import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
 import { PICKUP_HOME } from "../lib/pickup";
@@ -26,7 +27,8 @@ export default function HomePickupPage({ embedded = false }) {
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, label: "" });
-  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
+  const location = useLocation();
+  const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
   const highlightTimeoutRef = useRef(null);
   const { searchResults, searchLoading, clearSearchResults } = usePurchaseCustomerSearch({
     search,
@@ -375,7 +377,7 @@ export default function HomePickupPage({ embedded = false }) {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="app-sidebar-link"
+                  className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}

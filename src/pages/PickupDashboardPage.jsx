@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
-import { getPickupDashboardTabs, getPickupSidebarLinks, getRoleLabel } from "../lib/navigation";
+import { getOrdersNavItems, getPickupDashboardTabs, getRoleLabel, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
@@ -19,9 +20,10 @@ export default function PickupDashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("home");
   const [loadedTabs, setLoadedTabs] = useState([]);
+  const location = useLocation();
 
   const roleTabs = useMemo(() => getPickupDashboardTabs(profile.role), [profile.role]);
-  const sidebarLinks = useMemo(() => getPickupSidebarLinks(profile.role), [profile.role]);
+  const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
   const showSidebar = profile.role !== "laaura";
 
   useEffect(() => {
@@ -115,7 +117,7 @@ export default function PickupDashboardPage() {
                 <a
                   key={item.href}
                   href={item.href}
-                  className="app-sidebar-link"
+                  className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   {item.label}
