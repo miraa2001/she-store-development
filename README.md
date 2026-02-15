@@ -1,6 +1,6 @@
 # She-Store React App
 
-This folder contains the React/Vite staff app for She-Store.
+This repository contains the React/Vite staff app for She-Store.
 
 ## What Is Done
 - Core pages are native React: `#/orders`, `#/pickup-dashboard`, `#/pickuppoint`, `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/login`.
@@ -12,7 +12,6 @@ This folder contains the React/Vite staff app for She-Store.
 
 ## Local Run
 ```bash
-cd react-app
 npm install
 # copy .env.example to .env and add your values
 npm run dev
@@ -44,7 +43,7 @@ Workflow: `.github/workflows/deploy-react-pages.yml`
    - `VITE_SUPABASE_ANON_KEY`
    - `VITE_GEMINI_API_KEY`
 3. Push to `main` (or run workflow manually).
-4. Workflow builds `react-app` and deploys `react-app/dist`.
+4. Workflow builds the root Vite app and deploys `dist`.
 
 ## Go-Live
 1. Run parity QA from `MIGRATION_CHECKLIST.md` for all roles.
