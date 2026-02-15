@@ -247,16 +247,31 @@ export default function FinancePage({ embedded = false }) {
     <div className={`finance-page ${embedded ? "embedded" : ""}`} dir="rtl">
       {!embedded ? (
         <>
-          <div className={`finance-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
-          <aside className={`finance-sidebar ${sidebarOpen ? "open" : ""}`}>
-            <div className="finance-sidebar-head"><b>القائمة</b><button type="button" className="finance-menu-btn danger" onClick={() => setSidebarOpen(false)}>✕</button></div>
-            <div className="finance-sidebar-content">
+          <div
+            className={`finance-overlay app-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className={`finance-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
+            <div className="finance-sidebar-head app-sidebar-head">
+              <b>القائمة</b>
+              <button type="button" className="finance-menu-btn danger app-sidebar-close" onClick={() => setSidebarOpen(false)}>
+                ✕
+              </button>
+            </div>
+            <div className="finance-sidebar-content app-sidebar-content">
               {sidebarLinks.map((item) => (
-                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="app-sidebar-link"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   {item.label}
                 </a>
               ))}
-              <button type="button" className="danger" onClick={signOut}>تسجيل خروج</button>
+              <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
+                تسجيل خروج
+              </button>
             </div>
           </aside>
         </>

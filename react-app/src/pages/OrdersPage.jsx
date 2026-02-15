@@ -1177,12 +1177,12 @@ export default function OrdersPage() {
   return (
     <div className="orders-page" dir="rtl">
       <div
-        className={`global-overlay ${globalOpen ? "open" : ""}`}
+        className={`global-overlay app-sidebar-overlay ${globalOpen ? "open" : ""}`}
         onClick={() => setGlobalOpen(false)}
       />
 
-      <aside className={`global-sidebar ${globalOpen ? "open" : ""}`}>
-        <div className="global-sidebar-head">
+      <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
+        <div className="global-sidebar-head app-sidebar-head">
           <div className="brand-chip">
             <span className="brand-icon">SS</span>
             <div>
@@ -1190,16 +1190,16 @@ export default function OrdersPage() {
               <p>{getRoleLabel(profile.role)}</p>
             </div>
           </div>
-          <button type="button" className="icon-btn" onClick={() => setGlobalOpen(false)}>
+          <button type="button" className="icon-btn app-sidebar-close" onClick={() => setGlobalOpen(false)}>
             <Icon name="close" className="icon" />
           </button>
         </div>
 
-        <nav className="global-sidebar-nav">
+        <nav className="global-sidebar-nav app-sidebar-content">
           {visibleNavItems.map((item) => (
             <a
               key={item.id}
-              className={`nav-item ${item.id === "orders" ? "active" : ""}`}
+              className={`nav-item app-sidebar-link ${item.id === "orders" ? "active" : ""}`}
               href={item.href}
             >
               <span className="icon-wrap">
@@ -1210,7 +1210,7 @@ export default function OrdersPage() {
           ))}
         </nav>
 
-        <button type="button" className="logout-btn" onClick={signOut}>
+        <button type="button" className="logout-btn app-sidebar-link app-sidebar-danger" onClick={signOut}>
           <Icon name="logout" className="icon" />
           <span>تسجيل الخروج</span>
         </button>

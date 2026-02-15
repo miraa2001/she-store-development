@@ -215,21 +215,33 @@ export default function ArchivePage() {
 
   return (
     <div className="archive-page" dir="rtl">
-      <div className={`archive-overlay ${sidebarOpen ? "open" : ""}`} onClick={() => setSidebarOpen(false)} />
-      <aside className={`archive-sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="archive-sidebar-head">
+      <div
+        className={`archive-overlay app-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className={`archive-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
+        <div className="archive-sidebar-head app-sidebar-head">
           <b>القائمة</b>
-          <button type="button" className="archive-menu-btn danger" onClick={() => setSidebarOpen(false)}>
+          <button
+            type="button"
+            className="archive-menu-btn danger app-sidebar-close"
+            onClick={() => setSidebarOpen(false)}
+          >
             ✕
           </button>
             </div>
-            <div className="archive-sidebar-content">
+            <div className="archive-sidebar-content app-sidebar-content">
               {sidebarLinks.map((item) => (
-                <a key={item.href} href={item.href} onClick={() => setSidebarOpen(false)}>
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="app-sidebar-link"
+                  onClick={() => setSidebarOpen(false)}
+                >
                   {item.label}
                 </a>
               ))}
-              <button type="button" className="danger" onClick={signOut}>
+              <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
                 تسجيل خروج
               </button>
         </div>
