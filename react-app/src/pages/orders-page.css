@@ -729,6 +729,12 @@
   display: none;
 }
 
+.workspace-loader {
+  display: grid;
+  place-items: center;
+  min-height: 140px;
+}
+
 .purchaseVCard {
   width: min(100%, 214px);
   background: #fff;
@@ -1883,22 +1889,16 @@
   }
 
   .purchase-card {
-    border: 1px solid rgba(229, 231, 235, 0.9);
-    border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
-    padding: 12px;
-    display: grid;
-    gap: 10px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    display: block;
   }
 
   .purchase-desktop-shell {
-    display: none;
-  }
-
-  .purchase-mobile-shell {
-    display: grid;
-    gap: 10px;
+    display: flex;
   }
 
   .purchase-modal-foot {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatILS } from "../../lib/orders";
+import SessionLoader from "../common/SessionLoader";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
@@ -86,7 +87,11 @@ export default function OrdersTab({
       </div>
 
       {customersError ? <div className="workspace-empty workspace-error">{customersError}</div> : null}
-      {purchasesLoading ? <div className="workspace-empty">جاري تحميل المشتريات...</div> : null}
+      {purchasesLoading ? (
+        <div className="workspace-empty workspace-loader">
+          <SessionLoader />
+        </div>
+      ) : null}
       {purchasesError ? <div className="workspace-empty workspace-error">{purchasesError}</div> : null}
 
       {!purchasesLoading && !purchasesError && !filteredPurchases.length ? (
@@ -251,63 +256,6 @@ export default function OrdersTab({
                       </div>
                     ) : null}
                   </article>
-                </div>
-
-                <div className="purchase-mobile-shell">
-                  <div className="purchase-card-head">
-                    <div>
-                      <h3>{purchase.customer_name || "—"}</h3>
-                      <p>
-                        {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
-                      </p>
-                    </div>
-                    {actionsNode}
-                  </div>
-
-                  <div className="purchase-meta-list">
-                    <span>السعر: {formatILS(purchase.price)} ₪</span>
-                    <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
-                  </div>
-
-                  {purchase.links?.length ? (
-                    <div className="purchase-links-wrap">
-                      {purchase.links.map((link, index) => (
-                        <a key={`${purchase.id}-link-${index}`} href={link} target="_blank" rel="noreferrer">
-                          رابط {index + 1}
-                        </a>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {imageList.length ? (
-                    <div className="purchase-image-strip">
-                      {imageList.map((img, imageIndex) => (
-                        <button
-                          key={img.id || `${purchase.id}-img-${imageIndex}`}
-                          type="button"
-                          className="purchase-image-thumb"
-                          onClick={() =>
-                            onOpenLightbox(imageList, imageIndex, purchase.customer_name || "صورة المشترى")
-                          }
-                        >
-                          <img src={img.url} alt="صورة المشترى" loading="lazy" />
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="purchase-empty-images">لا توجد صور</div>
-                  )}
-
-                  {canShowWhatsapp ? (
-                    <div className="wa-actions-row">
-                      <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                        استعلام عن نقطة الاستلام❓
-                      </button>
-                      <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                        اعلام بوصول الطلب🔔
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </article>
             );
