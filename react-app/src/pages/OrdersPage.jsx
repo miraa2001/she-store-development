@@ -41,6 +41,7 @@ import OrdersSidebar from "../components/orders/OrdersSidebar";
 import OrdersTab from "../components/orders/OrdersTab";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import LightboxModal from "../components/orders/LightboxModal";
+import SessionLoader from "../components/common/SessionLoader";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
@@ -55,18 +56,16 @@ function paymentState(purchase) {
 }
 
 function createEmptyForm(orderId, customers) {
-  const firstCustomer = Array.isArray(customers) && customers.length ? customers[0] : null;
-
   return {
     purchaseId: "",
     orderId: orderId || "",
-    customerId: firstCustomer?.id || "",
-    customerName: firstCustomer?.name || "",
-    qty: 1,
+    customerId: "",
+    customerName: "",
+    qty: "",
     price: "",
     paidPrice: "",
-    bagSize: "كيس صغير",
-    pickupPoint: firstCustomer?.usual_pickup_point || CUSTOMER_PICKUP_OPTIONS[2],
+    bagSize: "",
+    pickupPoint: "",
     note: "",
     links: [""],
     newFiles: [],
@@ -801,11 +800,11 @@ export default function OrdersPage() {
   };
 
   const submitPurchaseForm = async (event) => {
-    event.preventDefault();
+    event?.preventDefault?.();
 
     if (!selectedOrder) {
       setFormError("اختاري طلبًا أولًا.");
-      return;
+      return false;
     }
 
     const qty = Number(formState.qty);
@@ -814,19 +813,35 @@ export default function OrdersPage() {
 
     if (!formState.customerId) {
       setFormError("اختاري الزبون.");
-      return;
+      return false;
+    }
+    if (String(formState.price).trim() === "") {
+      setFormError("أدخلي السعر.");
+      return false;
+    }
+    if (String(formState.paidPrice).trim() === "") {
+      setFormError("أدخلي السعر المدفوع.");
+      return false;
     }
     if (!Number.isInteger(qty) || qty < 1 || qty > 200) {
       setFormError("عدد القطع يجب أن يكون بين 1 و 200.");
-      return;
+      return false;
     }
     if (!Number.isFinite(price) || price < 0) {
       setFormError("السعر غير صالح.");
-      return;
+      return false;
     }
     if (!Number.isFinite(paidPrice) || paidPrice < 0) {
       setFormError("السعر المدفوع غير صالح.");
-      return;
+      return false;
+    }
+    if (!formState.bagSize) {
+      setFormError("اختاري حجم الكيس.");
+      return false;
+    }
+    if (!formState.pickupPoint) {
+      setFormError("اختاري مكان الاستلام.");
+      return false;
     }
 
     const normalizedLinks = sanitizeLinks(formState.links);
@@ -894,9 +909,11 @@ export default function OrdersPage() {
       setFormOpen(false);
       setFormUploadProgress("");
       clearFormAiStatus();
+      return true;
     } catch (error) {
       console.error(error);
       setFormError(error?.message || "تعذر حفظ البيانات.");
+      return false;
     } finally {
       setFormSaving(false);
     }
@@ -1119,9 +1136,7 @@ export default function OrdersPage() {
   if (profile.loading) {
     return (
       <div className="orders-page orders-loading-screen" dir="rtl">
-        <div className="legacy-note">
-          <h2>جاري التحقق من الجلسة...</h2>
-        </div>
+        <SessionLoader />
       </div>
     );
   }

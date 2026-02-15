@@ -6,6 +6,7 @@ import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
 import CollectionsPage from "./CollectionsPage";
 import "./pickup-dashboard-page.css";
+import SessionLoader from "../components/common/SessionLoader";
 
 const TAB_CONFIG = {
   home: { id: "home", label: "مستلمو البيت" },
@@ -57,7 +58,7 @@ export default function PickupDashboardPage() {
   if (profile.loading) {
     return (
       <div className="pickup-page pickup-state">
-        <div className="pickup-note">جاري التحقق من الجلسة...</div>
+        <SessionLoader />
       </div>
     );
   }

@@ -8,6 +8,7 @@ import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatu
 import { PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./homepickup-page.css";
 
 const BUCKET = "purchase-images";
@@ -317,7 +318,7 @@ export default function HomePickupPage({ embedded = false }) {
   if (profile.loading) {
     return (
       <div className="homepickup-page homepickup-state" dir="rtl">
-        <div className="homepickup-note">جاري التحقق من الجلسة...</div>
+        <SessionLoader />
       </div>
     );
   }

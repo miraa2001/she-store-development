@@ -4,6 +4,7 @@ import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./archive-page.css";
 
 const IMAGE_BUCKET = "purchase-images";
@@ -179,7 +180,7 @@ export default function ArchivePage() {
   if (profile.loading) {
     return (
       <div className="archive-page archive-state" dir="rtl">
-        <div className="archive-note">جاري التحقق من الجلسة...</div>
+        <SessionLoader />
       </div>
     );
   }

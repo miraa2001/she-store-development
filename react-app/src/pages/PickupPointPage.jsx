@@ -8,6 +8,7 @@ import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatu
 import { isAuraPickup, PICKUP_POINT } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./pickuppoint-page.css";
 
 const AURA_PICKUP_LABEL = `${PICKUP_POINT} (La Aura)`;
@@ -406,7 +407,7 @@ export default function PickupPointPage({ embedded = false }) {
   if (profile.loading) {
     return (
       <div className="pickuppoint-page pickuppoint-state" dir="rtl">
-        <div className="pickuppoint-note">جاري التحقق من الجلسة...</div>
+        <SessionLoader />
       </div>
     );
   }

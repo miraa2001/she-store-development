@@ -4,6 +4,7 @@ import { getPickupSidebarLinks } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./finance-page.css";
 
 function getOrderDate(order) {
@@ -238,7 +239,7 @@ export default function FinancePage({ embedded = false }) {
     await signOutAndRedirect();
   }
 
-  if (profile.loading) return <div className="finance-page finance-state"><div className="finance-note">جاري التحقق من الجلسة...</div></div>;
+  if (profile.loading) return <div className="finance-page finance-state"><SessionLoader /></div>;
   if (!profile.authenticated) return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد جلسة نشطة</h2><p>يلزم تسجيل الدخول أولًا.</p><a href="#/login" className="finance-link">فتح تسجيل الدخول</a></div></div>;
   if (profile.role !== "rahaf") return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد صلاحية</h2><p>هذه الصفحة متاحة لحساب رهف فقط.</p><a href="#/orders" className="finance-link">العودة للطلبيات</a></div></div>;
 

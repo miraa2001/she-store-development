@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./login-page.css";
 
 const EMAIL_DOMAIN = "she-store.com";
@@ -132,9 +133,7 @@ export default function LoginPage() {
   if (checkingSession) {
     return (
       <div className="login-page login-state" dir="rtl">
-        <div className="login-card">
-          <div className="login-title">جاري التحقق من الجلسة...</div>
-        </div>
+        <SessionLoader />
       </div>
     );
   }

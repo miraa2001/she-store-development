@@ -5,6 +5,7 @@ import { formatILS, parsePrice } from "../lib/orders";
 import { isAuraPickup, PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
+import SessionLoader from "../components/common/SessionLoader";
 import "./collections-page.css";
 
 export default function CollectionsPage({ embedded = false }) {
@@ -148,7 +149,7 @@ export default function CollectionsPage({ embedded = false }) {
   if (profile.loading) {
     return (
       <div className="collections-page collections-state" dir="rtl">
-        <div className="collections-note">جاري التحقق من الجلسة...</div>
+        <SessionLoader />
       </div>
     );
   }
