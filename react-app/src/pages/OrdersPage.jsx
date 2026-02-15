@@ -32,7 +32,7 @@ import {
 } from "../lib/whatsapp";
 import { exportOrderPdf } from "../lib/pdfExport";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
-import { getOrdersNavItems, getRoleLabel } from "../lib/navigation";
+import { getOrdersNavItems } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
@@ -1183,15 +1183,9 @@ export default function OrdersPage() {
 
       <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
         <div className="global-sidebar-head app-sidebar-head">
-          <div className="brand-chip">
-            <span className="brand-icon">SS</span>
-            <div>
-              <h2>She-Store</h2>
-              <p>{getRoleLabel(profile.role)}</p>
-            </div>
-          </div>
-          <button type="button" className="icon-btn app-sidebar-close" onClick={() => setGlobalOpen(false)}>
-            <Icon name="close" className="icon" />
+          <b>القائمة</b>
+          <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
+            ✕
           </button>
         </div>
 
@@ -1199,20 +1193,17 @@ export default function OrdersPage() {
           {visibleNavItems.map((item) => (
             <a
               key={item.id}
-              className={`nav-item app-sidebar-link ${item.id === "orders" ? "active" : ""}`}
+              className={`app-sidebar-link ${item.id === "orders" ? "active" : ""}`}
               href={item.href}
+              onClick={() => setGlobalOpen(false)}
             >
-              <span className="icon-wrap">
-                <Icon name={item.icon} className="icon" />
-              </span>
-              <span>{item.label}</span>
+              {item.label}
             </a>
           ))}
         </nav>
 
-        <button type="button" className="logout-btn app-sidebar-link app-sidebar-danger" onClick={signOut}>
-          <Icon name="logout" className="icon" />
-          <span>تسجيل الخروج</span>
+        <button type="button" className="app-sidebar-link app-sidebar-danger" onClick={signOut}>
+          تسجيل الخروج
         </button>
       </aside>
 

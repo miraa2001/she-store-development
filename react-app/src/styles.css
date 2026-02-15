@@ -282,3 +282,11 @@ a {
   align-items: center !important;
   justify-content: center !important;
 }
+
+.global-sidebar.app-sidebar-drawer::before {
+  display: none !important;
+}
+
+.global-sidebar-nav.app-sidebar-content {
+  padding: 0 !important;
+}
