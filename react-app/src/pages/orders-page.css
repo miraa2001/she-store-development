@@ -14,11 +14,11 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(1px);
   z-index: 40;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.25s ease;
+  transition: opacity 0.14s ease;
 }
 
 .global-overlay.open {
@@ -40,7 +40,8 @@
   border-left: 1px solid rgba(229, 231, 235, 0.9);
   box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
   transform: translateX(100%);
-  transition: transform 0.3s ease;
+  transition: transform 0.16s ease;
+  will-change: transform;
 }
 
 .global-sidebar.open {
@@ -905,16 +906,6 @@
   padding-bottom: 0;
 }
 
-.purchaseVPriceRow {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.purchaseVPriceCol {
-  min-width: 0;
-}
-
 .purchaseVLabel {
   margin: 0 0 4px;
   font-size: 11px;
@@ -1371,6 +1362,10 @@
   gap: 8px;
 }
 
+.lightbox-backdrop {
+  z-index: 85;
+}
+
 .lightbox-card {
   width: min(840px, calc(100vw - 24px));
   background: #fff;
@@ -1385,6 +1380,23 @@
   justify-content: space-between;
   padding: 10px 14px;
   border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+}
+
+.lightbox-head-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lightbox-count-badge {
+  border-radius: 999px;
+  border: 1px solid rgba(79, 138, 123, 0.2);
+  background: rgba(79, 138, 123, 0.1);
+  color: #264f43;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 8px;
+  line-height: 1;
 }
 
 .lightbox-body {

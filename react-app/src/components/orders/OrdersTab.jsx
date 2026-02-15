@@ -220,15 +220,9 @@ export default function OrdersTab({
                         <p className="purchaseVLabel">عدد القطع</p>
                         <p className="purchaseVValue">{purchase.qty || 0}</p>
                       </div>
-                      <div className="purchaseVField purchaseVPriceRow">
-                        <div className="purchaseVPriceCol">
-                          <p className="purchaseVLabel">السعر</p>
-                          <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
-                        </div>
-                        <div className="purchaseVPriceCol">
-                          <p className="purchaseVLabel">المدفوع</p>
-                          <p className="purchaseVValue paid">{formatILS(purchase.paid_price)} ₪</p>
-                        </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">السعر</p>
+                        <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
                       </div>
                       <div className="purchaseVField">
                         <p className="purchaseVLabel">مكان الاستلام</p>
@@ -272,7 +266,6 @@ export default function OrdersTab({
 
                   <div className="purchase-meta-list">
                     <span>السعر: {formatILS(purchase.price)} ₪</span>
-                    <span>المدفوع: {formatILS(purchase.paid_price)} ₪</span>
                     <span>مكان الاستلام: {purchase.pickup_point || "—"}</span>
                   </div>
 
