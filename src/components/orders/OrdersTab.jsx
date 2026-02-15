@@ -117,12 +117,14 @@ export default function OrdersTab({
                   <div className="purchase-menu-wrap" data-menu-root>
                     <button
                       type="button"
-                      className="icon-btn menu-dots"
+                      className="icon-btn menu-dots menu-dots-trigger"
                       onClick={(event) => {
                         event.stopPropagation();
                         onTogglePurchaseMenu(purchase.id);
                       }}
                       aria-label="إجراءات"
+                    aria-haspopup="menu"
+                    aria-expanded={String(menuPurchaseId) === String(purchase.id)}
                     >
                       ⋯
                     </button>
@@ -217,9 +219,9 @@ export default function OrdersTab({
                     </div>
 
                     <div className="purchaseVBody" dir="rtl">
-                      <div className="purchaseVField">
+                      <div className="purchaseVField purchaseVField-primary">
                         <p className="purchaseVLabel">الاسم</p>
-                        <p className="purchaseVValue">{purchase.customer_name || "—"}</p>
+                        <p className="purchaseVValue purchaseVValue-primary">{purchase.customer_name || "—"}</p>
                       </div>
                       <div className="purchaseVField">
                         <p className="purchaseVLabel">عدد القطع</p>
