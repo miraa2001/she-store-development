@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const MOBILE_BREAKPOINT = 768;
 const DESKTOP_BREAKPOINT = 1024;
@@ -28,6 +28,7 @@ export default function CommandHeader({
 }) {
   const [viewport, setViewport] = useState(() => getViewport());
   const [searchExpanded, setSearchExpanded] = useState(false);
+  const mobileSearchInputRef = useRef(null);
 
   const isMobile = viewport === "mobile";
   const isTablet = viewport === "tablet";
@@ -42,32 +43,34 @@ export default function CommandHeader({
     if (!isMobile) setSearchExpanded(false);
   }, [isMobile]);
 
+  useEffect(() => {
+    if (!isMobile || !searchExpanded) return;
+    mobileSearchInputRef.current?.focus();
+  }, [isMobile, searchExpanded]);
+
   if (isMobile) {
     return (
       <header className="command-header command-header-mobile">
-        {searchExpanded ? (
-          <div className="command-mobile-row command-mobile-row-expanded">
-            <button
-              type="button"
-              className="icon-btn command-mobile-icon"
-              aria-label="إغلاق البحث"
-              onClick={() => {
-                setSearchExpanded(false);
-                if (!search) onSearchChange("");
-              }}
+        <div className={`command-mobile-row command-mobile-row-animated ${searchExpanded ? "is-open" : ""}`}>
+          <div className="command-mobile-title">
+            <strong>الطلبات</strong>
+            <small>{totalOrders} طلب</small>
+          </div>
+
+          <div className="command-mobile-search-inline">
+            <form
+              className={`search-expand-form search-expand-inline ${searchExpanded ? "open" : ""}`}
+              onSubmit={(event) => event.preventDefault()}
             >
-              <Icon name="close" className="icon" />
-            </button>
-            <form className={`search-expand-form search-expand-inline ${searchExpanded ? "open" : ""}`} onSubmit={(event) => event.preventDefault()}>
               <label htmlFor="ordersMobileSearch">Search</label>
               <input
+                ref={mobileSearchInputRef}
                 id="ordersMobileSearch"
                 className="search-expand-input"
                 type="search"
                 value={search}
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="بحث باسم المشترية..."
-                autoFocus
               />
               <span className="search-expand-caret" />
               {search ? (
@@ -77,25 +80,18 @@ export default function CommandHeader({
                 </span>
               ) : null}
             </form>
-          </div>
-        ) : (
-          <div className="command-mobile-row">
-            <div className="command-mobile-title">
-              <strong>الطلبات</strong>
-              <small>{totalOrders} طلب</small>
-            </div>
 
             <button
               type="button"
               className="icon-btn command-mobile-icon"
-              aria-label="بحث"
+              aria-label={searchExpanded ? "إغلاق البحث" : "بحث"}
               aria-expanded={searchExpanded}
-              onClick={() => setSearchExpanded(true)}
+              onClick={() => setSearchExpanded((prev) => !prev)}
             >
-              <Icon name="search" className="icon" />
+              <Icon name={searchExpanded ? "close" : "search"} className="icon" />
             </button>
           </div>
-        )}
+        </div>
       </header>
     );
   }
