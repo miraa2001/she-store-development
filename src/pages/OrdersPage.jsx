@@ -1228,6 +1228,14 @@ export default function OrdersPage() {
         editMode={editMode}
         onEditModeChange={setEditMode}
         onOpenSidebar={() => setGlobalOpen(true)}
+        totalOrders={totalOrders}
+        showOrderActions={activeTab === "orders"}
+        arrivedChecked={!!selectedOrder?.arrived}
+        onToggleArrived={handleToggleArrived}
+        onOpenAddModal={openAddModal}
+        onExportPdf={exportPdfNative}
+        pdfExporting={pdfExporting}
+        onGeminiAction={handleGeminiToolbarAction}
         Icon={Icon}
       />
 
