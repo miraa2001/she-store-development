@@ -9,8 +9,6 @@ import SessionLoader from "../components/common/SessionLoader";
 import "./archive-page.css";
 
 const IMAGE_BUCKET = "purchase-images";
-const TAB_COLLECTED = "collected";
-const TAB_PREVIOUS = "previous";
 
 function cleanupMessage(kind, count = 0) {
   if (kind === "none") return "لا يوجد صور للحذف.";
@@ -19,10 +17,6 @@ function cleanupMessage(kind, count = 0) {
   if (kind === "storage-error") return "تعذر حذف بعض الصور من التخزين.";
   if (kind === "db-error") return "تم حذف الصور من التخزين، لكن حدث خطأ في قاعدة البيانات.";
   return "";
-}
-
-function orderTitle(tab) {
-  return tab === TAB_COLLECTED ? "طلبات تم تحصيلها" : "طلبات سابقة";
 }
 
 function formatOrderDate(iso) {
@@ -36,40 +30,25 @@ function formatOrderDate(iso) {
   });
 }
 
-function pickSelectedId(currentId, list) {
-  if (currentId && list.some((item) => String(item.id) === String(currentId))) return currentId;
-  return list[0]?.id || "";
-}
-
 export default function ArchivePage() {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [archiveTab, setArchiveTab] = useState(TAB_COLLECTED);
-  const [collectedOrders, setCollectedOrders] = useState([]);
-  const [previousOrders, setPreviousOrders] = useState([]);
-  const [selectedOrderByTab, setSelectedOrderByTab] = useState({
-    [TAB_COLLECTED]: "",
-    [TAB_PREVIOUS]: ""
-  });
+  const [orders, setOrders] = useState([]);
+  const [selectedOrderId, setSelectedOrderId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [cleanupMsg, setCleanupMsg] = useState("");
   const location = useLocation();
   const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
 
-  const activeOrders = useMemo(
-    () => (archiveTab === TAB_COLLECTED ? collectedOrders : previousOrders),
-    [archiveTab, collectedOrders, previousOrders]
+  const selectedOrder = useMemo(
+    () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
+    [orders, selectedOrderId]
   );
 
-  const selectedOrder = useMemo(() => {
-    const selectedId = selectedOrderByTab[archiveTab];
-    return activeOrders.find((order) => String(order.id) === String(selectedId)) || null;
-  }, [activeOrders, archiveTab, selectedOrderByTab]);
-
-  const totalActivePaid = useMemo(
-    () => activeOrders.reduce((sum, order) => sum + (order.totalPaid || 0), 0),
-    [activeOrders]
+  const totalArchivedPaid = useMemo(
+    () => orders.reduce((sum, order) => sum + (order.totalPaid || 0), 0),
+    [orders]
   );
 
   useEffect(() => {
@@ -80,17 +59,9 @@ export default function ArchivePage() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
-  useEffect(() => {
-    setSelectedOrderByTab((prev) => {
-      const nextId = pickSelectedId(prev[archiveTab], activeOrders);
-      if (prev[archiveTab] === nextId) return prev;
-      return { ...prev, [archiveTab]: nextId };
-    });
-  }, [activeOrders, archiveTab]);
-
-  const cleanupArchiveImages = useCallback(async (ordersToCleanup) => {
+  const cleanupArchiveImages = useCallback(async (collectedOrders) => {
     const allPaths = [];
-    ordersToCleanup.forEach((order) => {
+    collectedOrders.forEach((order) => {
       (order.purchases || []).forEach((purchase) => {
         (purchase.purchase_images || []).forEach((img) => {
           if (img?.storage_path) allPaths.push(img.storage_path);
@@ -163,48 +134,41 @@ export default function ArchivePage() {
 
       if (orderError) throw orderError;
 
-      const nextCollected = [];
-      const nextPrevious = [];
+      const nextOrders = [];
+      const collectedForCleanup = [];
 
       (orderRows || []).forEach((order) => {
         const entry = purchasesByOrder.get(order.id);
         const purchases = entry?.purchases || [];
         const allCollected = purchases.length > 0 && entry?.allCollected;
         const previousMonth = isOlderThanCurrentMonth(order.created_at);
-
         if (!allCollected && !previousMonth) return;
 
         const normalized = {
           id: order.id,
           orderName: String(order.order_name || "").trim() || "طلب بدون اسم",
           createdAt: order.created_at,
+          archiveType: allCollected ? "تم تحصيلها" : "طلبات سابقة",
           purchases,
           totalPaid: purchases.reduce(
             (sum, purchase) => sum + parsePrice(purchase.paid_price ?? purchase.price),
             0
           )
         };
-
-        if (allCollected) nextCollected.push(normalized);
-        if (previousMonth && !allCollected) nextPrevious.push(normalized);
+        nextOrders.push(normalized);
+        if (allCollected) collectedForCleanup.push(normalized);
       });
 
-      setCollectedOrders(nextCollected);
-      setPreviousOrders(nextPrevious);
-      setArchiveTab((prev) => {
-        if (prev === TAB_COLLECTED && !nextCollected.length && nextPrevious.length) return TAB_PREVIOUS;
-        if (prev === TAB_PREVIOUS && !nextPrevious.length && nextCollected.length) return TAB_COLLECTED;
-        return prev;
+      setOrders(nextOrders);
+      setSelectedOrderId((prev) => {
+        if (prev && nextOrders.some((order) => String(order.id) === String(prev))) return prev;
+        return nextOrders[0]?.id || "";
       });
-      setSelectedOrderByTab((prev) => ({
-        [TAB_COLLECTED]: pickSelectedId(prev[TAB_COLLECTED], nextCollected),
-        [TAB_PREVIOUS]: pickSelectedId(prev[TAB_PREVIOUS], nextPrevious)
-      }));
 
-      if (!nextCollected.length && !nextPrevious.length) {
+      if (!nextOrders.length) {
         setCleanupMsg("لا يوجد أرشيف بعد.");
-      } else if (nextCollected.length) {
-        await cleanupArchiveImages(nextCollected);
+      } else if (collectedForCleanup.length) {
+        await cleanupArchiveImages(collectedForCleanup);
       } else {
         setCleanupMsg("");
       }
@@ -309,43 +273,21 @@ export default function ArchivePage() {
 
         <div className="archive-grid">
           <aside className="archive-card archive-list-card">
-            <div className="archive-tabs" role="tablist" aria-label="تصنيفات الأرشيف">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={archiveTab === TAB_COLLECTED}
-                className={`archive-tab ${archiveTab === TAB_COLLECTED ? "active" : ""}`}
-                onClick={() => setArchiveTab(TAB_COLLECTED)}
-              >
-                طلبات تم تحصيلها
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={archiveTab === TAB_PREVIOUS}
-                className={`archive-tab ${archiveTab === TAB_PREVIOUS ? "active" : ""}`}
-                onClick={() => setArchiveTab(TAB_PREVIOUS)}
-              >
-                طلبات سابقة
-              </button>
-            </div>
-
             <div className="archive-row">
-              <b>{orderTitle(archiveTab)}</b>
+              <b>الطلبات</b>
               <div className="archive-orders-meta">
-                <span className="archive-pill">{activeOrders.length}</span>
-                <span className="archive-pill">إجمالي التحصيل: {formatILS(totalActivePaid)} ₪</span>
+                <span className="archive-pill">{orders.length}</span>
+                <span className="archive-pill">إجمالي التحصيل: {formatILS(totalArchivedPaid)} ₪</span>
               </div>
             </div>
-
             {cleanupMsg ? <div className="archive-cleanup-msg">{cleanupMsg}</div> : null}
 
             {loading ? <div className="archive-muted archive-spacer">جاري تحميل البيانات...</div> : null}
             {error ? <div className="archive-error archive-spacer">{error}</div> : null}
 
-            {!loading && !error && !activeOrders.length ? (
+            {!loading && !error && !orders.length ? (
               <div className="archive-muted archive-spacer">
-                لا يوجد بيانات في هذا التصنيف
+                لا يوجد بيانات
                 <div className="archive-refresh-row">
                   <button className="archive-btn" type="button" onClick={loadArchive}>
                     تحديث
@@ -354,26 +296,23 @@ export default function ArchivePage() {
               </div>
             ) : null}
 
-            {!loading && !error && activeOrders.length ? (
+            {!loading && !error && orders.length ? (
               <div className="archive-orders-list">
-                {activeOrders.map((order) => {
-                  const active =
-                    String(selectedOrderByTab[archiveTab] || "") === String(order.id || "");
+                {orders.map((order) => {
+                  const active = String(selectedOrderId) === String(order.id);
                   return (
                     <button
                       key={order.id}
                       type="button"
                       className={`archive-order-item ${active ? "active" : ""}`}
-                      onClick={() =>
-                        setSelectedOrderByTab((prev) => ({ ...prev, [archiveTab]: order.id }))
-                      }
+                      onClick={() => setSelectedOrderId(order.id)}
                     >
                       <div className="archive-order-main">
                         <span>{order.orderName}</span>
                         <small>{formatOrderDate(order.createdAt)}</small>
                       </div>
                       <div className="archive-orders-meta">
-                        <span className="archive-pill">{order.purchases.length}</span>
+                        <span className="archive-pill">{order.archiveType}</span>
                         <span className="archive-pill">{formatILS(order.totalPaid)} ₪</span>
                       </div>
                     </button>
@@ -401,6 +340,7 @@ export default function ArchivePage() {
                     <div className="archive-muted">{formatOrderDate(selectedOrder.createdAt)}</div>
                   </div>
                   <div className="archive-row">
+                    <span className="archive-pill">{selectedOrder.archiveType}</span>
                     <span className="archive-pill">عدد المشتريات: {selectedOrder.purchases.length}</span>
                     <span className="archive-pill">المجموع الكلي: {formatILS(selectedOrder.totalPaid)} ₪</span>
                   </div>

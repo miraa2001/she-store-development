@@ -1,22 +1,22 @@
 import { useMemo, useState } from "react";
-import { formatILS, parsePrice } from "../../lib/orders";
+import { formatILS } from "../../lib/orders";
 
-const COL_TO_ORDER = "to-order";
-const COL_ORDERED = "ordered";
-const COL_ARRIVED = "arrived";
+const COL_PENDING = "pending";
+const COL_RECEIVED = "received";
+const COL_COLLECTED = "collected";
 
 const COLUMNS = [
-  { id: COL_TO_ORDER, title: "قيد الطلب" },
-  { id: COL_ORDERED, title: "تم الطلب" },
-  { id: COL_ARRIVED, title: "وصل" }
+  { id: COL_PENDING, title: "قيد الانتظار" },
+  { id: COL_RECEIVED, title: "تم الاستلام" },
+  { id: COL_COLLECTED, title: "تم التحصيل" }
 ];
 
 function resolveColumnId(purchase) {
-  if (purchase?.collected) return COL_ARRIVED;
-  const price = parsePrice(purchase?.price);
-  const paid = parsePrice(purchase?.paid_price);
-  if (price > 0 && paid >= price) return COL_ORDERED;
-  return COL_TO_ORDER;
+  const pickedUp = !!purchase?.picked_up;
+  const collected = !!purchase?.collected;
+  if (pickedUp && collected) return COL_COLLECTED;
+  if (pickedUp) return COL_RECEIVED;
+  return COL_PENDING;
 }
 
 export default function KanbanView({ purchases, onMovePurchase, onOpenLightbox, movingPurchaseId }) {
@@ -31,9 +31,9 @@ export default function KanbanView({ purchases, onMovePurchase, onOpenLightbox, 
 
   const columns = useMemo(() => {
     const seed = {
-      [COL_TO_ORDER]: [],
-      [COL_ORDERED]: [],
-      [COL_ARRIVED]: []
+      [COL_PENDING]: [],
+      [COL_RECEIVED]: [],
+      [COL_COLLECTED]: []
     };
 
     (purchases || []).forEach((purchase) => {

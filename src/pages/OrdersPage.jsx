@@ -4,7 +4,6 @@ import "./orders-page.css";
 import {
   fetchOrdersWithSummary,
   groupOrdersByMonth,
-  isOlderThanCurrentMonth,
   parsePrice
 } from "../lib/orders";
 import { useAuthProfile } from "../hooks/useAuthProfile";
@@ -16,6 +15,7 @@ import {
   markPurchasePaidPrice,
   restoreDeletedPurchase,
   sanitizeLinks,
+  searchPurchasesByCustomerName,
   updatePurchaseWithRelations
 } from "../lib/purchases";
 import { searchByName } from "../lib/search";
@@ -265,6 +265,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
+  const [orderSearchMatches, setOrderSearchMatches] = useState(null);
   const [purchaseSearch, setPurchaseSearch] = useState("");
 
   const [purchases, setPurchases] = useState([]);
@@ -318,13 +319,47 @@ export default function OrdersPage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const groupedOrders = useMemo(() => groupOrdersByMonth(orders, search), [orders, search]);
+  useEffect(() => {
+    let cancelled = false;
+    const needle = String(search || "").trim();
+
+    if (!needle) {
+      setOrderSearchMatches(null);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const rows = await searchPurchasesByCustomerName(needle, 500);
+        if (cancelled) return;
+        const ids = new Set((rows || []).map((row) => String(row.order_id)).filter(Boolean));
+        setOrderSearchMatches(ids);
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) setOrderSearchMatches(new Set());
+      }
+    }, 220);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [search]);
+
+  const filteredOrders = useMemo(() => {
+    const needle = String(search || "").trim();
+    if (!needle) return orders;
+    if (!orderSearchMatches || !orderSearchMatches.size) return [];
+    return orders.filter((order) => orderSearchMatches.has(String(order.id)));
+  }, [orders, orderSearchMatches, search]);
+
+  const groupedOrders = useMemo(() => groupOrdersByMonth(filteredOrders), [filteredOrders]);
   const searchCount = useMemo(
     () => groupedOrders.reduce((sum, group) => sum + group.orders.length, 0),
     [groupedOrders]
   );
 
-  const totalOrders = orders.length;
+  const totalOrders = filteredOrders.length;
   const isRahaf = profile.role === "rahaf";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
@@ -376,19 +411,14 @@ export default function OrdersPage() {
 
     try {
       const data = await fetchOrdersWithSummary();
-      const currentMonthOrders = (data || []).filter(
-        (order) => !isOlderThanCurrentMonth(order.createdAt)
-      );
-      setOrders(currentMonthOrders);
+      const allOrders = data || [];
+      setOrders(allOrders);
       setSelectedOrderId((prev) => {
         const candidate = preferredId || prev;
-        if (
-          candidate &&
-          currentMonthOrders.some((order) => String(order.id) === String(candidate))
-        ) {
+        if (candidate && allOrders.some((order) => String(order.id) === String(candidate))) {
           return candidate;
         }
-        return currentMonthOrders[0]?.id || "";
+        return allOrders[0]?.id || "";
       });
     } catch (error) {
       console.error(error);
@@ -1176,19 +1206,18 @@ export default function OrdersPage() {
   const handleMovePurchaseKanban = async (purchase, targetColumn) => {
     if (!purchase?.id || !selectedOrder) return;
 
-    const price = parsePrice(purchase.price);
     let patch = {};
     let successText = "";
 
-    if (targetColumn === "to-order") {
-      patch = { collected: false, paid_price: 0 };
-      successText = "تم نقل المشترى إلى قيد الطلب.";
-    } else if (targetColumn === "ordered") {
-      patch = { collected: false, paid_price: price };
-      successText = "تم نقل المشترى إلى تم الطلب.";
-    } else if (targetColumn === "arrived") {
-      patch = { collected: true, paid_price: price };
-      successText = "تم نقل المشترى إلى وصل.";
+    if (targetColumn === "pending") {
+      patch = { picked_up: false, collected: false };
+      successText = "تم نقل المشترى إلى قيد الانتظار.";
+    } else if (targetColumn === "received") {
+      patch = { picked_up: true, collected: false };
+      successText = "تم نقل المشترى إلى تم الاستلام.";
+    } else if (targetColumn === "collected") {
+      patch = { picked_up: true, collected: true };
+      successText = "تم نقل المشترى إلى تم التحصيل.";
     } else {
       return;
     }

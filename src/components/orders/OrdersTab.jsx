@@ -7,13 +7,6 @@ function normalizeSlideIndex(index, total) {
   return ((Number(index) || 0) % total + total) % total;
 }
 
-function formatPurchaseDateTime(iso) {
-  if (!iso) return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("ar", { day: "2-digit", month: "2-digit", year: "2-digit" });
-}
-
 export default function OrdersTab({
   selectedOrder,
   purchaseStats,
@@ -271,7 +264,6 @@ export default function OrdersTab({
                 <div className="purchase-mobile-shell">
                   <div className="purchase-mobile-head">
                     <strong>{purchase.customer_name || "—"}</strong>
-                    <span>{formatPurchaseDateTime(purchase.created_at)}</span>
                   </div>
 
                   <div className="purchase-mobile-bubble">
@@ -306,20 +298,20 @@ export default function OrdersTab({
                         ))}
                       </div>
                     ) : null}
+
+                    {canShowWhatsapp ? (
+                      <div className="wa-actions-row purchase-mobile-wa">
+                        <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
+                          استعلام عن نقطة الاستلام❓
+                        </button>
+                        <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
+                          اعلام بوصول الطلب🔔
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="purchase-mobile-actions">{actionsNode}</div>
-
-                  {canShowWhatsapp ? (
-                    <div className="wa-actions-row purchase-mobile-wa">
-                      <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                        استعلام عن نقطة الاستلام❓
-                      </button>
-                      <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                        اعلام بوصول الطلب🔔
-                      </button>
-                    </div>
-                  ) : null}
                 </div>
               </article>
             );

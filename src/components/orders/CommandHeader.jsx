@@ -69,7 +69,7 @@ export default function CommandHeader({
               <input
                 value={search}
                 onChange={(event) => onSearchChange(event.target.value)}
-                placeholder="بحث باسم الطلب..."
+                placeholder="بحث باسم المشترية..."
               />
               {search ? (
                 <span className="search-count">
@@ -114,7 +114,7 @@ export default function CommandHeader({
 
           <div className="search-shell command-tablet-search">
             <Icon name="search" className="search-icon" />
-            <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم الطلب..." />
+            <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم المشترية..." />
             {search ? (
               <span className="search-count">
                 <b>{searchCount}</b>
@@ -152,7 +152,7 @@ export default function CommandHeader({
 
         <div className="search-shell command-search-group">
           <Icon name="search" className="search-icon" />
-          <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم الطلب..." />
+          <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم المشترية..." />
           {search ? (
             <span className="search-count">
               <b>{searchCount}</b>
