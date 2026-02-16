@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import MinimalInput from "../components/common/MinimalInput";
+import { sb } from "../lib/supabaseClient";
 import "./login-page.css";
 
 const EMAIL_DOMAIN = "she-store.com";
@@ -90,8 +91,8 @@ export default function LoginPage() {
           navigate(nextRoute, { replace: true });
           return;
         }
-      } catch (err) {
-        console.error(err);
+      } catch (sessionError) {
+        console.error(sessionError);
       } finally {
         if (mounted) setCheckingSession(false);
       }
@@ -143,47 +144,27 @@ export default function LoginPage() {
         <div className="login-accent" aria-hidden="true" />
 
         <div className="login-fields">
-          <div className="inputContainer">
-            <input
-              required
-              id="login-username"
-              className="inputField"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              placeholder="اسم المستخدم"
-              type="text"
-              autoComplete="username"
-              disabled={submitting}
-              dir="rtl"
-            />
-            <label className="floatingLabel" htmlFor="login-username">
-              اسم المستخدم
-            </label>
-            <svg viewBox="0 0 448 512" className="fieldIcon" aria-hidden="true">
-              <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z" />
-            </svg>
-          </div>
+          <MinimalInput
+            type="text"
+            placeholder="اسم المستخدم"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            name="username"
+            autoComplete="username"
+            disabled={submitting}
+            dir="rtl"
+          />
 
-          <div className="inputContainer">
-            <input
-              required
-              id="login-password"
-              className="inputField"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="كلمة المرور"
-              type="password"
-              autoComplete="current-password"
-              disabled={submitting}
-              dir="rtl"
-            />
-            <label className="floatingLabel" htmlFor="login-password">
-              كلمة المرور
-            </label>
-            <svg viewBox="0 0 448 512" className="fieldIcon" aria-hidden="true">
-              <path d="M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zM120 152c0-57.3 46.7-104 104-104s104 46.7 104 104v72H120v-72zm152 170.7V376c0 13.3-10.7 24-24 24s-24-10.7-24-24v-53.3c-14.2-8.3-24-23.8-24-41.7 0-26.5 21.5-48 48-48s48 21.5 48 48c0 17.9-9.8 33.4-24 41.7z" />
-            </svg>
-          </div>
+          <MinimalInput
+            type="password"
+            placeholder="كلمة المرور"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            name="password"
+            autoComplete="current-password"
+            disabled={submitting}
+            dir="rtl"
+          />
         </div>
 
         <button type="submit" className="login-btn" disabled={submitting}>
