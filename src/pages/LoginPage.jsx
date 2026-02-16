@@ -32,21 +32,15 @@ function normalizeNextRoute(rawNext) {
   let target = String(rawNext).trim();
   if (!target) return fallback;
 
-  if (target.startsWith("#/")) {
-    target = target.slice(1);
-  }
+  if (target.startsWith("#/")) target = target.slice(1);
 
   if (!target.startsWith("/")) {
     const filePart = target.split(/[?#]/)[0].split("/").pop()?.toLowerCase();
-    if (filePart && LEGACY_ROUTE_MAP[filePart]) {
-      return LEGACY_ROUTE_MAP[filePart];
-    }
+    if (filePart && LEGACY_ROUTE_MAP[filePart]) return LEGACY_ROUTE_MAP[filePart];
     return fallback;
   }
 
-  if (target.startsWith("/legacy/")) {
-    return target;
-  }
+  if (target.startsWith("/legacy/")) return target;
 
   const allowedRoutes = [
     "/",
@@ -67,12 +61,45 @@ function normalizeNextRoute(rawNext) {
   return fallback;
 }
 
+function PackageIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16.5 9.4 7.55 4.24" />
+      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+      <path d="m3.3 7 8.7 5 8.7-5" />
+      <path d="M12 22V12" />
+    </svg>
+  );
+}
+
+function EyeIcon({ open }) {
+  if (open) {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m3 3 18 18" />
+        <path d="M10.58 10.58a2 2 0 0 0 2.83 2.83" />
+        <path d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-4.04 5.01" />
+        <path d="M6.61 6.61A13.53 13.53 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export default function LoginPage() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [checkingSession, setCheckingSession] = useState(true);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -113,7 +140,7 @@ export default function LoginPage() {
     setError("");
 
     if (!username.trim() || !password) {
-      setError("اكتبي اسم المستخدم وكلمة المرور.");
+      setError("يرجى إدخال اسم المستخدم وكلمة المرور.");
       return;
     }
 
@@ -122,7 +149,7 @@ export default function LoginPage() {
 
     const { error: loginError } = await sb.auth.signInWithPassword({ email, password });
     if (loginError) {
-      setError(`فشل الدخول: ${loginError.message}`);
+      setError(`فشل تسجيل الدخول: ${loginError.message}`);
       setSubmitting(false);
       return;
     }
@@ -140,43 +167,65 @@ export default function LoginPage() {
 
   return (
     <div className="login-page" dir="rtl">
-      <form className="login-card" onSubmit={onSubmit}>
-        <img src="legacy/assets/woman.png" alt="She Store" className="login-hero" />
-        <div className="login-title">تسجيل الدخول</div>
-        <div className="login-muted">
-          اكتبي اسم المستخدم وكلمة المرور. (مثل: <b>rahaf</b> أو <b>reem</b> أو <b>rawand</b>)
+      <form className="login-glass-card" onSubmit={onSubmit} noValidate>
+        <div className="login-logo" aria-hidden="true">
+          <PackageIcon />
         </div>
 
-        <label className="login-label" htmlFor="login-username">
-          اسم المستخدم
-        </label>
-        <input
-          id="login-username"
-          value={username}
-          onChange={(event) => setUsername(event.target.value)}
-          placeholder="اسم المستخدم"
-          autoComplete="username"
-          disabled={submitting}
-        />
+        <h1 className="login-title">تسجيل الدخول</h1>
+        <p className="login-subtitle">She Store Dashboard</p>
 
-        <label className="login-label" htmlFor="login-password">
-          كلمة المرور
-        </label>
-        <input
-          id="login-password"
-          type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          placeholder="كلمة المرور"
-          autoComplete="current-password"
-          disabled={submitting}
-        />
+        <div className="login-field">
+          <label className="login-field-label" htmlFor="login-username">
+            اسم المستخدم
+          </label>
+          <input
+            id="login-username"
+            className="login-input"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="اسم المستخدم"
+            autoComplete="username"
+            disabled={submitting}
+            dir="rtl"
+          />
+        </div>
+
+        <div className="login-field">
+          <label className="login-field-label" htmlFor="login-password">
+            كلمة المرور
+          </label>
+          <div className="login-password-wrap">
+            <input
+              id="login-password"
+              className="login-input"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="كلمة المرور"
+              autoComplete="current-password"
+              disabled={submitting}
+              dir="rtl"
+            />
+            <button
+              type="button"
+              className="login-eye-btn"
+              onClick={() => setShowPassword((prev) => !prev)}
+              disabled={submitting}
+              aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+            >
+              <EyeIcon open={showPassword} />
+            </button>
+          </div>
+        </div>
 
         <button type="submit" className="login-btn" disabled={submitting}>
-          {submitting ? "جاري الدخول..." : "دخول"}
+          {submitting ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
         </button>
 
-        {error ? <div className="login-error">{error}</div> : null}
+        <p className={`login-error ${error ? "visible" : ""}`} role="alert" aria-live="polite">
+          {error}
+        </p>
       </form>
     </div>
   );
