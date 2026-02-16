@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import {
   fetchOrdersWithSummary,
+  formatILS,
   groupOrdersByMonth,
   parsePrice
 } from "../lib/orders";

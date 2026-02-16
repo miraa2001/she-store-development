@@ -2336,6 +2336,10 @@
   min-height: 56px;
 }
 
+.command-mobile-row-expanded {
+  justify-content: flex-start;
+}
+
 .command-mobile-icon,
 .command-overflow-btn {
   width: 44px;
@@ -2379,6 +2383,12 @@
   margin: 0 auto;
 }
 
+.search-expand-form.search-expand-inline {
+  max-width: none;
+  margin: 0;
+  flex: 1;
+}
+
 .search-expand-form label {
   position: absolute;
   width: 0;
@@ -2394,7 +2404,7 @@
   border-radius: 14px;
   background: #ffffff;
   color: #111827;
-  padding: 0 16px 0 42px;
+  padding: 0 78px 0 42px;
   font-family: inherit;
   font-size: 14px;
   line-height: 1.5;
@@ -2424,6 +2434,7 @@
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
+  pointer-events: none;
 }
 
 .orders-header-search-results {

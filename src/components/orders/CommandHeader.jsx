@@ -45,26 +45,20 @@ export default function CommandHeader({
   if (isMobile) {
     return (
       <header className="command-header command-header-mobile">
-        <div className="command-mobile-row">
-          <div className="command-mobile-title">
-            <strong>الطلبات</strong>
-            <small>{totalOrders} طلب</small>
-          </div>
-
-          <button
-            type="button"
-            className="icon-btn command-mobile-icon"
-            aria-label="بحث"
-            aria-expanded={searchExpanded}
-            onClick={() => setSearchExpanded((prev) => !prev)}
-          >
-            <Icon name="search" className="icon" />
-          </button>
-        </div>
-
         {searchExpanded ? (
-          <div className="command-mobile-search">
-            <form className={`search-expand-form ${searchExpanded ? "open" : ""}`} onSubmit={(event) => event.preventDefault()}>
+          <div className="command-mobile-row command-mobile-row-expanded">
+            <button
+              type="button"
+              className="icon-btn command-mobile-icon"
+              aria-label="إغلاق البحث"
+              onClick={() => {
+                setSearchExpanded(false);
+                if (!search) onSearchChange("");
+              }}
+            >
+              <Icon name="close" className="icon" />
+            </button>
+            <form className={`search-expand-form search-expand-inline ${searchExpanded ? "open" : ""}`} onSubmit={(event) => event.preventDefault()}>
               <label htmlFor="ordersMobileSearch">Search</label>
               <input
                 id="ordersMobileSearch"
@@ -84,7 +78,24 @@ export default function CommandHeader({
               ) : null}
             </form>
           </div>
-        ) : null}
+        ) : (
+          <div className="command-mobile-row">
+            <div className="command-mobile-title">
+              <strong>الطلبات</strong>
+              <small>{totalOrders} طلب</small>
+            </div>
+
+            <button
+              type="button"
+              className="icon-btn command-mobile-icon"
+              aria-label="بحث"
+              aria-expanded={searchExpanded}
+              onClick={() => setSearchExpanded(true)}
+            >
+              <Icon name="search" className="icon" />
+            </button>
+          </div>
+        )}
       </header>
     );
   }
