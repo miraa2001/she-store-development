@@ -43,7 +43,7 @@ export async function fetchPurchasesByOrder(orderId) {
   const { data, error } = await sb
     .from("purchases")
     .select(
-      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, note, created_at, purchase_links(url), purchase_images(id,storage_path)"
+      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, note, created_at, collected, purchase_links(url), purchase_images(id,storage_path)"
     )
     .eq("order_id", orderId)
     .order("created_at", { ascending: false });

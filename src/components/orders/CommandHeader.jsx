@@ -21,6 +21,9 @@ export default function CommandHeader({
   onEditModeChange,
   onOpenSidebar,
   totalOrders,
+  showDesktopOrdersViewToggle = false,
+  desktopOrdersView = "list",
+  onDesktopOrdersViewChange,
   Icon
 }) {
   const [viewport, setViewport] = useState(() => getViewport());
@@ -43,12 +46,7 @@ export default function CommandHeader({
     return (
       <header className="command-header command-header-mobile">
         <div className="command-mobile-row">
-          <button
-            type="button"
-            className="icon-btn command-mobile-icon"
-            onClick={onOpenSidebar}
-            aria-label="فتح القائمة"
-          >
+          <button type="button" className="icon-btn command-mobile-icon" onClick={onOpenSidebar} aria-label="فتح القائمة">
             <Icon name="menu" className="icon" />
           </button>
 
@@ -94,29 +92,16 @@ export default function CommandHeader({
     return (
       <header className="command-header command-header-tablet">
         <div className="command-tablet-row">
-          <button
-            type="button"
-            className="icon-btn command-mobile-icon"
-            onClick={onOpenSidebar}
-            aria-label="فتح القائمة"
-          >
+          <button type="button" className="icon-btn command-mobile-icon" onClick={onOpenSidebar} aria-label="فتح القائمة">
             <Icon name="menu" className="icon" />
           </button>
 
           {isRahaf ? (
             <div className="tabs-shell command-tablet-tabs" role="tablist" aria-label="التبويبات">
-              <button
-                type="button"
-                className={`tab ${activeTab === "orders" ? "active" : ""}`}
-                onClick={() => onActiveTabChange("orders")}
-              >
+              <button type="button" className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
                 الطلبات
               </button>
-              <button
-                type="button"
-                className={`tab ${activeTab === "view" ? "active" : ""}`}
-                onClick={() => onActiveTabChange("view")}
-              >
+              <button type="button" className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
                 العرض
               </button>
               <button
@@ -133,11 +118,7 @@ export default function CommandHeader({
 
           <div className="search-shell command-tablet-search">
             <Icon name="search" className="search-icon" />
-            <input
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="بحث باسم الطلب..."
-            />
+            <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم الطلب..." />
             {search ? (
               <span className="search-count">
                 <b>{searchCount}</b>
@@ -155,18 +136,10 @@ export default function CommandHeader({
       <div className="command-main command-main-group">
         {isRahaf ? (
           <div className="tabs-shell" role="tablist" aria-label="التبويبات">
-            <button
-              type="button"
-              className={`tab ${activeTab === "orders" ? "active" : ""}`}
-              onClick={() => onActiveTabChange("orders")}
-            >
+            <button type="button" className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
               الطلبات
             </button>
-            <button
-              type="button"
-              className={`tab ${activeTab === "view" ? "active" : ""}`}
-              onClick={() => onActiveTabChange("view")}
-            >
+            <button type="button" className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
               العرض
             </button>
             <button
@@ -183,11 +156,7 @@ export default function CommandHeader({
 
         <div className="search-shell command-search-group">
           <Icon name="search" className="search-icon" />
-          <input
-            value={search}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="بحث باسم الطلب..."
-          />
+          <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث باسم الطلب..." />
           {search ? (
             <span className="search-count">
               <b>{searchCount}</b>
@@ -200,19 +169,30 @@ export default function CommandHeader({
       <div className="command-actions command-action-group">
         {isRahaf ? (
           <div className="mode-shell">
+            <button type="button" className={`mode ${editMode ? "active" : ""}`} onClick={() => onEditModeChange(true)}>
+              تعديل / إضافة
+            </button>
+            <button type="button" className={`mode ${!editMode ? "active" : ""}`} onClick={() => onEditModeChange(false)}>
+              عرض فقط
+            </button>
+          </div>
+        ) : null}
+
+        {showDesktopOrdersViewToggle ? (
+          <div className="orders-view-toggle" role="tablist" aria-label="طريقة عرض المشتريات">
             <button
               type="button"
-              className={`mode ${editMode ? "active" : ""}`}
-              onClick={() => onEditModeChange(true)}
+              className={`orders-view-btn ${desktopOrdersView === "list" ? "active" : ""}`}
+              onClick={() => onDesktopOrdersViewChange?.("list")}
             >
-              تعديل / إضافة
+              List
             </button>
             <button
               type="button"
-              className={`mode ${!editMode ? "active" : ""}`}
-              onClick={() => onEditModeChange(false)}
+              className={`orders-view-btn ${desktopOrdersView === "kanban" ? "active" : ""}`}
+              onClick={() => onDesktopOrdersViewChange?.("kanban")}
             >
-              عرض فقط
+              Kanban
             </button>
           </div>
         ) : null}

@@ -7,6 +7,13 @@ function normalizeSlideIndex(index, total) {
   return ((Number(index) || 0) % total + total) % total;
 }
 
+function formatPurchaseDateTime(iso) {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("ar", { day: "2-digit", month: "2-digit", year: "2-digit" });
+}
+
 export default function OrdersTab({
   selectedOrder,
   purchaseStats,
@@ -31,7 +38,8 @@ export default function OrdersTab({
   onDeletePurchase,
   onOpenLightbox,
   onInquireWhatsapp,
-  onNotifyWhatsapp
+  onNotifyWhatsapp,
+  hidePurchaseGrid = false
 }) {
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
 
@@ -98,7 +106,7 @@ export default function OrdersTab({
         <div className="workspace-empty">لا توجد مشتريات مطابقة.</div>
       ) : null}
 
-      {!purchasesLoading && !purchasesError && filteredPurchases.length ? (
+      {!purchasesLoading && !purchasesError && filteredPurchases.length && !hidePurchaseGrid ? (
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
             const state = paymentState(purchase);
@@ -123,8 +131,8 @@ export default function OrdersTab({
                         onTogglePurchaseMenu(purchase.id);
                       }}
                       aria-label="إجراءات"
-                    aria-haspopup="menu"
-                    aria-expanded={String(menuPurchaseId) === String(purchase.id)}
+                      aria-haspopup="menu"
+                      aria-expanded={String(menuPurchaseId) === String(purchase.id)}
                     >
                       ⋯
                     </button>
@@ -258,6 +266,60 @@ export default function OrdersTab({
                       </div>
                     ) : null}
                   </article>
+                </div>
+
+                <div className="purchase-mobile-shell">
+                  <div className="purchase-mobile-head">
+                    <strong>{purchase.customer_name || "—"}</strong>
+                    <span>{formatPurchaseDateTime(purchase.created_at)}</span>
+                  </div>
+
+                  <div className="purchase-mobile-bubble">
+                    <div className="purchase-mobile-images" dir="ltr">
+                      {imageList.length ? (
+                        imageList.map((img, index) => (
+                          <button
+                            key={img.id || `${purchase.id}-mobile-${index}`}
+                            type="button"
+                            className="purchase-mobile-image"
+                            onClick={() => onOpenLightbox(imageList, index, purchase.customer_name || "صورة المشترى")}
+                            aria-label={`عرض الصورة ${index + 1}`}
+                          >
+                            <img src={img.url} alt={`صورة ${index + 1}`} loading="lazy" />
+                          </button>
+                        ))
+                      ) : (
+                        <div className="purchase-mobile-empty-image">لا توجد صور</div>
+                      )}
+                    </div>
+
+                    <div className="purchase-mobile-summary">
+                      {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
+                    </div>
+
+                    {purchase.links?.length ? (
+                      <div className="purchase-mobile-links">
+                        {purchase.links.map((link, index) => (
+                          <a key={`${purchase.id}-m-link-${index}`} href={link} target="_blank" rel="noreferrer">
+                            رابط {index + 1}
+                          </a>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="purchase-mobile-actions">{actionsNode}</div>
+
+                  {canShowWhatsapp ? (
+                    <div className="wa-actions-row purchase-mobile-wa">
+                      <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
+                        استعلام عن نقطة الاستلام❓
+                      </button>
+                      <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
+                        اعلام بوصول الطلب🔔
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               </article>
             );

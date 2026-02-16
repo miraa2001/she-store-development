@@ -44,6 +44,7 @@ import ViewTab from "../components/tabs/ViewTab";
 import CommandHeader from "../components/orders/CommandHeader";
 import OrdersSidebar from "../components/orders/OrdersSidebar";
 import OrdersTab from "../components/orders/OrdersTab";
+import KanbanView from "../components/orders/KanbanView";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
@@ -256,6 +257,7 @@ export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState("orders");
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(true);
+  const [desktopOrdersView, setDesktopOrdersView] = useState("list");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const { profile } = useAuthProfile();
 
@@ -294,6 +296,7 @@ export default function OrdersPage() {
   const [formAiStatus, setFormAiStatus] = useState({ text: "", isError: false });
   const [formAiRunning, setFormAiRunning] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
+  const [kanbanMovingPurchaseId, setKanbanMovingPurchaseId] = useState("");
   const [newFilePreviews, setNewFilePreviews] = useState([]);
 
   const [toast, setToast] = useState(null);
@@ -306,6 +309,7 @@ export default function OrdersPage() {
 
   const isMobile = viewportWidth < 768;
   const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+  const isDesktop = viewportWidth >= 1024;
 
   useEffect(() => {
     const onResize = () => setViewportWidth(window.innerWidth);
@@ -1168,6 +1172,52 @@ export default function OrdersPage() {
     }
   };
 
+  const handleMovePurchaseKanban = async (purchase, targetColumn) => {
+    if (!purchase?.id || !selectedOrder) return;
+
+    const price = parsePrice(purchase.price);
+    let patch = {};
+    let successText = "";
+
+    if (targetColumn === "to-order") {
+      patch = { collected: false, paid_price: 0 };
+      successText = "تم نقل المشترى إلى قيد الطلب.";
+    } else if (targetColumn === "ordered") {
+      patch = { collected: false, paid_price: price };
+      successText = "تم نقل المشترى إلى تم الطلب.";
+    } else if (targetColumn === "arrived") {
+      patch = { collected: true, paid_price: price };
+      successText = "تم نقل المشترى إلى وصل.";
+    } else {
+      return;
+    }
+
+    setKanbanMovingPurchaseId(String(purchase.id));
+    try {
+      const { error } = await sb.from("purchases").update(patch).eq("id", purchase.id);
+      if (error) throw error;
+
+      setPurchases((prev) =>
+        prev.map((item) =>
+          String(item.id) === String(purchase.id)
+            ? {
+                ...item,
+                ...patch
+              }
+            : item
+        )
+      );
+
+      setToast({ type: "success", text: successText });
+      await refreshOrders(selectedOrder.id);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: "فشل نقل المشترى بين الأعمدة." });
+    } finally {
+      setKanbanMovingPurchaseId("");
+    }
+  };
+
   const speedDialActions = useMemo(() => {
     const actions = [];
 
@@ -1353,6 +1403,9 @@ export default function OrdersPage() {
         onEditModeChange={setEditMode}
         onOpenSidebar={() => setGlobalOpen(true)}
         totalOrders={totalOrders}
+        showDesktopOrdersViewToggle={isDesktop && activeTab === "orders"}
+        desktopOrdersView={desktopOrdersView}
+        onDesktopOrdersViewChange={setDesktopOrdersView}
         Icon={Icon}
       />
 
@@ -1377,34 +1430,46 @@ export default function OrdersPage() {
 
         <section className="workspace-main">
           {activeTab === "orders" ? (
-            <OrdersTab
-              selectedOrder={selectedOrder}
-              purchaseStats={purchaseStats}
-              purchaseSearch={purchaseSearch}
-              onPurchaseSearchChange={setPurchaseSearch}
-              isRahaf={isRahaf}
-              editMode={editMode}
-              onToggleArrived={handleToggleArrived}
-              onOpenAddModal={openAddModal}
-              onExportPdf={exportPdfNative}
-              pdfExporting={pdfExporting}
-              onGeminiAction={handleGeminiToolbarAction}
-              customersError={customersError}
-              purchasesLoading={purchasesLoading}
-              purchasesError={purchasesError}
-              filteredPurchases={filteredPurchases}
-              paymentState={paymentState}
-              menuPurchaseId={menuPurchaseId}
-              onTogglePurchaseMenu={(purchaseId) =>
-                setMenuPurchaseId((prev) => (String(prev) === String(purchaseId) ? "" : purchaseId))
-              }
-              onEditPurchase={openEditModal}
-              onMarkPaid={handleMarkPaid}
-              onDeletePurchase={handleDeletePurchase}
-              onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
-              onInquireWhatsapp={inquirePickupViaWhatsapp}
-              onNotifyWhatsapp={notifyViaWhatsapp}
-            />
+            <>
+              <OrdersTab
+                selectedOrder={selectedOrder}
+                purchaseStats={purchaseStats}
+                purchaseSearch={purchaseSearch}
+                onPurchaseSearchChange={setPurchaseSearch}
+                isRahaf={isRahaf}
+                editMode={editMode}
+                onToggleArrived={handleToggleArrived}
+                onOpenAddModal={openAddModal}
+                onExportPdf={exportPdfNative}
+                pdfExporting={pdfExporting}
+                onGeminiAction={handleGeminiToolbarAction}
+                customersError={customersError}
+                purchasesLoading={purchasesLoading}
+                purchasesError={purchasesError}
+                filteredPurchases={filteredPurchases}
+                paymentState={paymentState}
+                menuPurchaseId={menuPurchaseId}
+                onTogglePurchaseMenu={(purchaseId) =>
+                  setMenuPurchaseId((prev) => (String(prev) === String(purchaseId) ? "" : purchaseId))
+                }
+                onEditPurchase={openEditModal}
+                onMarkPaid={handleMarkPaid}
+                onDeletePurchase={handleDeletePurchase}
+                onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
+                onInquireWhatsapp={inquirePickupViaWhatsapp}
+                onNotifyWhatsapp={notifyViaWhatsapp}
+                hidePurchaseGrid={isDesktop && desktopOrdersView === "kanban"}
+              />
+
+              {isDesktop && desktopOrdersView === "kanban" ? (
+                <KanbanView
+                  purchases={filteredPurchases}
+                  movingPurchaseId={kanbanMovingPurchaseId}
+                  onMovePurchase={handleMovePurchaseKanban}
+                  onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
+                />
+              ) : null}
+            </>
           ) : activeTab === "customers" ? (
             <CustomersTab
               customerSearch={customerSearch}
