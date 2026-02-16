@@ -1,7 +1,12 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
-import { fetchOrdersWithSummary, groupOrdersByMonth, parsePrice } from "../lib/orders";
+import {
+  fetchOrdersWithSummary,
+  groupOrdersByMonth,
+  isOlderThanCurrentMonth,
+  parsePrice
+} from "../lib/orders";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { sb } from "../lib/supabaseClient";
 import {
@@ -366,13 +371,19 @@ export default function OrdersPage() {
 
     try {
       const data = await fetchOrdersWithSummary();
-      setOrders(data);
+      const currentMonthOrders = (data || []).filter(
+        (order) => !isOlderThanCurrentMonth(order.createdAt)
+      );
+      setOrders(currentMonthOrders);
       setSelectedOrderId((prev) => {
         const candidate = preferredId || prev;
-        if (candidate && data.some((order) => String(order.id) === String(candidate))) {
+        if (
+          candidate &&
+          currentMonthOrders.some((order) => String(order.id) === String(candidate))
+        ) {
           return candidate;
         }
-        return data[0]?.id || "";
+        return currentMonthOrders[0]?.id || "";
       });
     } catch (error) {
       console.error(error);

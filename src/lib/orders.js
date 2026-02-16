@@ -87,6 +87,17 @@ export async function fetchOrdersWithSummary() {
   });
 }
 
+export function currentMonthStart(now = new Date()) {
+  return new Date(now.getFullYear(), now.getMonth(), 1);
+}
+
+export function isOlderThanCurrentMonth(isoDate, now = new Date()) {
+  if (!isoDate) return false;
+  const parsed = new Date(isoDate);
+  if (Number.isNaN(parsed.getTime())) return false;
+  return parsed < currentMonthStart(now);
+}
+
 export async function fetchArrivedOrders() {
   const { data, error } = await sb
     .from("orders")

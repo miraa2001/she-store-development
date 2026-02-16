@@ -149,6 +149,38 @@
   flex-wrap: wrap;
 }
 
+.archive-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 5px;
+  border: 1px solid #d8e3de;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.archive-tab {
+  border: 0;
+  background: transparent;
+  color: #4b5563;
+  border-radius: 10px;
+  min-height: 38px;
+  padding: 0 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;
+}
+
+.archive-tab.active {
+  color: #fff;
+  background: linear-gradient(135deg, #4f8a7b, #3d6f61);
+  box-shadow: 0 8px 16px rgba(79, 138, 123, 0.24);
+}
+
 .archive-orders-meta {
   display: inline-flex;
   align-items: center;
@@ -194,6 +226,22 @@
   align-items: center;
   text-align: right;
   gap: 8px;
+}
+
+.archive-order-main {
+  display: grid;
+  gap: 3px;
+  justify-items: start;
+  text-align: right;
+}
+
+.archive-order-main small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.archive-order-item.active .archive-order-main small {
+  color: #335d52;
 }
 
 .archive-order-item.active {
