@@ -15,23 +15,56 @@ export default function OrdersSidebar({
   onCollapse,
   Icon
 }) {
+  const collapsedOrders = groupedOrders.flatMap((group) => group.orders).slice(0, 8);
+
+  const orderInitial = (name) => {
+    const text = String(name || "").trim();
+    return text ? text.charAt(0) : "؟";
+  };
+
+  const orderTooltip = (order) =>
+    `${order.name}\n#${order.orderNo} • ${order.purchaseCount || 0} ق\n${order.amountLabel} • ${statusLabel(order.status)}`;
+
   if (collapsed) {
     return (
       <aside className="workspace-collapsed">
-        <button className="icon-btn collapsed-expand" onClick={onExpand}>
+        <button className="icon-btn collapsed-expand" onClick={onExpand} aria-label="توسيع القائمة">
           <Icon name="chevron-left" className="icon" />
         </button>
 
-        <div className="collapsed-pill active-pill">
-          <Icon name="package" className="icon" />
-          <b>{totalOrders}</b>
-        </div>
+        <div className="collapsed-orders-list">
+          {ordersLoading ? <div className="collapsed-empty">...</div> : null}
 
-        {groupedOrders.slice(0, 4).map((group) => (
-          <div key={group.month} className="collapsed-pill">
-            {group.orders.length}
-          </div>
-        ))}
+          {!ordersLoading && ordersError ? <div className="collapsed-empty">!</div> : null}
+
+          {!ordersLoading && !ordersError && !collapsedOrders.length ? (
+            <div className="collapsed-empty">0</div>
+          ) : null}
+
+          {!ordersLoading && !ordersError
+            ? collapsedOrders.map((order) => {
+                const selected = String(selectedOrderId) === String(order.id);
+                return (
+                  <button
+                    key={order.id}
+                    type="button"
+                    className={`collapsed-order-card ${selected ? "selected" : ""}`}
+                    data-tooltip={orderTooltip(order)}
+                    title={orderTooltip(order)}
+                    onClick={() => {
+                      onSelectOrder(order.id);
+                      if (isRahaf) onForceOrdersTab();
+                    }}
+                  >
+                    <span className={`collapsed-order-dot ${selected ? "selected" : ""}`} />
+                    <span className="collapsed-order-initial">{orderInitial(order.name)}</span>
+                    <span className="collapsed-order-no">#{order.orderNo}</span>
+                    <span className="collapsed-order-count">{order.purchaseCount || 0} ق</span>
+                  </button>
+                );
+              })
+            : null}
+        </div>
       </aside>
     );
   }

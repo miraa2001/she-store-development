@@ -69,19 +69,23 @@ export async function fetchOrdersWithSummary() {
   if (purchasesError) throw purchasesError;
 
   const totals = new Map();
+  const purchaseCounts = new Map();
   (purchases || []).forEach((purchase) => {
     const id = purchase.order_id;
     if (!id) return;
     const next = (totals.get(id) || 0) + parsePrice(purchase.price);
     totals.set(id, next);
+    purchaseCounts.set(id, (purchaseCounts.get(id) || 0) + 1);
   });
 
   return normalizedOrders.map((order) => {
     const total = totals.get(order.id) || 0;
+    const purchaseCount = purchaseCounts.get(order.id) || 0;
     return {
       ...order,
       amountRaw: total,
       amountLabel: `${formatILS(total)} ₪`,
+      purchaseCount,
       status: order.arrived ? "completed" : "pending"
     };
   });
