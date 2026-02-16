@@ -1380,12 +1380,16 @@ export default function OrdersPage() {
 
   if (!profile.authenticated) {
     return (
-      <div className="orders-page orders-loading-screen" dir="rtl">
-        <div className="legacy-note legacy-note-danger">
-          <h2>لا توجد جلسة نشطة</h2>
-          <p>يلزم تسجيل الدخول قبل استخدام واجهة React.</p>
-          <a href="#/login" className="mode auth-link">
-            فتح تسجيل الدخول
+      <div className="orders-page orders-auth-screen" dir="rtl">
+        <div className="orders-auth-empty">
+          <div className="orders-auth-logo" aria-hidden="true">
+            <Icon name="package" className="icon" />
+          </div>
+          <div className="orders-auth-brand">She Store</div>
+          <h2>مرحباً بك</h2>
+          <p>يرجى تسجيل الدخول للمتابعة</p>
+          <a href="#/login" className="auth-primary-btn">
+            تسجيل الدخول
           </a>
         </div>
       </div>
