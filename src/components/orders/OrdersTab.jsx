@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatILS } from "../../lib/orders";
 import SessionLoader from "../common/SessionLoader";
 
@@ -32,9 +32,17 @@ export default function OrdersTab({
   onOpenLightbox,
   onInquireWhatsapp,
   onNotifyWhatsapp,
+  highlightPurchaseId = "",
   hidePurchaseGrid = false
 }) {
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
+  const highlightRef = useRef(null);
+
+  useEffect(() => {
+    if (!highlightPurchaseId) return;
+    if (!highlightRef.current) return;
+    highlightRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightPurchaseId, filteredPurchases.length]);
 
   const setSlideIndex = (purchaseId, total, nextIndex) => {
     const normalized = normalizeSlideIndex(nextIndex, total);
@@ -154,7 +162,12 @@ export default function OrdersTab({
             );
 
             return (
-              <article key={purchase.id} className="purchase-card" data-menu-root>
+              <article
+                key={purchase.id}
+                className={`purchase-card ${String(highlightPurchaseId) === String(purchase.id) ? "purchase-highlight" : ""}`}
+                ref={String(highlightPurchaseId) === String(purchase.id) ? highlightRef : null}
+                data-menu-root
+              >
                 <div className="purchase-desktop-shell">
                   <article className="purchaseVCard">
                     <div className="purchaseVMedia" dir="ltr">

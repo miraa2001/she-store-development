@@ -265,7 +265,9 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
-  const [orderSearchMatches, setOrderSearchMatches] = useState(null);
+  const [headerSearchResults, setHeaderSearchResults] = useState([]);
+  const [headerSearchLoading, setHeaderSearchLoading] = useState(false);
+  const [headerSearchTouched, setHeaderSearchTouched] = useState(false);
   const [purchaseSearch, setPurchaseSearch] = useState("");
 
   const [purchases, setPurchases] = useState([]);
@@ -304,6 +306,7 @@ export default function OrdersPage() {
   const [toast, setToast] = useState(null);
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
+  const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const hasInitializedUrlState = useRef(false);
 
   const location = useLocation();
@@ -324,19 +327,23 @@ export default function OrdersPage() {
     const needle = String(search || "").trim();
 
     if (!needle) {
-      setOrderSearchMatches(null);
+      setHeaderSearchLoading(false);
+      setHeaderSearchResults([]);
       return undefined;
     }
 
+    setHeaderSearchTouched(true);
     const timer = window.setTimeout(async () => {
       try {
-        const rows = await searchPurchasesByCustomerName(needle, 500);
+        setHeaderSearchLoading(true);
+        const rows = await searchPurchasesByCustomerName(needle, 100);
         if (cancelled) return;
-        const ids = new Set((rows || []).map((row) => String(row.order_id)).filter(Boolean));
-        setOrderSearchMatches(ids);
+        setHeaderSearchResults(rows || []);
       } catch (error) {
         console.error(error);
-        if (!cancelled) setOrderSearchMatches(new Set());
+        if (!cancelled) setHeaderSearchResults([]);
+      } finally {
+        if (!cancelled) setHeaderSearchLoading(false);
       }
     }, 220);
 
@@ -346,20 +353,10 @@ export default function OrdersPage() {
     };
   }, [search]);
 
-  const filteredOrders = useMemo(() => {
-    const needle = String(search || "").trim();
-    if (!needle) return orders;
-    if (!orderSearchMatches || !orderSearchMatches.size) return [];
-    return orders.filter((order) => orderSearchMatches.has(String(order.id)));
-  }, [orders, orderSearchMatches, search]);
+  const groupedOrders = useMemo(() => groupOrdersByMonth(orders), [orders]);
+  const searchCount = useMemo(() => headerSearchResults.length, [headerSearchResults]);
 
-  const groupedOrders = useMemo(() => groupOrdersByMonth(filteredOrders), [filteredOrders]);
-  const searchCount = useMemo(
-    () => groupedOrders.reduce((sum, group) => sum + group.orders.length, 0),
-    [groupedOrders]
-  );
-
-  const totalOrders = filteredOrders.length;
+  const totalOrders = orders.length;
   const isRahaf = profile.role === "rahaf";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
@@ -385,6 +382,12 @@ export default function OrdersPage() {
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orders, selectedOrderId]
   );
+
+  const orderNameById = useMemo(() => {
+    const map = new Map();
+    orders.forEach((order) => map.set(String(order.id), order.name));
+    return map;
+  }, [orders]);
 
   const filteredPurchases = useMemo(() => {
     return searchByName(purchases, purchaseSearch, (item) => [item.customer_name, item.note]);
@@ -588,6 +591,12 @@ export default function OrdersPage() {
     const timer = setTimeout(() => setToast(null), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
+
+  useEffect(() => {
+    if (!highlightPurchaseId) return undefined;
+    const timer = window.setTimeout(() => setHighlightPurchaseId(""), 2000);
+    return () => window.clearTimeout(timer);
+  }, [highlightPurchaseId]);
 
   useEffect(() => {
     const onDocClick = (event) => {
@@ -1203,6 +1212,18 @@ export default function OrdersPage() {
     }
   };
 
+  const handleHeaderSearchPick = (row) => {
+    if (!row?.order_id || !row?.id) return;
+    setActiveTab("orders");
+    setSelectedOrderId(row.order_id);
+    setMenuPurchaseId("");
+    setPurchaseSearch("");
+    setSearch("");
+    setHeaderSearchTouched(false);
+    setHeaderSearchResults([]);
+    setHighlightPurchaseId(String(row.id));
+  };
+
   const handleMovePurchaseKanban = async (purchase, targetColumn) => {
     if (!purchase?.id || !selectedOrder) return;
 
@@ -1443,6 +1464,33 @@ export default function OrdersPage() {
         Icon={Icon}
       />
 
+      {String(search || "").trim() ? (
+        <div className="orders-header-search-results">
+          {headerSearchLoading ? (
+            <div className="orders-search-hint">جاري البحث عن المشتريات...</div>
+          ) : headerSearchResults.length ? (
+            <div className="orders-search-list">
+              {headerSearchResults.map((row) => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className="orders-search-item"
+                  onClick={() => handleHeaderSearchPick(row)}
+                >
+                  <strong>{row.customer_name || "بدون اسم"}</strong>
+                  <span>
+                    {orderNameById.get(String(row.order_id)) || "طلب"} • {row.qty || 0} قطع •{" "}
+                    {formatILS(row.price)} ₪
+                  </span>
+                </button>
+              ))}
+            </div>
+          ) : headerSearchTouched ? (
+            <div className="orders-search-hint">لا توجد مشتريات مطابقة.</div>
+          ) : null}
+        </div>
+      ) : null}
+
       {isMobile && activeTab === "orders" ? (
         <HorizontalOrderPicker
           groupedOrders={groupedOrders}
@@ -1506,6 +1554,7 @@ export default function OrdersPage() {
                 onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
                 onInquireWhatsapp={inquirePickupViaWhatsapp}
                 onNotifyWhatsapp={notifyViaWhatsapp}
+                highlightPurchaseId={highlightPurchaseId}
                 hidePurchaseGrid={isDesktop && desktopOrdersView === "kanban"}
               />
 

@@ -64,20 +64,25 @@ export default function CommandHeader({
 
         {searchExpanded ? (
           <div className="command-mobile-search">
-            <div className="search-shell">
-              <Icon name="search" className="search-icon" />
+            <form className={`search-expand-form ${searchExpanded ? "open" : ""}`} onSubmit={(event) => event.preventDefault()}>
+              <label htmlFor="ordersMobileSearch">Search</label>
               <input
+                id="ordersMobileSearch"
+                className="search-expand-input"
+                type="search"
                 value={search}
                 onChange={(event) => onSearchChange(event.target.value)}
                 placeholder="بحث باسم المشترية..."
+                autoFocus
               />
+              <span className="search-expand-caret" />
               {search ? (
-                <span className="search-count">
+                <span className="search-count search-expand-count">
                   <b>{searchCount}</b>
                   <small>نتيجة</small>
                 </span>
               ) : null}
-            </div>
+            </form>
           </div>
         ) : null}
       </header>
