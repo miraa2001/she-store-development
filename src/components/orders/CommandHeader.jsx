@@ -46,10 +46,6 @@ export default function CommandHeader({
     return (
       <header className="command-header command-header-mobile">
         <div className="command-mobile-row">
-          <button type="button" className="icon-btn command-mobile-icon" onClick={onOpenSidebar} aria-label="فتح القائمة">
-            <Icon name="menu" className="icon" />
-          </button>
-
           <div className="command-mobile-title">
             <strong>الطلبات</strong>
             <small>{totalOrders} طلب</small>

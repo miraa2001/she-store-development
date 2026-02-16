@@ -2359,6 +2359,84 @@
   flex: 1;
 }
 
+.orders-horizontal-scroll-wrap {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .orders-horizontal-scroll-wrap {
+    display: flex;
+    align-items: center;
+    height: 80px;
+    position: sticky;
+    top: 76px;
+    z-index: 18;
+    background: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  .orders-horizontal-scroll {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 12px 16px;
+  }
+
+  .orders-horizontal-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .orders-horizontal-pill {
+    flex: 0 0 120px;
+    width: 120px;
+    height: 64px;
+    border-radius: 12px;
+    border: 1px solid #dde7e3;
+    background: #fff;
+    color: #667085;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    scroll-snap-align: start;
+    cursor: pointer;
+  }
+
+  .orders-horizontal-pill .initial {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .orders-horizontal-pill .order-id {
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  .orders-horizontal-pill.selected {
+    border-color: #2e7d32;
+    background: #2e7d32;
+    color: #fff;
+  }
+
+  .orders-horizontal-empty {
+    padding: 0 16px;
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .orders-horizontal-error {
+    color: #b42318;
+  }
+}
+
 @media (max-width: 1023px) {
   .order-detail-actions {
     display: flex;

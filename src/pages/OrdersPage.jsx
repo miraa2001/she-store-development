@@ -42,6 +42,7 @@ import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
 import CommandHeader from "../components/orders/CommandHeader";
+import HorizontalOrderPicker from "../components/orders/HorizontalOrderPicker";
 import OrdersSidebar from "../components/orders/OrdersSidebar";
 import OrdersTab from "../components/orders/OrdersTab";
 import KanbanView from "../components/orders/KanbanView";
@@ -1361,36 +1362,40 @@ export default function OrdersPage() {
 
   return (
     <div className="orders-page" dir="rtl">
-      <div
-        className={`global-overlay app-sidebar-overlay ${globalOpen ? "open" : ""}`}
-        onClick={() => setGlobalOpen(false)}
-      />
+      {!isMobile ? (
+        <>
+          <div
+            className={`global-overlay app-sidebar-overlay ${globalOpen ? "open" : ""}`}
+            onClick={() => setGlobalOpen(false)}
+          />
 
-      <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
-        <div className="global-sidebar-head app-sidebar-head">
-          <b>القائمة</b>
-          <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
-            ✕
-          </button>
-        </div>
+          <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
+            <div className="global-sidebar-head app-sidebar-head">
+              <b>القائمة</b>
+              <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
+                ✕
+              </button>
+            </div>
 
-        <nav className="global-sidebar-nav app-sidebar-content">
-          {visibleNavItems.map((item) => (
-            <a
-              key={item.id}
-              className={`app-sidebar-link ${isSidebarItemActive(item.href) ? "active" : ""}`}
-              href={item.href}
-              onClick={() => setGlobalOpen(false)}
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+            <nav className="global-sidebar-nav app-sidebar-content">
+              {visibleNavItems.map((item) => (
+                <a
+                  key={item.id}
+                  className={`app-sidebar-link ${isSidebarItemActive(item.href) ? "active" : ""}`}
+                  href={item.href}
+                  onClick={() => setGlobalOpen(false)}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </nav>
 
-        <button type="button" className="app-sidebar-link app-sidebar-danger" onClick={signOut}>
-          تسجيل الخروج
-        </button>
-      </aside>
+            <button type="button" className="app-sidebar-link app-sidebar-danger" onClick={signOut}>
+              تسجيل الخروج
+            </button>
+          </aside>
+        </>
+      ) : null}
 
       <CommandHeader
         isRahaf={isRahaf}
@@ -1409,11 +1414,8 @@ export default function OrdersPage() {
         Icon={Icon}
       />
 
-      <div className="workspace">
-        <OrdersSidebar
-          collapsed={collapsed}
-          sidebarWidth={sidebarWidth}
-          onStartResize={() => setResizing(true)}
+      {isMobile && activeTab === "orders" ? (
+        <HorizontalOrderPicker
           groupedOrders={groupedOrders}
           ordersLoading={ordersLoading}
           ordersError={ordersError}
@@ -1421,12 +1423,29 @@ export default function OrdersPage() {
           onSelectOrder={setSelectedOrderId}
           isRahaf={isRahaf}
           onForceOrdersTab={() => setActiveTab("orders")}
-          totalOrders={totalOrders}
-          statusLabel={statusLabel}
-          onExpand={() => setCollapsed(false)}
-          onCollapse={() => setCollapsed(true)}
-          Icon={Icon}
         />
+      ) : null}
+
+      <div className="workspace">
+        {!isMobile ? (
+          <OrdersSidebar
+            collapsed={collapsed}
+            sidebarWidth={sidebarWidth}
+            onStartResize={() => setResizing(true)}
+            groupedOrders={groupedOrders}
+            ordersLoading={ordersLoading}
+            ordersError={ordersError}
+            selectedOrderId={selectedOrderId}
+            onSelectOrder={setSelectedOrderId}
+            isRahaf={isRahaf}
+            onForceOrdersTab={() => setActiveTab("orders")}
+            totalOrders={totalOrders}
+            statusLabel={statusLabel}
+            onExpand={() => setCollapsed(false)}
+            onCollapse={() => setCollapsed(true)}
+            Icon={Icon}
+          />
+        ) : null}
 
         <section className="workspace-main">
           {activeTab === "orders" ? (
