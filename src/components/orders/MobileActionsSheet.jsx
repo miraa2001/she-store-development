@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
 export default function MobileActionsSheet({
   open,
@@ -28,7 +29,7 @@ export default function MobileActionsSheet({
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose]);
 
-  return (
+  const sheetNode = (
     <>
       <div className={`mobile-sheet-backdrop ${open ? "open" : ""}`} onClick={onClose} aria-hidden={!open} />
 
@@ -172,5 +173,7 @@ export default function MobileActionsSheet({
       </aside>
     </>
   );
-}
 
+  if (typeof document === "undefined") return sheetNode;
+  return createPortal(sheetNode, document.body);
+}
