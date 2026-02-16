@@ -42,6 +42,7 @@ import OrdersTab from "../components/orders/OrdersTab";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
+import SpeedDial from "../components/common/SpeedDial";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
@@ -240,6 +241,9 @@ function statusLabel(status) {
 }
 
 export default function OrdersPage() {
+  const [viewportWidth, setViewportWidth] = useState(() =>
+    typeof window === "undefined" ? 1280 : window.innerWidth
+  );
   const [globalOpen, setGlobalOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(320);
@@ -294,6 +298,15 @@ export default function OrdersPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isMobile = viewportWidth < 768;
+  const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const groupedOrders = useMemo(() => groupOrdersByMonth(orders, search), [orders, search]);
   const searchCount = useMemo(
@@ -1144,6 +1157,106 @@ export default function OrdersPage() {
     }
   };
 
+  const speedDialActions = useMemo(() => {
+    const actions = [];
+
+    if (isRahaf && isMobile) {
+      actions.push(
+        {
+          id: "tab-orders",
+          label: "فتح الطلبات",
+          icon: "📦",
+          show: activeTab !== "orders",
+          onClick: () => setActiveTab("orders")
+        },
+        {
+          id: "tab-view",
+          label: "فتح العرض",
+          icon: "👁️",
+          show: activeTab !== "view",
+          onClick: () => setActiveTab("view")
+        },
+        {
+          id: "tab-customers",
+          label: "فتح العملاء",
+          icon: "👥",
+          show: activeTab !== "customers",
+          onClick: () => setActiveTab("customers")
+        }
+      );
+    }
+
+    const onOrdersTab = activeTab === "orders";
+    const hasOrder = !!selectedOrder;
+
+    if (isRahaf && onOrdersTab) {
+      actions.push(
+        {
+          id: "mode-edit",
+          label: "تبديل إلى تعديل/إضافة",
+          icon: "✏️",
+          show: !editMode,
+          onClick: () => setEditMode(true)
+        },
+        {
+          id: "mode-view",
+          label: "تبديل إلى عرض فقط",
+          icon: "🪟",
+          show: editMode,
+          onClick: () => setEditMode(false)
+        }
+      );
+    }
+
+    if (onOrdersTab) {
+      actions.push(
+        {
+          id: "add",
+          label: "إضافة مشترى",
+          icon: "➕",
+          primary: true,
+          show: isRahaf && editMode,
+          onClick: openAddModal
+        },
+        {
+          id: "pdf",
+          label: pdfExporting ? "جاري تصدير PDF..." : "تصدير PDF",
+          icon: "📄",
+          show: hasOrder,
+          disabled: pdfExporting,
+          onClick: exportPdfNative
+        },
+        {
+          id: "gemini",
+          label: "تحليل Gemini",
+          icon: "✨",
+          show: isRahaf && editMode && hasOrder,
+          onClick: handleGeminiToolbarAction
+        },
+        {
+          id: "arrived",
+          label: selectedOrder?.arrived ? "إزالة حالة الوصول" : "تعليم الطلب واصل",
+          icon: selectedOrder?.arrived ? "↩️" : "✅",
+          show: isRahaf && hasOrder,
+          onClick: handleToggleArrived
+        }
+      );
+    }
+
+    return actions;
+  }, [
+    activeTab,
+    editMode,
+    exportPdfNative,
+    handleGeminiToolbarAction,
+    handleToggleArrived,
+    isMobile,
+    isRahaf,
+    openAddModal,
+    pdfExporting,
+    selectedOrder
+  ]);
+
   if (profile.loading) {
     return (
       <div className="orders-page orders-loading-screen" dir="rtl">
@@ -1229,13 +1342,6 @@ export default function OrdersPage() {
         onEditModeChange={setEditMode}
         onOpenSidebar={() => setGlobalOpen(true)}
         totalOrders={totalOrders}
-        showOrderActions={activeTab === "orders"}
-        arrivedChecked={!!selectedOrder?.arrived}
-        onToggleArrived={handleToggleArrived}
-        onOpenAddModal={openAddModal}
-        onExportPdf={exportPdfNative}
-        pdfExporting={pdfExporting}
-        onGeminiAction={handleGeminiToolbarAction}
         Icon={Icon}
       />
 
@@ -1322,6 +1428,10 @@ export default function OrdersPage() {
           ) : null}
         </section>
       </div>
+
+      {(isMobile || isTablet) && !globalOpen && !formOpen && !lightbox.open ? (
+        <SpeedDial actions={speedDialActions} position="bottom-right" size="large" />
+      ) : null}
 
       <PurchaseFormModal
         open={formOpen}
