@@ -137,7 +137,7 @@ export default function LoginPage() {
 
   return (
     <StyledWrapper>
-      <form className="form" onSubmit={onSubmit} noValidate dir="rtl">
+      <form className="form" onSubmit={onSubmit} noValidate dir="ltr">
         <p id="heading">Login</p>
 
         <div className="field">
@@ -152,6 +152,7 @@ export default function LoginPage() {
             value={username}
             onChange={(event) => setUsername(event.target.value)}
             disabled={submitting}
+            dir="ltr"
           />
         </div>
 
@@ -167,20 +168,11 @@ export default function LoginPage() {
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={submitting}
+            dir="ltr"
           />
         </div>
-
-        <div className="btn">
-          <button className="button1" type="submit" disabled={submitting}>
-            {submitting ? "Logging in..." : "Login"}
-          </button>
-          <button className="button2" type="button" aria-disabled="true">
-            Sign Up
-          </button>
-        </div>
-
-        <button className="button3" type="button" aria-disabled="true">
-          Forgot Password
+        <button className="button1" type="submit" disabled={submitting}>
+          {submitting ? "Logging in..." : "Login"}
         </button>
 
         <p className={`error ${error ? "visible" : ""}`} role="alert" aria-live="polite">
@@ -218,6 +210,7 @@ const StyledWrapper = styled.div`
     background-color: #171717;
     border-radius: 25px;
     transition: 0.4s ease-in-out;
+    direction: ltr;
   }
 
   .form:hover {
@@ -236,6 +229,7 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-direction: row;
     gap: 0.5em;
     border-radius: 25px;
     padding: 0.6em;
@@ -258,25 +252,20 @@ const StyledWrapper = styled.div`
     outline: none;
     width: 100%;
     color: #d3d3d3;
-  }
-
-  .form .btn {
-    display: flex;
-    justify-content: center;
-    flex-direction: row;
-    margin-top: 2.5em;
+    text-align: left;
   }
 
   .button1 {
     padding: 0.5em 1.1em;
     border-radius: 5px;
-    margin-right: 0.5em;
+    margin-top: 2.5em;
     border: none;
     outline: none;
     transition: 0.4s ease-in-out;
     background-color: #252525;
     color: white;
     cursor: pointer;
+    width: 100%;
   }
 
   .button1:hover {
@@ -287,39 +276,6 @@ const StyledWrapper = styled.div`
   .button1:disabled {
     opacity: 0.65;
     cursor: not-allowed;
-  }
-
-  .button2 {
-    padding: 0.5em 2.3em;
-    border-radius: 5px;
-    border: none;
-    outline: none;
-    transition: 0.4s ease-in-out;
-    background-color: #252525;
-    color: white;
-    cursor: pointer;
-  }
-
-  .button2:hover {
-    background-color: black;
-    color: white;
-  }
-
-  .button3 {
-    margin-bottom: 1em;
-    padding: 0.5em;
-    border-radius: 5px;
-    border: none;
-    outline: none;
-    transition: 0.4s ease-in-out;
-    background-color: #252525;
-    color: white;
-    cursor: pointer;
-  }
-
-  .button3:hover {
-    background-color: red;
-    color: white;
   }
 
   .error {
