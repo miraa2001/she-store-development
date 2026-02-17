@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { formatILS } from "../../lib/orders";
 import SessionLoader from "../common/SessionLoader";
+import OrderStatusDropdown from "./OrderStatusDropdown";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
@@ -76,22 +77,12 @@ export default function OrdersTab({
           />
 
           {canEditOrderStatus && !isMobile ? (
-            <label className="order-status-control">
-              <span>حالة الطلب</span>
-              <select
-                value={selectedOrderStatus}
-                onChange={(event) => onUpdateOrderStatus?.(event.target.value)}
-                disabled={orderStatusSaving || orderStatusLocked}
-              >
-                <option value="pending">قيد الانتظار</option>
-                <option value="arrived">تم وصول الطلب</option>
-                <option value="at_pickup">الطلب في نقطة الاستلام</option>
-                <option value="collected" disabled={!orderStatusLocked}>
-                  تم التحصيل
-                </option>
-              </select>
-              {orderStatusLocked ? <small className="order-status-lock">🔒</small> : null}
-            </label>
+            <OrderStatusDropdown
+              value={selectedOrderStatus}
+              onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
+              disabled={orderStatusSaving || orderStatusLocked}
+              lockCollected={orderStatusLocked}
+            />
           ) : null}
 
           {!isMobile && isRahaf && editMode ? (
@@ -108,22 +99,12 @@ export default function OrdersTab({
 
       {isMobile && canEditOrderStatus ? (
         <div className="mobile-order-controls">
-          <label className="order-status-control">
-            <span>حالة الطلب</span>
-            <select
-              value={selectedOrderStatus}
-              onChange={(event) => onUpdateOrderStatus?.(event.target.value)}
-              disabled={orderStatusSaving || orderStatusLocked}
-            >
-              <option value="pending">قيد الانتظار</option>
-              <option value="arrived">تم وصول الطلب</option>
-              <option value="at_pickup">الطلب في نقطة الاستلام</option>
-              <option value="collected" disabled={!orderStatusLocked}>
-                تم التحصيل
-              </option>
-            </select>
-            {orderStatusLocked ? <small className="order-status-lock">🔒</small> : null}
-          </label>
+          <OrderStatusDropdown
+            value={selectedOrderStatus}
+            onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
+            disabled={orderStatusSaving || orderStatusLocked}
+            lockCollected={orderStatusLocked}
+          />
 
           <button className="btn-primary mobile-add-purchase-btn" type="button" onClick={onOpenAddModal}>
             + إضافة مشترى
