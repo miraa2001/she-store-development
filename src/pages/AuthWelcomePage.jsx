@@ -2,6 +2,7 @@ import { useState } from "react";
 
 export default function WelcomePage({ onContinue }) {
   const [isHovering, setIsHovering] = useState(false);
+  const womanImageSrc = `${import.meta.env.BASE_URL}legacy/assets/woman.png`;
 
   return (
     <div
@@ -211,7 +212,7 @@ export default function WelcomePage({ onContinue }) {
 
         <div style={{ marginBottom: 36 }}>
           <img
-            src="/legacy/assets/woman.png"
+            src={womanImageSrc}
             alt="Shopping"
             className="hero-image"
             style={{
