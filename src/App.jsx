@@ -8,6 +8,7 @@ import CollectionsPage from "./pages/CollectionsPage";
 import HomePickupPage from "./pages/HomePickupPage";
 import PickupPointPage from "./pages/PickupPointPage";
 import LoginPage from "./pages/LoginPage";
+import WelcomeEntryPage from "./pages/WelcomeEntryPage";
 
 const pages = [
   { id: "index", title: "الطلبات", file: "index.html", note: "لوحة الطلبات الرئيسية" },
@@ -114,7 +115,7 @@ export default function App() {
     <>
       <SessionTimeoutGuard />
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<WelcomeEntryPage />} />
         <Route path="/migration" element={<Dashboard />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/pickup-dashboard" element={<PickupDashboardPage />} />
