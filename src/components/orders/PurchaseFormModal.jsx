@@ -248,7 +248,7 @@ export default function PurchaseFormModal({
             onClick={onAnalyzeWithGemini}
             disabled={formSaving || formAiRunning}
           >
-            {formAiRunning ? "جاري التحليل..." : "تحليل Gemini"}
+            {formAiRunning ? "جاري التحليل..." : "تحليل المجموع"}
           </button>
         </div>
       </div>

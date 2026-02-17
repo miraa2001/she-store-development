@@ -22,7 +22,6 @@ export default function OrdersTab({
   onOpenAddModal,
   onExportPdf,
   pdfExporting,
-  onGeminiAction,
   customersError,
   purchasesLoading,
   purchasesError,
@@ -104,11 +103,6 @@ export default function OrdersTab({
           <button className="btn-ghost-light" type="button" onClick={onExportPdf} disabled={pdfExporting}>
             {pdfExporting ? "جاري التصدير..." : "تصدير PDF"}
           </button>
-          {isRahaf && editMode ? (
-            <button className="btn-ghost-light" type="button" onClick={onGeminiAction}>
-              Gemini
-            </button>
-          ) : null}
         </div>
       </div>
 

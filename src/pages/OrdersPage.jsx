@@ -1201,20 +1201,6 @@ export default function OrdersPage() {
     }
   };
 
-  const handleGeminiToolbarAction = () => {
-    if (!isRahaf || !editMode) return;
-    if (!selectedOrder) {
-      setToast({ type: "warn", text: "اختاري طلبًا أولًا." });
-      return;
-    }
-    if (!formOpen) {
-      openAddModal();
-      setFormAiStatus({ text: "أضيفي صورًا ثم اضغطي «تحليل Gemini».", isError: false });
-      return;
-    }
-    analyzeFormImagesWithGemini();
-  };
-
   const exportPdfNative = async () => {
     if (!selectedOrder) return;
     if (pdfExporting) return;
@@ -1507,7 +1493,6 @@ export default function OrdersPage() {
                 onOpenAddModal={openAddModal}
                 onExportPdf={exportPdfNative}
                 pdfExporting={pdfExporting}
-                onGeminiAction={handleGeminiToolbarAction}
                 customersError={customersError}
                 purchasesLoading={purchasesLoading}
                 purchasesError={purchasesError}
