@@ -255,6 +255,22 @@ const StyledWrapper = styled.div`
     text-align: left;
   }
 
+  .input-field:-webkit-autofill,
+  .input-field:-webkit-autofill:hover,
+  .input-field:-webkit-autofill:focus,
+  .input-field:-webkit-autofill:active {
+    -webkit-text-fill-color: #d3d3d3;
+    caret-color: #d3d3d3;
+    -webkit-box-shadow: 0 0 0 1000px #171717 inset;
+    box-shadow: 0 0 0 1000px #171717 inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+
+  .input-field:-moz-autofill {
+    box-shadow: 0 0 0 1000px #171717 inset;
+    -moz-text-fill-color: #d3d3d3;
+  }
+
   .button1 {
     padding: 0.5em 1.1em;
     border-radius: 5px;
