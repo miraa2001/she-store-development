@@ -43,8 +43,8 @@ import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import ViewTab from "../components/tabs/ViewTab";
 import CommandHeader from "../components/orders/CommandHeader";
-import HorizontalOrderPicker from "../components/orders/HorizontalOrderPicker";
-import OrdersSidebar from "../components/orders/OrdersSidebar";
+import OrdersBottomSheet from "../components/orders/OrdersBottomSheet";
+import OrdersDrawer from "../components/orders/OrdersDrawer";
 import OrdersTab from "../components/orders/OrdersTab";
 import KanbanView from "../components/orders/KanbanView";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
@@ -253,9 +253,7 @@ export default function OrdersPage() {
     typeof window === "undefined" ? 1280 : window.innerWidth
   );
   const [globalOpen, setGlobalOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(320);
-  const [resizing, setResizing] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("orders");
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(true);
@@ -567,25 +565,9 @@ export default function OrdersPage() {
   }, [activeTab, refreshPurchases, selectedOrderId]);
 
   useEffect(() => {
-    if (!resizing) return;
-
-    const onMove = (event) => {
-      const next = window.innerWidth - event.clientX;
-      if (next >= 280 && next <= 500) {
-        setSidebarWidth(next);
-      }
-    };
-
-    const onUp = () => setResizing(false);
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, [resizing]);
+    if (activeTab === "orders") return;
+    setOrdersMenuOpen(false);
+  }, [activeTab]);
 
   useEffect(() => {
     if (!toast) return;
@@ -1216,6 +1198,7 @@ export default function OrdersPage() {
   const handleHeaderSearchPick = (row) => {
     if (!row?.order_id || !row?.id) return;
     setActiveTab("orders");
+    setOrdersMenuOpen(false);
     setSelectedOrderId(row.order_id);
     setMenuPurchaseId("");
     setPurchaseSearch("");
@@ -1462,6 +1445,8 @@ export default function OrdersPage() {
         editMode={editMode}
         onEditModeChange={setEditMode}
         onOpenSidebar={() => setGlobalOpen(true)}
+        showOrdersMenuTrigger={activeTab === "orders"}
+        onOpenOrdersMenu={() => setOrdersMenuOpen(true)}
         totalOrders={totalOrders}
         showDesktopOrdersViewToggle={isDesktop && activeTab === "orders"}
         desktopOrdersView={desktopOrdersView}
@@ -1496,8 +1481,27 @@ export default function OrdersPage() {
         </div>
       ) : null}
 
-      {isMobile && activeTab === "orders" ? (
-        <HorizontalOrderPicker
+      {activeTab === "orders" && !isMobile ? (
+        <OrdersDrawer
+          open={ordersMenuOpen}
+          onClose={() => setOrdersMenuOpen(false)}
+          groupedOrders={groupedOrders}
+          ordersLoading={ordersLoading}
+          ordersError={ordersError}
+          selectedOrderId={selectedOrderId}
+          onSelectOrder={setSelectedOrderId}
+          isRahaf={isRahaf}
+          onForceOrdersTab={() => setActiveTab("orders")}
+          totalOrders={totalOrders}
+          statusLabel={statusLabel}
+          Icon={Icon}
+        />
+      ) : null}
+
+      {activeTab === "orders" && isMobile ? (
+        <OrdersBottomSheet
+          open={ordersMenuOpen}
+          onClose={() => setOrdersMenuOpen(false)}
           groupedOrders={groupedOrders}
           ordersLoading={ordersLoading}
           ordersError={ordersError}
@@ -1509,26 +1513,6 @@ export default function OrdersPage() {
       ) : null}
 
       <div className="workspace">
-        {!isMobile ? (
-          <OrdersSidebar
-            collapsed={collapsed}
-            sidebarWidth={sidebarWidth}
-            onStartResize={() => setResizing(true)}
-            groupedOrders={groupedOrders}
-            ordersLoading={ordersLoading}
-            ordersError={ordersError}
-            selectedOrderId={selectedOrderId}
-            onSelectOrder={setSelectedOrderId}
-            isRahaf={isRahaf}
-            onForceOrdersTab={() => setActiveTab("orders")}
-            totalOrders={totalOrders}
-            statusLabel={statusLabel}
-            onExpand={() => setCollapsed(false)}
-            onCollapse={() => setCollapsed(true)}
-            Icon={Icon}
-          />
-        ) : null}
-
         <section className="workspace-main">
           {activeTab === "orders" ? (
             <>
@@ -1607,7 +1591,7 @@ export default function OrdersPage() {
         </section>
       </div>
 
-      {(isMobile || isTablet) && !globalOpen && !formOpen && !lightbox.open ? (
+      {(isMobile || isTablet) && !globalOpen && !formOpen && !lightbox.open && !ordersMenuOpen ? (
         <SpeedDial actions={speedDialActions} position="bottom-right" size="large" />
       ) : null}
 

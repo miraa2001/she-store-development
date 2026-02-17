@@ -20,6 +20,8 @@ export default function CommandHeader({
   editMode,
   onEditModeChange,
   onOpenSidebar,
+  showOrdersMenuTrigger = false,
+  onOpenOrdersMenu,
   totalOrders,
   showDesktopOrdersViewToggle = false,
   desktopOrdersView = "list",
@@ -81,6 +83,17 @@ export default function CommandHeader({
               ) : null}
             </form>
 
+            {showOrdersMenuTrigger ? (
+              <button
+                type="button"
+                className="icon-btn command-mobile-icon orders-menu-trigger-btn"
+                aria-label="فتح قائمة الطلبات"
+                onClick={onOpenOrdersMenu}
+              >
+                <Icon name="package" className="icon" />
+              </button>
+            ) : null}
+
             <button
               type="button"
               className="icon-btn command-mobile-icon"
@@ -134,6 +147,12 @@ export default function CommandHeader({
               </span>
             ) : null}
           </div>
+
+          {showOrdersMenuTrigger ? (
+            <button type="button" className="icon-btn orders-menu-trigger-btn" onClick={onOpenOrdersMenu} aria-label="فتح قائمة الطلبات">
+              <Icon name="package" className="icon" />
+            </button>
+          ) : null}
         </div>
       </header>
     );
@@ -203,6 +222,12 @@ export default function CommandHeader({
               Kanban
             </button>
           </div>
+        ) : null}
+
+        {showOrdersMenuTrigger ? (
+          <button type="button" className="icon-btn orders-menu-trigger-btn" onClick={onOpenOrdersMenu} aria-label="فتح قائمة الطلبات">
+            <Icon name="package" className="icon" />
+          </button>
         ) : null}
 
         <button type="button" className="icon-btn" onClick={onOpenSidebar} aria-label="فتح القائمة">
