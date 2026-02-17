@@ -157,6 +157,7 @@ export default function LoginPage() {
   if (checkingSession) {
     return (
       <div
+        dir="ltr"
         style={{
           minHeight: "100vh",
           display: "flex",
@@ -172,12 +173,14 @@ export default function LoginPage() {
 
   return (
     <div
+      dir="ltr"
       style={{
         minHeight: "100vh",
         background: "linear-gradient(145deg, #f3f5f4 0%, #e8f0ed 40%, #dde7e3 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        direction: "ltr",
         fontFamily: "'DM Sans', sans-serif",
         padding: "20px",
         position: "relative",
