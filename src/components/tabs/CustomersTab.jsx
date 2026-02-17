@@ -10,6 +10,7 @@ export default function CustomersTab({
   customerFormMessage,
   customerFormSaving,
   handleCreateCustomer,
+  isRahaf,
   editingCustomerId,
   editingCustomerForm,
   setEditingCustomerForm,
@@ -25,8 +26,9 @@ export default function CustomersTab({
       <div className="order-detail-header">
         <div>
           <h2>العملاء</h2>
-          <p>إدارة بيانات العملاء (إضافة، تعديل، حذف) بنفس منطق النسخة الأصلية.</p>
+          <p>{isRahaf ? "إدارة بيانات العملاء (إضافة، تعديل، حذف)." : "عرض بيانات العملاء فقط."}</p>
         </div>
+
         <div className="order-detail-actions">
           <input
             className="purchase-search"
@@ -38,75 +40,77 @@ export default function CustomersTab({
         </div>
       </div>
 
-      <div className="customer-layout">
-        <form className="customer-form-card" onSubmit={handleCreateCustomer}>
-          <h3>إضافة عميل</h3>
+      <div className={`customer-layout ${isRahaf ? "" : "customer-layout-readonly"}`.trim()}>
+        {isRahaf ? (
+          <form className="customer-form-card" onSubmit={handleCreateCustomer}>
+            <h3>إضافة عميل</h3>
 
-          <label>
-            <span>الاسم</span>
-            <input
-              value={customerForm.name}
-              onChange={(event) =>
-                setCustomerForm((prev) => ({ ...prev, name: event.target.value }))
-              }
-              placeholder="اسم العميل"
-              disabled={customerFormSaving}
-            />
-          </label>
+            <label>
+              <span>الاسم</span>
+              <input
+                value={customerForm.name}
+                onChange={(event) =>
+                  setCustomerForm((prev) => ({ ...prev, name: event.target.value }))
+                }
+                placeholder="اسم العميل"
+                disabled={customerFormSaving}
+              />
+            </label>
 
-          <label>
-            <span>رقم الهاتف</span>
-            <input
-              value={customerForm.phone}
-              onChange={(event) =>
-                setCustomerForm((prev) => ({ ...prev, phone: event.target.value }))
-              }
-              placeholder="970xxxxxxxxx أو 972xxxxxxxxx"
-              disabled={customerFormSaving}
-            />
-          </label>
+            <label>
+              <span>رقم الهاتف</span>
+              <input
+                value={customerForm.phone}
+                onChange={(event) =>
+                  setCustomerForm((prev) => ({ ...prev, phone: event.target.value }))
+                }
+                placeholder="970xxxxxxxxx أو 972xxxxxxxxx"
+                disabled={customerFormSaving}
+              />
+            </label>
 
-          <label>
-            <span>المدينة</span>
-            <select
-              value={customerForm.city}
-              onChange={(event) =>
-                setCustomerForm((prev) => ({ ...prev, city: event.target.value }))
-              }
-              disabled={customerFormSaving}
-            >
-              {cityOptions.map((city) => (
-                <option key={city} value={city}>
-                  {city}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label>
+              <span>المدينة</span>
+              <select
+                value={customerForm.city}
+                onChange={(event) =>
+                  setCustomerForm((prev) => ({ ...prev, city: event.target.value }))
+                }
+                disabled={customerFormSaving}
+              >
+                {cityOptions.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label>
-            <span>نقطة الاستلام المعتادة</span>
-            <select
-              value={customerForm.pickup}
-              onChange={(event) =>
-                setCustomerForm((prev) => ({ ...prev, pickup: event.target.value }))
-              }
-              disabled={customerFormSaving}
-            >
-              {pickupOptions.map((pickup) => (
-                <option key={pickup} value={pickup}>
-                  {pickup}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label>
+              <span>نقطة الاستلام المعتادة</span>
+              <select
+                value={customerForm.pickup}
+                onChange={(event) =>
+                  setCustomerForm((prev) => ({ ...prev, pickup: event.target.value }))
+                }
+                disabled={customerFormSaving}
+              >
+                {pickupOptions.map((pickup) => (
+                  <option key={pickup} value={pickup}>
+                    {pickup}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <div className="customer-form-actions">
-            <button type="submit" className="btn-primary" disabled={customerFormSaving}>
-              {customerFormSaving ? "جاري الحفظ..." : "حفظ العميل"}
-            </button>
-          </div>
-          {customerFormMessage ? <div className="modal-help">{customerFormMessage}</div> : null}
-        </form>
+            <div className="customer-form-actions">
+              <button type="submit" className="btn-primary" disabled={customerFormSaving}>
+                {customerFormSaving ? "جاري الحفظ..." : "حفظ العميل"}
+              </button>
+            </div>
+            {customerFormMessage ? <div className="modal-help">{customerFormMessage}</div> : null}
+          </form>
+        ) : null}
 
         <div className="customer-list-card">
           {customersLoading ? <div className="workspace-empty">جاري تحميل العملاء...</div> : null}
@@ -124,7 +128,7 @@ export default function CustomersTab({
 
                 return (
                   <article key={customer.id} className="customer-item-card">
-                    {isEditing && form ? (
+                    {isEditing && form && isRahaf ? (
                       <>
                         <div className="customer-item-head">
                           <h4>تعديل العميل</h4>
@@ -140,6 +144,7 @@ export default function CustomersTab({
                               }
                             />
                           </label>
+
                           <label>
                             <span>الهاتف</span>
                             <input
@@ -149,6 +154,7 @@ export default function CustomersTab({
                               }
                             />
                           </label>
+
                           <label>
                             <span>المدينة</span>
                             <select
@@ -164,6 +170,7 @@ export default function CustomersTab({
                               ))}
                             </select>
                           </label>
+
                           <label>
                             <span>نقطة الاستلام</span>
                             <select
@@ -204,22 +211,20 @@ export default function CustomersTab({
                           <span>نقطة الاستلام: {customer.usual_pickup_point || "—"}</span>
                         </div>
 
-                        <div className="customer-item-actions">
-                          <button
-                            type="button"
-                            className="btn-ghost-light"
-                            onClick={() => beginEditCustomer(customer)}
-                          >
-                            تعديل
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-ghost-light danger-btn"
-                            onClick={() => handleDeleteCustomer(customer)}
-                          >
-                            حذف
-                          </button>
-                        </div>
+                        {isRahaf ? (
+                          <div className="customer-item-actions">
+                            <button type="button" className="btn-ghost-light" onClick={() => beginEditCustomer(customer)}>
+                              تعديل
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-ghost-light danger-btn"
+                              onClick={() => handleDeleteCustomer(customer)}
+                            >
+                              حذف
+                            </button>
+                          </div>
+                        ) : null}
                       </>
                     )}
                   </article>

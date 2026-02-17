@@ -9,12 +9,16 @@ function normalizeSlideIndex(index, total) {
 
 export default function OrdersTab({
   selectedOrder,
+  selectedOrderStatus = "pending",
+  orderStatusLocked = false,
+  orderStatusSaving = false,
   purchaseStats,
   purchaseSearch,
   onPurchaseSearchChange,
+  isMobile = false,
   isRahaf,
   editMode,
-  onToggleArrived,
+  onUpdateOrderStatus,
   onOpenAddModal,
   onExportPdf,
   pdfExporting,
@@ -37,6 +41,7 @@ export default function OrdersTab({
 }) {
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
   const highlightRef = useRef(null);
+  const canEditOrderStatus = isRahaf && editMode && !!selectedOrder;
 
   useEffect(() => {
     if (!highlightPurchaseId) return;
@@ -71,14 +76,26 @@ export default function OrdersTab({
             placeholder="بحث داخل المشتريات..."
           />
 
-          {isRahaf ? (
-            <label className="arrived-toggle-chip">
-              <input type="checkbox" checked={!!selectedOrder?.arrived} onChange={onToggleArrived} />
-              <span>تم وصول الطلب</span>
+          {canEditOrderStatus && !isMobile ? (
+            <label className="order-status-control">
+              <span>حالة الطلب</span>
+              <select
+                value={selectedOrderStatus}
+                onChange={(event) => onUpdateOrderStatus?.(event.target.value)}
+                disabled={orderStatusSaving || orderStatusLocked}
+              >
+                <option value="pending">قيد الانتظار</option>
+                <option value="arrived">تم وصول الطلب</option>
+                <option value="at_pickup">الطلب في نقطة الاستلام</option>
+                <option value="collected" disabled={!orderStatusLocked}>
+                  تم التحصيل
+                </option>
+              </select>
+              {orderStatusLocked ? <small className="order-status-lock">🔒</small> : null}
             </label>
           ) : null}
 
-          {isRahaf && editMode ? (
+          {!isMobile && isRahaf && editMode ? (
             <button className="btn-primary" type="button" onClick={onOpenAddModal}>
               + إضافة مشترى
             </button>
@@ -94,6 +111,31 @@ export default function OrdersTab({
           ) : null}
         </div>
       </div>
+
+      {isMobile && canEditOrderStatus ? (
+        <div className="mobile-order-controls">
+          <label className="order-status-control">
+            <span>حالة الطلب</span>
+            <select
+              value={selectedOrderStatus}
+              onChange={(event) => onUpdateOrderStatus?.(event.target.value)}
+              disabled={orderStatusSaving || orderStatusLocked}
+            >
+              <option value="pending">قيد الانتظار</option>
+              <option value="arrived">تم وصول الطلب</option>
+              <option value="at_pickup">الطلب في نقطة الاستلام</option>
+              <option value="collected" disabled={!orderStatusLocked}>
+                تم التحصيل
+              </option>
+            </select>
+            {orderStatusLocked ? <small className="order-status-lock">🔒</small> : null}
+          </label>
+
+          <button className="btn-primary mobile-add-purchase-btn" type="button" onClick={onOpenAddModal}>
+            + إضافة مشترى
+          </button>
+        </div>
+      ) : null}
 
       {customersError ? <div className="workspace-empty workspace-error">{customersError}</div> : null}
       {purchasesLoading ? (

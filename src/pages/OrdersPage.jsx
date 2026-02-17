@@ -2,10 +2,15 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import {
+  ORDER_STATUS,
+  ORDER_STATUS_LABELS,
+  deriveOrderStatus,
   fetchOrdersWithSummary,
   formatILS,
   groupOrdersByMonth,
-  parsePrice
+  isOrderFullyCollected,
+  parsePrice,
+  updateOrderWorkflowStatus
 } from "../lib/orders";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { sb } from "../lib/supabaseClient";
@@ -41,7 +46,6 @@ import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
-import ViewTab from "../components/tabs/ViewTab";
 import CommandHeader from "../components/orders/CommandHeader";
 import OrdersBottomSheet from "../components/orders/OrdersBottomSheet";
 import OrdersDrawer from "../components/orders/OrdersDrawer";
@@ -243,9 +247,7 @@ function Icon({ name, className = "" }) {
 }
 
 function statusLabel(status) {
-  if (status === "completed") return "مكتمل";
-  if (status === "processing") return "قيد التنفيذ";
-  return "قيد الانتظار";
+  return ORDER_STATUS_LABELS[status] || ORDER_STATUS_LABELS[ORDER_STATUS.PENDING];
 }
 
 export default function OrdersPage() {
@@ -299,6 +301,7 @@ export default function OrdersPage() {
   const [formAiStatus, setFormAiStatus] = useState({ text: "", isError: false });
   const [formAiRunning, setFormAiRunning] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
+  const [orderStatusSaving, setOrderStatusSaving] = useState(false);
   const [kanbanMovingPurchaseId, setKanbanMovingPurchaseId] = useState("");
   const [newFilePreviews, setNewFilePreviews] = useState([]);
 
@@ -360,8 +363,8 @@ export default function OrdersPage() {
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
   const allowedTabs = useMemo(
-    () => (isRahaf ? ["orders", "view", "customers"] : ["orders"]),
-    [isRahaf]
+    () => (isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
+    [isRahaf, isViewOnlyRole]
   );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
@@ -381,6 +384,21 @@ export default function OrdersPage() {
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orders, selectedOrderId]
   );
+
+  const selectedOrderIsFullyCollected = useMemo(
+    () => isOrderFullyCollected(purchases),
+    [purchases]
+  );
+
+  const selectedOrderStatus = useMemo(() => {
+    if (!selectedOrder) return ORDER_STATUS.PENDING;
+    return deriveOrderStatus({
+      arrived: selectedOrder.arrived,
+      placedAtPickup: selectedOrder.placedAtPickup,
+      purchaseCount: purchases.length,
+      allCollected: selectedOrderIsFullyCollected
+    });
+  }, [purchases.length, selectedOrder, selectedOrderIsFullyCollected]);
 
   const orderNameById = useMemo(() => {
     const map = new Map();
@@ -493,7 +511,6 @@ export default function OrdersPage() {
     if (!profile.authenticated) return;
     if (!isViewOnlyRole) return;
     setEditMode(false);
-    setActiveTab("orders");
   }, [isViewOnlyRole, profile.authenticated]);
 
 
@@ -1041,32 +1058,54 @@ export default function OrdersPage() {
       setToast({ type: "success", text: "تم تحديث المدفوع." });
       setMenuPurchaseId("");
       await refreshPurchases(selectedOrder.id);
+      await refreshOrders(selectedOrder.id);
     } catch (error) {
       console.error(error);
       setToast({ type: "danger", text: "فشل تحديث المدفوع." });
     }
   };
 
-  const handleToggleArrived = async () => {
-    if (!selectedOrder || !isRahaf) return;
+  const handleUpdateOrderStatus = async (nextStatus) => {
+    if (!selectedOrder || !isRahaf || !editMode) return;
+    if (!nextStatus) return;
 
-    const next = !selectedOrder.arrived;
+    if (selectedOrderIsFullyCollected) {
+      setToast({ type: "warn", text: "تم التحصيل: الحالة مقفلة تلقائيًا." });
+      return;
+    }
 
+    const normalizedNext = String(nextStatus).trim();
+    if (!Object.values(ORDER_STATUS).includes(normalizedNext)) {
+      setToast({ type: "danger", text: "حالة الطلب غير صالحة." });
+      return;
+    }
+
+    if (normalizedNext === ORDER_STATUS.COLLECTED && !selectedOrderIsFullyCollected) {
+      setToast({ type: "danger", text: "لا يمكن اختيار تم التحصيل قبل اكتمال التحصيل لكل المشتريات." });
+      return;
+    }
+
+    setOrderStatusSaving(true);
     try {
-      const { error } = await sb.from("orders").update({ arrived: next }).eq("id", selectedOrder.id);
-      if (error) throw error;
-
+      const { status, payload } = await updateOrderWorkflowStatus(selectedOrder.id, normalizedNext);
       setOrders((prev) =>
         prev.map((order) =>
           String(order.id) === String(selectedOrder.id)
-            ? { ...order, arrived: next, status: next ? "completed" : "pending" }
+            ? {
+                ...order,
+                arrived: !!payload.arrived,
+                placedAtPickup: !!payload.placed_at_pickup,
+                status
+              }
             : order
         )
       );
-      setToast({ type: "success", text: next ? "تم تعليم الطلب كواصل." : "تمت إزالة حالة الوصول." });
+      setToast({ type: "success", text: "تم تحديث حالة الطلب." });
     } catch (error) {
       console.error(error);
-      setToast({ type: "danger", text: "فشل تحديث حالة الوصول." });
+      setToast({ type: "danger", text: "فشل تحديث حالة الطلب." });
+    } finally {
+      setOrderStatusSaving(false);
     }
   };
 
@@ -1254,101 +1293,39 @@ export default function OrdersPage() {
   };
 
   const speedDialActions = useMemo(() => {
+    if (!isMobile) return [];
+
     const actions = [];
-
-    if (isRahaf && isMobile) {
-      actions.push(
-        {
-          id: "tab-orders",
-          label: "فتح الطلبات",
-          icon: "📦",
-          show: activeTab !== "orders",
-          onClick: () => setActiveTab("orders")
-        },
-        {
-          id: "tab-view",
-          label: "فتح العرض",
-          icon: "👁️",
-          show: activeTab !== "view",
-          onClick: () => setActiveTab("view")
-        },
-        {
-          id: "tab-customers",
-          label: "فتح العملاء",
-          icon: "👥",
-          show: activeTab !== "customers",
-          onClick: () => setActiveTab("customers")
-        }
-      );
-    }
-
     const onOrdersTab = activeTab === "orders";
     const hasOrder = !!selectedOrder;
 
-    if (isRahaf && onOrdersTab) {
-      actions.push(
-        {
-          id: "mode-edit",
-          label: "تبديل إلى تعديل/إضافة",
-          icon: "✏️",
-          show: !editMode,
-          onClick: () => setEditMode(true)
-        },
-        {
-          id: "mode-view",
-          label: "تبديل إلى عرض فقط",
-          icon: "🪟",
-          show: editMode,
-          onClick: () => setEditMode(false)
-        }
-      );
+    if (onOrdersTab && hasOrder) {
+      actions.push({
+        id: "pdf",
+        label: pdfExporting ? "جاري تصدير PDF..." : "تصدير PDF",
+        icon: "📄",
+        show: true,
+        disabled: pdfExporting,
+        onClick: exportPdfNative
+      });
     }
 
-    if (onOrdersTab) {
-      actions.push(
-        {
-          id: "add",
-          label: "إضافة مشترى",
-          icon: "➕",
-          primary: true,
-          show: isRahaf && editMode,
-          onClick: openAddModal
-        },
-        {
-          id: "pdf",
-          label: pdfExporting ? "جاري تصدير PDF..." : "تصدير PDF",
-          icon: "📄",
-          show: hasOrder,
-          disabled: pdfExporting,
-          onClick: exportPdfNative
-        },
-        {
-          id: "gemini",
-          label: "تحليل Gemini",
-          icon: "✨",
-          show: isRahaf && editMode && hasOrder,
-          onClick: handleGeminiToolbarAction
-        },
-        {
-          id: "arrived",
-          label: selectedOrder?.arrived ? "إزالة حالة الوصول" : "تعليم الطلب واصل",
-          icon: selectedOrder?.arrived ? "↩️" : "✅",
-          show: isRahaf && hasOrder,
-          onClick: handleToggleArrived
-        }
-      );
+    if (allowedTabs.includes("customers")) {
+      actions.push({
+        id: "tab-customers",
+        label: "العملاء",
+        icon: "👥",
+        show: activeTab !== "customers",
+        onClick: () => setActiveTab("customers")
+      });
     }
 
     return actions;
   }, [
     activeTab,
-    editMode,
+    allowedTabs,
     exportPdfNative,
-    handleGeminiToolbarAction,
-    handleToggleArrived,
     isMobile,
-    isRahaf,
-    openAddModal,
     pdfExporting,
     selectedOrder
   ]);
@@ -1400,43 +1377,42 @@ export default function OrdersPage() {
 
   return (
     <div className="orders-page" dir="rtl">
-      {!isMobile ? (
-        <>
-          <div
-            className={`global-overlay app-sidebar-overlay ${globalOpen ? "open" : ""}`}
-            onClick={() => setGlobalOpen(false)}
-          />
+      <>
+        <div
+          className={`global-overlay app-sidebar-overlay ${globalOpen ? "open" : ""}`}
+          onClick={() => setGlobalOpen(false)}
+        />
 
-          <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
-            <div className="global-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
-              <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
-                ✕
-              </button>
-            </div>
-
-            <nav className="global-sidebar-nav app-sidebar-content">
-              {visibleNavItems.map((item) => (
-                <a
-                  key={item.id}
-                  className={`app-sidebar-link ${isSidebarItemActive(item.href) ? "active" : ""}`}
-                  href={item.href}
-                  onClick={() => setGlobalOpen(false)}
-                >
-                  {item.label}
-                </a>
-              ))}
-            </nav>
-
-            <button type="button" className="app-sidebar-link app-sidebar-danger" onClick={signOut}>
-              تسجيل الخروج
+        <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
+          <div className="global-sidebar-head app-sidebar-head">
+            <b>القائمة</b>
+            <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
+              ✕
             </button>
-          </aside>
-        </>
-      ) : null}
+          </div>
+
+          <nav className="global-sidebar-nav app-sidebar-content">
+            {visibleNavItems.map((item) => (
+              <a
+                key={item.id}
+                className={`app-sidebar-link ${isSidebarItemActive(item.href) ? "active" : ""}`}
+                href={item.href}
+                onClick={() => setGlobalOpen(false)}
+              >
+                {item.label}
+              </a>
+            ))}
+          </nav>
+
+          <button type="button" className="app-sidebar-link app-sidebar-danger" onClick={signOut}>
+            تسجيل الخروج
+          </button>
+        </aside>
+      </>
 
       <CommandHeader
         isRahaf={isRahaf}
+        canAccessCustomers={allowedTabs.includes("customers")}
         activeTab={activeTab}
         onActiveTabChange={setActiveTab}
         search={search}
@@ -1518,12 +1494,16 @@ export default function OrdersPage() {
             <>
               <OrdersTab
                 selectedOrder={selectedOrder}
+                selectedOrderStatus={selectedOrderStatus}
+                orderStatusLocked={selectedOrderIsFullyCollected}
+                orderStatusSaving={orderStatusSaving}
                 purchaseStats={purchaseStats}
                 purchaseSearch={purchaseSearch}
                 onPurchaseSearchChange={setPurchaseSearch}
+                isMobile={isMobile}
                 isRahaf={isRahaf}
                 editMode={editMode}
-                onToggleArrived={handleToggleArrived}
+                onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenAddModal={openAddModal}
                 onExportPdf={exportPdfNative}
                 pdfExporting={pdfExporting}
@@ -1569,6 +1549,7 @@ export default function OrdersPage() {
               customerFormMessage={customerFormMessage}
               customerFormSaving={customerFormSaving}
               handleCreateCustomer={handleCreateCustomer}
+              isRahaf={isRahaf}
               editingCustomerId={editingCustomerId}
               editingCustomerForm={editingCustomerForm}
               setEditingCustomerForm={setEditingCustomerForm}
@@ -1578,14 +1559,6 @@ export default function OrdersPage() {
               handleDeleteCustomer={handleDeleteCustomer}
               cityOptions={CUSTOMER_CITIES}
               pickupOptions={CUSTOMER_PICKUP_OPTIONS}
-            />
-          ) : activeTab === "view" ? (
-            <ViewTab
-              role={profile.role}
-              onOpenLightbox={(images, index, title) =>
-                setLightbox({ open: true, images, index, title: title || "صورة" })
-              }
-              onToast={setToast}
             />
           ) : null}
         </section>

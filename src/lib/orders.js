@@ -1,6 +1,20 @@
-﻿import { sb } from "./supabaseClient";
+import { sb } from "./supabaseClient";
 
 export const IMAGE_BUCKET = "purchase-images";
+
+export const ORDER_STATUS = {
+  PENDING: "pending",
+  ARRIVED: "arrived",
+  AT_PICKUP: "at_pickup",
+  COLLECTED: "collected"
+};
+
+export const ORDER_STATUS_LABELS = {
+  [ORDER_STATUS.PENDING]: "\u0642\u064a\u062f \u0627\u0644\u0627\u0646\u062a\u0638\u0627\u0631",
+  [ORDER_STATUS.ARRIVED]: "\u062a\u0645 \u0648\u0635\u0648\u0644 \u0627\u0644\u0637\u0644\u0628",
+  [ORDER_STATUS.AT_PICKUP]: "\u0627\u0644\u0637\u0644\u0628 \u0641\u064a \u0646\u0642\u0637\u0629 \u0627\u0644\u0627\u0633\u062a\u0644\u0627\u0645",
+  [ORDER_STATUS.COLLECTED]: "\u062a\u0645 \u0627\u0644\u062a\u062d\u0635\u064a\u0644"
+};
 
 export function parsePrice(value) {
   if (value === null || value === undefined) return 0;
@@ -8,7 +22,7 @@ export function parsePrice(value) {
 
   const cleaned = String(value)
     .replace(/[, ]/g, "")
-    .replace(/[₪]/g, "");
+    .replace(/[\u20AA]/g, "");
 
   const match = cleaned.match(/-?\d+(?:\.\d+)?/);
   return match ? Number(match[0]) : 0;
@@ -21,10 +35,36 @@ export function formatILS(value) {
   return fixed.endsWith(".00") ? String(Math.round(number)) : fixed;
 }
 
+export function normalizeOrderStatus(rawStatus) {
+  const status = String(rawStatus || "").trim().toLowerCase();
+  if (status === ORDER_STATUS.ARRIVED) return ORDER_STATUS.ARRIVED;
+  if (status === ORDER_STATUS.AT_PICKUP) return ORDER_STATUS.AT_PICKUP;
+  if (status === ORDER_STATUS.COLLECTED) return ORDER_STATUS.COLLECTED;
+  return ORDER_STATUS.PENDING;
+}
+
+export function isPurchaseFullyCollected(purchase) {
+  const price = parsePrice(purchase?.price);
+  const paid = parsePrice(purchase?.paid_price || 0);
+  return price > 0 && paid >= price && !!purchase?.collected;
+}
+
+export function isOrderFullyCollected(purchases = []) {
+  if (!Array.isArray(purchases) || !purchases.length) return false;
+  return purchases.every((purchase) => isPurchaseFullyCollected(purchase));
+}
+
+export function deriveOrderStatus({ arrived, placedAtPickup, purchaseCount = 0, allCollected = false }) {
+  if (purchaseCount > 0 && allCollected) return ORDER_STATUS.COLLECTED;
+  if (placedAtPickup) return ORDER_STATUS.AT_PICKUP;
+  if (arrived) return ORDER_STATUS.ARRIVED;
+  return ORDER_STATUS.PENDING;
+}
+
 function monthKey(iso) {
-  if (!iso) return "—";
+  if (!iso) return "\u2014";
   const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "—";
+  if (Number.isNaN(date.getTime())) return "\u2014";
 
   return date.toLocaleDateString("ar", {
     month: "long",
@@ -48,7 +88,7 @@ export async function fetchOrdersWithSummary() {
 
   const normalizedOrders = (orders || []).map((order) => ({
     id: order.id,
-    name: String(order.order_name || "").trim() || "طلب بدون اسم",
+    name: String(order.order_name || "").trim() || "\u0637\u0644\u0628 \u0628\u062f\u0648\u0646 \u0627\u0633\u0645",
     createdAt: order.created_at,
     arrived: !!order.arrived,
     placedAtPickup: !!order.placed_at_pickup,
@@ -63,30 +103,44 @@ export async function fetchOrdersWithSummary() {
 
   const { data: purchases, error: purchasesError } = await sb
     .from("purchases")
-    .select("order_id, price")
+    .select("order_id, price, paid_price, collected")
     .in("order_id", ids);
 
   if (purchasesError) throw purchasesError;
 
   const totals = new Map();
   const purchaseCounts = new Map();
+  const fullyCollectedByOrder = new Map();
+
   (purchases || []).forEach((purchase) => {
     const id = purchase.order_id;
     if (!id) return;
+
     const next = (totals.get(id) || 0) + parsePrice(purchase.price);
     totals.set(id, next);
     purchaseCounts.set(id, (purchaseCounts.get(id) || 0) + 1);
+
+    const currentAllCollected = fullyCollectedByOrder.has(id) ? fullyCollectedByOrder.get(id) : true;
+    fullyCollectedByOrder.set(id, currentAllCollected && isPurchaseFullyCollected(purchase));
   });
 
   return normalizedOrders.map((order) => {
     const total = totals.get(order.id) || 0;
     const purchaseCount = purchaseCounts.get(order.id) || 0;
+    const allCollected = purchaseCount > 0 && fullyCollectedByOrder.get(order.id) === true;
+
     return {
       ...order,
       amountRaw: total,
-      amountLabel: `${formatILS(total)} ₪`,
+      amountLabel: `${formatILS(total)} \u20AA`,
       purchaseCount,
-      status: order.arrived ? "completed" : "pending"
+      allCollected,
+      status: deriveOrderStatus({
+        arrived: order.arrived,
+        placedAtPickup: order.placedAtPickup,
+        purchaseCount,
+        allCollected
+      })
     };
   });
 }
@@ -113,7 +167,7 @@ export async function fetchArrivedOrders() {
 
   return (data || []).map((order) => ({
     id: order.id,
-    name: String(order.order_name || "").trim() || "طلب بدون اسم",
+    name: String(order.order_name || "").trim() || "\u0637\u0644\u0628 \u0628\u062f\u0648\u0646 \u0627\u0633\u0645",
     createdAt: order.created_at,
     arrived: !!order.arrived,
     placedAtPickup: !!order.placed_at_pickup,
@@ -130,6 +184,28 @@ export async function updateOrderPlacedAtPickup(orderId, enabled) {
   const { error } = await sb.from("orders").update(payload).eq("id", orderId);
   if (error) throw error;
   return payload;
+}
+
+export async function updateOrderWorkflowStatus(orderId, nextStatus) {
+  const status = normalizeOrderStatus(nextStatus);
+  const nowIso = new Date().toISOString();
+  let payload;
+
+  if (status === ORDER_STATUS.PENDING) {
+    payload = { arrived: false, placed_at_pickup: false, placed_at_pickup_at: null };
+  } else if (status === ORDER_STATUS.ARRIVED) {
+    payload = { arrived: true, placed_at_pickup: false, placed_at_pickup_at: null };
+  } else {
+    payload = { arrived: true, placed_at_pickup: true, placed_at_pickup_at: nowIso };
+  }
+
+  const { error } = await sb.from("orders").update(payload).eq("id", orderId);
+  if (error) throw error;
+
+  return {
+    status,
+    payload
+  };
 }
 
 export function groupOrdersByMonth(orders, query = "") {

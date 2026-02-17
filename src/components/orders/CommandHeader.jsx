@@ -12,6 +12,7 @@ function getViewport() {
 
 export default function CommandHeader({
   isRahaf,
+  canAccessCustomers = false,
   activeTab,
   onActiveTabChange,
   search,
@@ -34,6 +35,7 @@ export default function CommandHeader({
 
   const isMobile = viewport === "mobile";
   const isTablet = viewport === "tablet";
+  const showOrdersCustomersTabs = isRahaf || canAccessCustomers;
 
   useEffect(() => {
     const onResize = () => setViewport(getViewport());
@@ -50,20 +52,54 @@ export default function CommandHeader({
     mobileSearchInputRef.current?.focus();
   }, [isMobile, searchExpanded]);
 
+  const renderTabs = (className = "") => {
+    if (!showOrdersCustomersTabs) {
+      return <div className="readonly-chip">وضع العرض فقط</div>;
+    }
+
+    return (
+      <div className={`tabs-shell ${className}`.trim()} role="tablist" aria-label="التبويبات">
+        <button
+          type="button"
+          className={`tab ${activeTab === "orders" ? "active" : ""}`}
+          onClick={() => onActiveTabChange("orders")}
+        >
+          الطلبات
+        </button>
+
+        {canAccessCustomers ? (
+          <button
+            type="button"
+            className={`tab ${activeTab === "customers" ? "active" : ""}`}
+            onClick={() => onActiveTabChange("customers")}
+          >
+            العملاء
+          </button>
+        ) : null}
+      </div>
+    );
+  };
+
   if (isMobile) {
     return (
       <header className="command-header command-header-mobile">
         <div className={`command-mobile-row command-mobile-row-animated ${searchExpanded ? "is-open" : ""}`}>
+          <button
+            type="button"
+            className="icon-btn command-mobile-icon"
+            onClick={onOpenSidebar}
+            aria-label="فتح القائمة"
+          >
+            <Icon name="menu" className="icon" />
+          </button>
+
           <div className="command-mobile-title">
             <strong>الطلبات</strong>
             <small>{totalOrders} طلب</small>
           </div>
 
           <div className="command-mobile-search-inline">
-            <form
-              className={`search-expand-form search-expand-inline ${searchExpanded ? "open" : ""}`}
-              onSubmit={(event) => event.preventDefault()}
-            >
+            <form className={`search-expand-form search-expand-inline ${searchExpanded ? "open" : ""}`} onSubmit={(event) => event.preventDefault()}>
               <label htmlFor="ordersMobileSearch">Search</label>
               <input
                 ref={mobileSearchInputRef}
@@ -117,25 +153,7 @@ export default function CommandHeader({
             <Icon name="menu" className="icon" />
           </button>
 
-          {isRahaf ? (
-            <div className="tabs-shell command-tablet-tabs" role="tablist" aria-label="التبويبات">
-              <button type="button" className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
-                الطلبات
-              </button>
-              <button type="button" className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
-                العرض
-              </button>
-              <button
-                type="button"
-                className={`tab ${activeTab === "customers" ? "active" : ""}`}
-                onClick={() => onActiveTabChange("customers")}
-              >
-                العملاء
-              </button>
-            </div>
-          ) : (
-            <div className="readonly-chip">وضع العرض فقط</div>
-          )}
+          {renderTabs("command-tablet-tabs")}
 
           <div className="search-shell command-tablet-search">
             <Icon name="search" className="search-icon" />
@@ -161,25 +179,7 @@ export default function CommandHeader({
   return (
     <header className="command-header">
       <div className="command-main command-main-group">
-        {isRahaf ? (
-          <div className="tabs-shell" role="tablist" aria-label="التبويبات">
-            <button type="button" className={`tab ${activeTab === "orders" ? "active" : ""}`} onClick={() => onActiveTabChange("orders")}>
-              الطلبات
-            </button>
-            <button type="button" className={`tab ${activeTab === "view" ? "active" : ""}`} onClick={() => onActiveTabChange("view")}>
-              العرض
-            </button>
-            <button
-              type="button"
-              className={`tab ${activeTab === "customers" ? "active" : ""}`}
-              onClick={() => onActiveTabChange("customers")}
-            >
-              العملاء
-            </button>
-          </div>
-        ) : (
-          <div className="readonly-chip">وضع العرض فقط</div>
-        )}
+        {renderTabs()}
 
         <div className="search-shell command-search-group">
           <Icon name="search" className="search-icon" />

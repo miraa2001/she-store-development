@@ -561,6 +561,21 @@
   color: #b45309;
 }
 
+.status.arrived {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.status.at_pickup {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.status.collected {
+  background: #dcfce7;
+  color: #15803d;
+}
+
 .order-row.selected .status {
   background: rgba(255, 255, 255, 0.2);
   color: #fff;
@@ -844,6 +859,56 @@
 
 .arrived-toggle-chip input {
   margin: 0;
+}
+
+.order-status-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(79, 138, 123, 0.22);
+  background: rgba(79, 138, 123, 0.08);
+  color: #244b41;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.order-status-control > span {
+  white-space: nowrap;
+}
+
+.order-status-control select {
+  min-height: 32px;
+  border-radius: 10px;
+  border: 1px solid rgba(79, 138, 123, 0.35);
+  background: #fff;
+  color: #1f2937;
+  font-size: 12px;
+  font-family: inherit;
+  padding: 0 10px;
+}
+
+.order-status-control select:focus-visible {
+  outline: 0;
+  border-color: #4f8a7b;
+  box-shadow: 0 0 0 3px rgba(79, 138, 123, 0.18);
+}
+
+.order-status-lock {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.mobile-order-controls {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.mobile-add-purchase-btn {
+  width: 100%;
 }
 
 .purchase-cards-grid {
@@ -1678,6 +1743,10 @@
   display: grid;
   grid-template-columns: minmax(260px, 340px) 1fr;
   gap: 12px;
+}
+
+.customer-layout-readonly {
+  grid-template-columns: 1fr;
 }
 
 .customer-form-card,
