@@ -4,6 +4,7 @@ import { sb } from "../lib/supabaseClient";
 
 const SESSION_TIMEOUT_MS = 15 * 60 * 1000;
 const ACTIVITY_STORAGE_KEY = "she_store:last_activity_at";
+const REMEMBER_ME_STORAGE_KEY = "she_store:remember_me";
 const ACTIVITY_EVENTS = [
   "pointerdown",
   "keydown",
@@ -19,6 +20,10 @@ function readLastActivity() {
 
 function writeLastActivity() {
   window.localStorage.setItem(ACTIVITY_STORAGE_KEY, String(Date.now()));
+}
+
+function isRememberMeEnabled() {
+  return window.localStorage.getItem(REMEMBER_ME_STORAGE_KEY) === "1";
 }
 
 export default function SessionTimeoutGuard() {
@@ -59,6 +64,7 @@ export default function SessionTimeoutGuard() {
   const scheduleTimeout = () => {
     clearTimer();
     if (!hasSessionRef.current) return;
+    if (isRememberMeEnabled()) return;
 
     const elapsed = Date.now() - readLastActivity();
     const remaining = SESSION_TIMEOUT_MS - elapsed;
@@ -83,7 +89,7 @@ export default function SessionTimeoutGuard() {
     };
 
     const onStorage = (event) => {
-      if (event.key !== ACTIVITY_STORAGE_KEY) return;
+      if (event.key !== ACTIVITY_STORAGE_KEY && event.key !== REMEMBER_ME_STORAGE_KEY) return;
       if (!hasSessionRef.current) return;
       scheduleTimeout();
     };
@@ -96,7 +102,7 @@ export default function SessionTimeoutGuard() {
         if (!mounted) return;
         hasSessionRef.current = !!session;
         if (session) {
-          if (!window.localStorage.getItem(ACTIVITY_STORAGE_KEY)) {
+          if (!window.localStorage.getItem(ACTIVITY_STORAGE_KEY) && !isRememberMeEnabled()) {
             writeLastActivity();
           }
           scheduleTimeout();
@@ -112,7 +118,7 @@ export default function SessionTimeoutGuard() {
       hasSessionRef.current = !!session;
 
       if (session) {
-        writeLastActivity();
+        if (!isRememberMeEnabled()) writeLastActivity();
         scheduleTimeout();
         return;
       }
@@ -139,4 +145,3 @@ export default function SessionTimeoutGuard() {
 
   return null;
 }
-
