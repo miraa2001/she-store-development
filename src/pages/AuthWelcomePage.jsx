@@ -1,8 +1,8 @@
 import { useState } from "react";
+import womanImageSrc from "../assets/woman.png";
 
 export default function WelcomePage({ onContinue }) {
   const [isHovering, setIsHovering] = useState(false);
-  const womanImageSrc = `${import.meta.env.BASE_URL}legacy/assets/woman.png`;
 
   return (
     <div
