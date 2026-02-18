@@ -1722,13 +1722,12 @@
 .lightbox-backdrop {
   z-index: 85;
   padding: 8px;
+  place-items: center;
 }
 
 .lightbox-card {
-  width: calc(100vw - 16px);
-  height: calc(100dvh - 16px);
-  max-width: 1800px;
-  max-height: calc(100dvh - 16px);
+  width: min(1800px, calc(100vw - 16px));
+  max-height: calc(100svh - 16px);
   background: #0f1720;
   border-radius: 14px;
   overflow: hidden;
@@ -1777,15 +1776,17 @@
   place-items: center;
   padding: 8px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .lightbox-body img {
   width: auto;
-  height: 100%;
-  max-height: none;
-  max-width: none;
+  height: auto;
+  max-height: calc(100svh - 84px);
+  max-width: calc(100vw - 96px);
   border-radius: 10px;
   background: #000;
+  object-fit: contain;
 }
 
 .lightbox-nav {
@@ -1808,8 +1809,7 @@
 @media (max-width: 767px) {
   .lightbox-card {
     width: calc(100vw - 8px);
-    height: calc(100dvh - 8px);
-    max-height: calc(100dvh - 8px);
+    max-height: calc(100svh - 8px);
     border-radius: 10px;
   }
 
@@ -1833,6 +1833,11 @@
 
   .lightbox-nav-next {
     right: 8px;
+  }
+
+  .lightbox-body img {
+    max-height: calc(100svh - 72px);
+    max-width: calc(100vw - 24px);
   }
 }
 
