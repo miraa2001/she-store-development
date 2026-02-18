@@ -290,20 +290,19 @@ export default function OrdersTab({
                       </div>
                     ) : null}
 
-                    {menuNode ? (
-                      <div className="purchaseVMenuRow">
-                        <div className="purchase-head-actions">{menuNode}</div>
-                      </div>
-                    ) : null}
-
-                    {canShowWhatsapp ? (
+                    {canShowWhatsapp || menuNode ? (
                       <div className="wa-actions-row purchaseVWa">
-                        <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                          استعلام عن نقطة الاستلام❓
-                        </button>
-                        <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                          اعلام بوصول الطلب🔔
-                        </button>
+                        {canShowWhatsapp ? (
+                          <>
+                            <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
+                              استعلام عن نقطة الاستلام❓
+                            </button>
+                            <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
+                              اعلام بوصول الطلب🔔
+                            </button>
+                          </>
+                        ) : null}
+                        {menuNode ? <div className="purchaseVInlineMenu">{menuNode}</div> : null}
                       </div>
                     ) : null}
                   </article>
