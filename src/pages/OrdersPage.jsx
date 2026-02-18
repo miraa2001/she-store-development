@@ -61,6 +61,8 @@ const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
 
 function paymentState(purchase) {
+  if (purchase?.collected) return { key: "completed", label: "مكتمل" };
+
   const priceNum = parsePrice(purchase.price);
   const paidNum = parsePrice(purchase.paid_price || 0);
 
@@ -369,11 +371,12 @@ export default function OrdersPage() {
 
   const totalOrders = orders.length;
   const isRahaf = profile.role === "rahaf";
+  const isReem = profile.role === "reem";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
   const allowedTabs = useMemo(
-    () => (isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
-    [isRahaf, isViewOnlyRole]
+    () => (isReem ? ["orders"] : isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
+    [isRahaf, isReem, isViewOnlyRole]
   );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
@@ -521,6 +524,11 @@ export default function OrdersPage() {
     if (!isViewOnlyRole) return;
     setEditMode(false);
   }, [isViewOnlyRole, profile.authenticated]);
+
+  useEffect(() => {
+    if (!isReem) return;
+    setDesktopOrdersView("list");
+  }, [isReem]);
 
 
   useEffect(() => {
@@ -1372,7 +1380,7 @@ export default function OrdersPage() {
     const onOrdersTab = activeTab === "orders";
     const hasOrder = !!selectedOrder;
 
-    if (onOrdersTab && hasOrder) {
+    if (onOrdersTab && hasOrder && !isReem) {
       actions.push({
         id: "pdf",
         label: pdfExporting ? "جاري تصدير PDF..." : "تصدير PDF",
@@ -1398,6 +1406,7 @@ export default function OrdersPage() {
     activeTab,
     allowedTabs,
     exportPdfNative,
+    isReem,
     isMobile,
     pdfExporting,
     selectedOrder
@@ -1497,7 +1506,7 @@ export default function OrdersPage() {
         showOrdersMenuTrigger={activeTab === "orders"}
         onOpenOrdersMenu={() => setOrdersMenuOpen(true)}
         totalOrders={totalOrders}
-        showDesktopOrdersViewToggle={isDesktop && activeTab === "orders"}
+        showDesktopOrdersViewToggle={isDesktop && activeTab === "orders" && !isReem}
         desktopOrdersView={desktopOrdersView}
         onDesktopOrdersViewChange={setDesktopOrdersView}
         Icon={Icon}
@@ -1577,6 +1586,7 @@ export default function OrdersPage() {
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenAddModal={openAddModal}
                 onExportPdf={exportPdfNative}
+                canExportPdf={!isReem}
                 pdfExporting={pdfExporting}
                 customersError={customersError}
                 purchasesLoading={purchasesLoading}
@@ -1594,10 +1604,10 @@ export default function OrdersPage() {
                 onInquireWhatsapp={inquirePickupViaWhatsapp}
                 onNotifyWhatsapp={notifyViaWhatsapp}
                 highlightPurchaseId={highlightPurchaseId}
-                hidePurchaseGrid={isDesktop && desktopOrdersView === "kanban"}
+                hidePurchaseGrid={isDesktop && desktopOrdersView === "kanban" && !isReem}
               />
 
-              {isDesktop && desktopOrdersView === "kanban" ? (
+              {isDesktop && desktopOrdersView === "kanban" && !isReem ? (
                 <KanbanView
                   purchases={filteredPurchases}
                   movingPurchaseId={kanbanMovingPurchaseId}

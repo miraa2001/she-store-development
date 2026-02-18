@@ -21,6 +21,7 @@ export default function OrdersTab({
   onUpdateOrderStatus,
   onOpenAddModal,
   onExportPdf,
+  canExportPdf = true,
   pdfExporting,
   customersError,
   purchasesLoading,
@@ -87,19 +88,21 @@ export default function OrdersTab({
             </button>
           ) : null}
 
-          <button
-            className="btn-ghost-light"
-            type="button"
-            onClick={onExportPdf}
-            disabled={pdfExporting}
-            aria-label={pdfExporting ? "???? ????? PDF" : "????? PDF"}
-          >
-            <img
-              src={pdfExportIcon}
-              alt="pdf--v3"
-              style={{ width: 28, height: 28, objectFit: "contain", display: "block" }}
-            />
-          </button>
+          {canExportPdf ? (
+            <button
+              className="btn-ghost-light"
+              type="button"
+              onClick={onExportPdf}
+              disabled={pdfExporting}
+              aria-label={pdfExporting ? "جاري تصدير PDF" : "تصدير PDF"}
+            >
+              <img
+                src={pdfExportIcon}
+                alt="pdf--v3"
+                style={{ width: 28, height: 28, objectFit: "contain", display: "block" }}
+              />
+            </button>
+          ) : null}
         </div>
       </div>
 

@@ -44,9 +44,8 @@ export function normalizeOrderStatus(rawStatus) {
 }
 
 export function isPurchaseFullyCollected(purchase) {
-  const price = parsePrice(purchase?.price);
-  const paid = parsePrice(purchase?.paid_price || 0);
-  return price > 0 && paid >= price && !!purchase?.collected;
+  // "Collected" is authoritative, even when price/paid fields are zero.
+  return !!purchase?.collected;
 }
 
 export function isOrderFullyCollected(purchases = []) {

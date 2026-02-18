@@ -86,23 +86,17 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
         </div>
 
         <div className="lightbox-body">
-          {total > 1 ? (
-            <button type="button" className="icon-btn" onClick={onPrev} aria-label="الصورة السابقة">
-              <Icon name="chevron-right" className="icon" />
-            </button>
-          ) : (
-            <span />
-          )}
-
           <img src={images[index]} alt="صورة" />
-
           {total > 1 ? (
-            <button type="button" className="icon-btn" onClick={onNext} aria-label="الصورة التالية">
-              <Icon name="chevron-left" className="icon" />
-            </button>
-          ) : (
-            <span />
-          )}
+            <>
+              <button type="button" className="icon-btn lightbox-nav lightbox-nav-prev" onClick={onPrev} aria-label="الصورة السابقة">
+                <Icon name="chevron-right" className="icon" />
+              </button>
+              <button type="button" className="icon-btn lightbox-nav lightbox-nav-next" onClick={onNext} aria-label="الصورة التالية">
+                <Icon name="chevron-left" className="icon" />
+              </button>
+            </>
+          ) : null}
         </div>
       </div>
     </div>

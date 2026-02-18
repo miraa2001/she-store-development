@@ -18,7 +18,7 @@ const ORDERS_NAV_ITEMS = [
 
 const ORDERS_NAV_ACCESS = {
   rahaf: ["orders", "pickup-dashboard", "archive", "finance", "customers", "collections"],
-  reem: ["orders", "pickup-dashboard", "customers", "homepickup"],
+  reem: ["orders", "pickup-dashboard", "homepickup"],
   rawand: ["orders", "pickup-dashboard", "customers", "homepickup"],
   laaura: ["orders", "pickuppoint"]
 };
