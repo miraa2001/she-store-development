@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { formatILS } from "../../lib/orders";
 import SessionLoader from "../common/SessionLoader";
 import OrderStatusDropdown from "./OrderStatusDropdown";
+import pdfExportIcon from "../../assets/pdf-export-v3.png";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
@@ -14,8 +15,6 @@ export default function OrdersTab({
   orderStatusLocked = false,
   orderStatusSaving = false,
   purchaseStats,
-  purchaseSearch,
-  onPurchaseSearchChange,
   isMobile = false,
   isRahaf,
   editMode,
@@ -69,20 +68,17 @@ export default function OrdersTab({
         </div>
 
         <div className="order-detail-actions">
-          <input
-            className="purchase-search"
-            value={purchaseSearch}
-            onChange={(event) => onPurchaseSearchChange(event.target.value)}
-            placeholder="بحث داخل المشتريات..."
-          />
 
           {canEditOrderStatus && !isMobile ? (
-            <OrderStatusDropdown
-              value={selectedOrderStatus}
-              onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
-              disabled={orderStatusSaving || orderStatusLocked}
-              lockCollected={orderStatusLocked}
-            />
+            <div className="order-status-inline">
+              <span className="order-status-inline-label">حالة الطلب</span>
+              <OrderStatusDropdown
+                value={selectedOrderStatus}
+                onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
+                disabled={orderStatusSaving || orderStatusLocked}
+                lockCollected={orderStatusLocked}
+              />
+            </div>
           ) : null}
 
           {!isMobile && isRahaf && editMode ? (
@@ -91,20 +87,33 @@ export default function OrdersTab({
             </button>
           ) : null}
 
-          <button className="btn-ghost-light" type="button" onClick={onExportPdf} disabled={pdfExporting}>
-            {pdfExporting ? "جاري التصدير..." : "تصدير PDF"}
+          <button
+            className="btn-ghost-light"
+            type="button"
+            onClick={onExportPdf}
+            disabled={pdfExporting}
+            aria-label={pdfExporting ? "???? ????? PDF" : "????? PDF"}
+          >
+            <img
+              src={pdfExportIcon}
+              alt="pdf--v3"
+              style={{ width: 28, height: 28, objectFit: "contain", display: "block" }}
+            />
           </button>
         </div>
       </div>
 
       {isMobile && canEditOrderStatus ? (
         <div className="mobile-order-controls">
-          <OrderStatusDropdown
-            value={selectedOrderStatus}
-            onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
-            disabled={orderStatusSaving || orderStatusLocked}
-            lockCollected={orderStatusLocked}
-          />
+          <div className="order-status-inline">
+            <span className="order-status-inline-label">حالة الطلب</span>
+            <OrderStatusDropdown
+              value={selectedOrderStatus}
+              onChange={(nextValue) => onUpdateOrderStatus?.(nextValue)}
+              disabled={orderStatusSaving || orderStatusLocked}
+              lockCollected={orderStatusLocked}
+            />
+          </div>
 
           <button className="btn-primary mobile-add-purchase-btn" type="button" onClick={onOpenAddModal}>
             + إضافة مشترى

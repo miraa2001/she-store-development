@@ -269,7 +269,6 @@ export default function OrdersPage() {
   const [headerSearchResults, setHeaderSearchResults] = useState([]);
   const [headerSearchLoading, setHeaderSearchLoading] = useState(false);
   const [headerSearchTouched, setHeaderSearchTouched] = useState(false);
-  const [purchaseSearch, setPurchaseSearch] = useState("");
 
   const [purchases, setPurchases] = useState([]);
   const [purchasesLoading, setPurchasesLoading] = useState(false);
@@ -406,9 +405,7 @@ export default function OrdersPage() {
     return map;
   }, [orders]);
 
-  const filteredPurchases = useMemo(() => {
-    return searchByName(purchases, purchaseSearch, (item) => [item.customer_name, item.note]);
-  }, [purchaseSearch, purchases]);
+  const filteredPurchases = useMemo(() => purchases, [purchases]);
 
   const purchaseStats = useMemo(() => {
     const count = purchases.length;
@@ -1226,7 +1223,6 @@ export default function OrdersPage() {
     setOrdersMenuOpen(false);
     setSelectedOrderId(row.order_id);
     setMenuPurchaseId("");
-    setPurchaseSearch("");
     setSearch("");
     setHeaderSearchTouched(false);
     setHeaderSearchResults([]);
@@ -1484,8 +1480,6 @@ export default function OrdersPage() {
                 orderStatusLocked={selectedOrderIsFullyCollected}
                 orderStatusSaving={orderStatusSaving}
                 purchaseStats={purchaseStats}
-                purchaseSearch={purchaseSearch}
-                onPurchaseSearchChange={setPurchaseSearch}
                 isMobile={isMobile}
                 isRahaf={isRahaf}
                 editMode={editMode}

@@ -911,6 +911,19 @@
   width: 100%;
 }
 
+.order-status-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.order-status-inline-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #3d6f61;
+  white-space: nowrap;
+}
+
 .purchase-cards-grid {
   display: grid;
   gap: 12px;
@@ -2773,17 +2786,8 @@
 @media (max-width: 1023px) {
   .order-detail-actions {
     display: flex;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: var(--od-space-2);
-  }
-
-  .order-detail-actions > *:not(.purchase-search) {
-    display: none;
-  }
-
-  .purchase-search {
-    width: 100%;
-    min-width: 0;
   }
 }
 
