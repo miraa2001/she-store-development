@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Stepper, { Step } from "../common/Stepper";
+import FileUploadDropzone from "../common/FileUploadDropzone";
 
 export default function PurchaseFormModal({
   open,
@@ -27,6 +28,7 @@ export default function PurchaseFormModal({
   onAnalyzeWithGemini,
   onToggleExistingImageRemoval,
   onRemoveNewImage,
+  onOpenAddCustomerModal,
   Icon
 }) {
   const [customerSearch, setCustomerSearch] = useState("");
@@ -66,9 +68,13 @@ export default function PurchaseFormModal({
         />
       </label>
 
-      {String(customerSearch || "").trim() ? (
-        <div className="customer-search-results customer-field-full">
-          {filteredCustomers.length ? (
+      <div
+        className={`customer-search-results customer-field-full ${String(customerSearch || "").trim() ? "has-query" : ""} ${
+          filteredCustomers.length ? "has-results" : ""
+        }`}
+      >
+        {String(customerSearch || "").trim() ? (
+          filteredCustomers.length ? (
             filteredCustomers.map((customer) => (
               <button
                 key={customer.id}
@@ -85,9 +91,20 @@ export default function PurchaseFormModal({
             ))
           ) : (
             <div className="customer-search-empty">لا توجد نتائج مطابقة.</div>
-          )}
-        </div>
-      ) : null}
+          )
+        ) : (
+          <div className="customer-search-empty">ابدئي بكتابة اسم الزبون لعرض النتائج.</div>
+        )}
+
+        <button
+          type="button"
+          className="customer-add-btn"
+          onClick={() => onOpenAddCustomerModal?.(customerSearch)}
+          disabled={formSaving}
+        >
+          + إضافة زبون جديد
+        </button>
+      </div>
 
       <label>
         <span>الزبون</span>
@@ -232,16 +249,6 @@ export default function PurchaseFormModal({
           الصور ({formState.newFiles.length}/{maxImages})
         </strong>
         <div className="modal-images-actions">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(event) => {
-              onAddNewImages(event.target.files);
-              event.target.value = "";
-            }}
-            disabled={formSaving || formAiRunning}
-          />
           <button
             type="button"
             className="btn-ghost-light"
@@ -252,6 +259,13 @@ export default function PurchaseFormModal({
           </button>
         </div>
       </div>
+
+      <FileUploadDropzone
+        disabled={formSaving || formAiRunning}
+        onFilesSelected={onAddNewImages}
+        currentCount={formState.newFiles.length}
+        maxImages={maxImages}
+      />
 
       {formMode === "edit" && formState.existingImages.length ? (
         <div className="modal-existing-images">

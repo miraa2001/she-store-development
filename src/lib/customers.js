@@ -55,8 +55,13 @@ export async function fetchCustomers() {
 }
 
 export async function createCustomer(payload) {
-  const { error } = await sb.from("customers").insert(payload);
+  const { data, error } = await sb
+    .from("customers")
+    .insert(payload)
+    .select("id,name,phone,city,usual_pickup_point")
+    .single();
   if (error) throw error;
+  return data;
 }
 
 export async function updateCustomer(id, payload) {

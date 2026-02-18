@@ -1,9 +1,7 @@
-import { useState } from "react";
 import womanImageSrc from "../assets/woman.png";
+import TypewriterEffect from "../components/common/TypewriterEffect";
 
 export default function WelcomePage({ onContinue }) {
-  const [isHovering, setIsHovering] = useState(false);
-
   return (
     <div
       style={{
@@ -68,6 +66,27 @@ export default function WelcomePage({ onContinue }) {
           margin-bottom: 10px;
           line-height: 1.2;
           letter-spacing: -0.02em;
+        }
+
+        .auth-welcome-typewriter {
+          font-family: 'Quicksand', sans-serif;
+          font-size: 34px;
+          font-weight: 700;
+          letter-spacing: -0.02em;
+          margin-bottom: 10px;
+        }
+
+        .auth-welcome-word {
+          color: #111827;
+        }
+
+        .auth-welcome-word--accent {
+          color: #4f8a7b;
+        }
+
+        .auth-welcome-cursor {
+          background: #4f8a7b;
+          height: 1.05em;
         }
 
         .welcome-subtitle {
@@ -145,6 +164,9 @@ export default function WelcomePage({ onContinue }) {
           .welcome-title {
             font-size: 30px;
           }
+          .auth-welcome-typewriter {
+            font-size: 30px;
+          }
         }
 
         @media (max-width: 480px) {
@@ -156,6 +178,9 @@ export default function WelcomePage({ onContinue }) {
             max-width: 168px !important;
           }
           .welcome-title {
+            font-size: 26px;
+          }
+          .auth-welcome-typewriter {
             font-size: 26px;
           }
           .welcome-subtitle {
@@ -226,11 +251,17 @@ export default function WelcomePage({ onContinue }) {
         </div>
 
         <div style={{ marginBottom: 32 }}>
-          <h1 className="welcome-title">
-            Welcome to Your
-            <br />
-            <span style={{ color: "#4f8a7b" }}>Order Hub</span>
-          </h1>
+          <TypewriterEffect
+            className="auth-welcome-typewriter"
+            cursorClassName="auth-welcome-cursor"
+            words={[
+              { text: "Welcome", className: "auth-welcome-word" },
+              { text: "to", className: "auth-welcome-word" },
+              { text: "your", className: "auth-welcome-word" },
+              { text: "Order", className: "auth-welcome-word--accent" },
+              { text: "Hub", className: "auth-welcome-word--accent" }
+            ]}
+          />
           <p className="welcome-subtitle">
             Streamline Shein order management with easy tracking and organization
           </p>
@@ -272,8 +303,6 @@ export default function WelcomePage({ onContinue }) {
           className="login-button"
           type="button"
           onClick={onContinue}
-          onMouseEnter={() => setIsHovering(true)}
-          onMouseLeave={() => setIsHovering(false)}
         >
           Sign In to Continue
         </button>

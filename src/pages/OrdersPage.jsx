@@ -52,6 +52,7 @@ import OrdersDrawer from "../components/orders/OrdersDrawer";
 import OrdersTab from "../components/orders/OrdersTab";
 import KanbanView from "../components/orders/KanbanView";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
+import CustomerQuickAddModal from "../components/orders/CustomerQuickAddModal";
 import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
@@ -299,6 +300,15 @@ export default function OrdersPage() {
   const [formUploadProgress, setFormUploadProgress] = useState("");
   const [formAiStatus, setFormAiStatus] = useState({ text: "", isError: false });
   const [formAiRunning, setFormAiRunning] = useState(false);
+  const [quickCustomerOpen, setQuickCustomerOpen] = useState(false);
+  const [quickCustomerSaving, setQuickCustomerSaving] = useState(false);
+  const [quickCustomerStatus, setQuickCustomerStatus] = useState({ text: "", isError: false });
+  const [quickCustomerForm, setQuickCustomerForm] = useState({
+    name: "",
+    phone: "",
+    city: CUSTOMER_CITIES[0],
+    pickup: CUSTOMER_PICKUP_OPTIONS[2]
+  });
   const [pdfExporting, setPdfExporting] = useState(false);
   const [orderStatusSaving, setOrderStatusSaving] = useState(false);
   const [kanbanMovingPurchaseId, setKanbanMovingPurchaseId] = useState("");
@@ -455,9 +465,11 @@ export default function OrdersPage() {
       setEditingCustomerId((prev) =>
         prev && (list || []).some((customer) => String(customer.id) === String(prev)) ? prev : ""
       );
+      return list || [];
     } catch (error) {
       console.error(error);
       setCustomersError("فشل تحميل بيانات العملاء.");
+      return [];
     } finally {
       setCustomersLoading(false);
     }
@@ -672,6 +684,85 @@ export default function OrdersPage() {
       setCustomerFormMessage(customerFriendlyError(error, "فشل إضافة العميل."));
     } finally {
       setCustomerFormSaving(false);
+    }
+  };
+
+  const openQuickCustomerModal = (prefillName = "") => {
+    setQuickCustomerForm({
+      name: String(prefillName || "").trim(),
+      phone: "",
+      city: CUSTOMER_CITIES[0],
+      pickup: CUSTOMER_PICKUP_OPTIONS[2]
+    });
+    setQuickCustomerStatus({ text: "", isError: false });
+    setQuickCustomerOpen(true);
+  };
+
+  const closeQuickCustomerModal = () => {
+    if (quickCustomerSaving) return;
+    setQuickCustomerOpen(false);
+    setQuickCustomerStatus({ text: "", isError: false });
+  };
+
+  const handleQuickCustomerSubmit = async (event) => {
+    event.preventDefault();
+    if (quickCustomerSaving) return;
+
+    const name = String(quickCustomerForm.name || "").trim();
+    const phone = normalizePhone(quickCustomerForm.phone);
+    const city = String(quickCustomerForm.city || "").trim();
+    const pickup = String(quickCustomerForm.pickup || "").trim();
+
+    if (!name) {
+      setQuickCustomerStatus({ text: "الاسم مطلوب.", isError: true });
+      return;
+    }
+    if (!phone) {
+      setQuickCustomerStatus({ text: "رقم الهاتف مطلوب.", isError: true });
+      return;
+    }
+    if (!isValidCustomerPhone(phone)) {
+      setQuickCustomerStatus({ text: "رقم الهاتف يجب أن يبدأ بـ 970 أو 972.", isError: true });
+      return;
+    }
+    if (!city) {
+      setQuickCustomerStatus({ text: "اختاري المدينة.", isError: true });
+      return;
+    }
+
+    setQuickCustomerSaving(true);
+    setQuickCustomerStatus({ text: "جاري الحفظ...", isError: false });
+
+    try {
+      const createdCustomer = await createCustomer({
+        name,
+        phone,
+        city,
+        usual_pickup_point: pickup
+      });
+
+      await refreshCustomers();
+
+      if (createdCustomer?.id) {
+        setFormState((prev) => ({
+          ...prev,
+          customerId: createdCustomer.id,
+          customerName: createdCustomer.name || prev.customerName,
+          pickupPoint: createdCustomer.usual_pickup_point || prev.pickupPoint
+        }));
+      }
+
+      setQuickCustomerOpen(false);
+      setQuickCustomerStatus({ text: "", isError: false });
+      setToast({ type: "success", text: "تم حفظ العميل." });
+    } catch (error) {
+      console.error(error);
+      setQuickCustomerStatus({
+        text: customerFriendlyError(error, "فشل إضافة العميل."),
+        isError: true
+      });
+    } finally {
+      setQuickCustomerSaving(false);
     }
   };
 
@@ -1573,6 +1664,20 @@ export default function OrdersPage() {
         onAnalyzeWithGemini={analyzeFormImagesWithGemini}
         onToggleExistingImageRemoval={toggleExistingImageRemoval}
         onRemoveNewImage={removeNewImage}
+        onOpenAddCustomerModal={openQuickCustomerModal}
+        Icon={Icon}
+      />
+
+      <CustomerQuickAddModal
+        open={quickCustomerOpen}
+        form={quickCustomerForm}
+        saving={quickCustomerSaving}
+        status={quickCustomerStatus}
+        cityOptions={CUSTOMER_CITIES}
+        pickupOptions={CUSTOMER_PICKUP_OPTIONS}
+        onClose={closeQuickCustomerModal}
+        onSubmit={handleQuickCustomerSubmit}
+        onChange={(patch) => setQuickCustomerForm((prev) => ({ ...prev, ...patch }))}
         Icon={Icon}
       />
 
