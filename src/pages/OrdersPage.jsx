@@ -526,6 +526,12 @@ export default function OrdersPage() {
   }, [isViewOnlyRole, profile.authenticated]);
 
   useEffect(() => {
+    if (!profile.authenticated) return;
+    if (!isRahaf) return;
+    setEditMode(true);
+  }, [isRahaf, profile.authenticated]);
+
+  useEffect(() => {
     if (!isReem) return;
     setDesktopOrdersView("list");
   }, [isReem]);
@@ -534,25 +540,13 @@ export default function OrdersPage() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tabFromUrl = params.get("tab");
-    const modeFromUrl = params.get("mode");
 
     if (tabFromUrl && allowedTabs.includes(tabFromUrl)) {
       setActiveTab((prev) => (prev === tabFromUrl ? prev : tabFromUrl));
     }
 
-    if (isRahaf && modeFromUrl) {
-      const shouldEdit = modeFromUrl === "edit";
-      const shouldView = modeFromUrl === "view";
-      if (shouldEdit || shouldView) {
-        setEditMode((prev) => {
-          const next = shouldEdit;
-          return prev === next ? prev : next;
-        });
-      }
-    }
-
     hasInitializedUrlState.current = true;
-  }, [allowedTabs, isRahaf, location.search]);
+  }, [allowedTabs, location.search]);
 
   useEffect(() => {
     if (!profile.authenticated) return;
@@ -566,13 +560,7 @@ export default function OrdersPage() {
       changed = true;
     }
 
-    if (isRahaf) {
-      const modeValue = editMode ? "edit" : "view";
-      if (params.get("mode") !== modeValue) {
-        params.set("mode", modeValue);
-        changed = true;
-      }
-    } else if (params.has("mode")) {
+    if (params.has("mode")) {
       params.delete("mode");
       changed = true;
     }
@@ -580,7 +568,7 @@ export default function OrdersPage() {
     if (!changed) return;
     const query = params.toString();
     navigate(query ? `${location.pathname}?${query}` : location.pathname, { replace: true });
-  }, [activeTab, editMode, isRahaf, location.pathname, navigate, profile.authenticated]);
+  }, [activeTab, location.pathname, navigate, profile.authenticated]);
 
   useEffect(() => {
     if (allowedTabs.includes(activeTab)) return;

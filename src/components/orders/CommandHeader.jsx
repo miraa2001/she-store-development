@@ -33,24 +33,6 @@ function ColumnsIcon({ className = "" }) {
   );
 }
 
-function EditIcon({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 20h9" />
-      <path d="m16.5 3.5 4 4L8 20H4v-4z" />
-    </svg>
-  );
-}
-
-function EyeIcon({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  );
-}
-
 export default function CommandHeader({
   isRahaf,
   canAccessCustomers = false,
@@ -59,8 +41,6 @@ export default function CommandHeader({
   search,
   onSearchChange,
   searchCount,
-  editMode,
-  onEditModeChange,
   onOpenSidebar,
   showOrdersMenuTrigger = false,
   onOpenOrdersMenu,
@@ -230,22 +210,6 @@ export default function CommandHeader({
       </div>
 
       <div className="command-actions command-action-group" role="toolbar" aria-label="شريط أدوات الطلبات">
-        {isRahaf ? (
-          <div className="view-controls-group">
-            <span className="control-label">الوضع:</span>
-            <div className="mode-shell">
-              <button type="button" className={`mode ${editMode ? "active" : ""}`} onClick={() => onEditModeChange(true)}>
-                <EditIcon className="icon-sm" />
-                تعديل / إضافة
-              </button>
-              <button type="button" className={`mode ${!editMode ? "active" : ""}`} onClick={() => onEditModeChange(false)}>
-                <EyeIcon className="icon-sm" />
-                عرض فقط
-              </button>
-            </div>
-          </div>
-        ) : null}
-
         {showDesktopOrdersViewToggle ? (
           <div className="view-controls-group">
             <span className="control-label">العرض:</span>
