@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 function toImageUrl(image) {
   if (!image) return "";
@@ -14,6 +14,28 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
   const total = images.length;
   const index = total ? ((lightbox.index % total) + total) % total : 0;
   const touchStartX = useRef(null);
+  const swipeResetTimerRef = useRef(null);
+  const [swipeDirection, setSwipeDirection] = useState("");
+  const [swipeKey, setSwipeKey] = useState(0);
+
+  const triggerSwipeAnimation = (direction) => {
+    setSwipeDirection(direction);
+    setSwipeKey((prev) => prev + 1);
+    if (swipeResetTimerRef.current) window.clearTimeout(swipeResetTimerRef.current);
+    swipeResetTimerRef.current = window.setTimeout(() => {
+      setSwipeDirection("");
+    }, 240);
+  };
+
+  const handlePrev = () => {
+    triggerSwipeAnimation("right");
+    onPrev();
+  };
+
+  const handleNext = () => {
+    triggerSwipeAnimation("left");
+    onNext();
+  };
 
   useEffect(() => {
     if (!lightbox.open || total === 0) return undefined;
@@ -28,17 +50,17 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
       if (total < 2) return;
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        onPrev();
+        handlePrev();
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        onNext();
+        handleNext();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [lightbox.open, onClose, onNext, onPrev, total]);
+  }, [handleNext, handlePrev, lightbox.open, onClose, total]);
 
   useEffect(() => {
     if (!lightbox.open || total === 0) return undefined;
@@ -48,6 +70,13 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
       document.body.style.overflow = previousOverflow;
     };
   }, [lightbox.open, total]);
+
+  useEffect(
+    () => () => {
+      if (swipeResetTimerRef.current) window.clearTimeout(swipeResetTimerRef.current);
+    },
+    []
+  );
 
   if (!lightbox.open || total === 0) return null;
 
@@ -66,8 +95,8 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
         if (typeof endX !== "number") return;
         const dx = endX - startX;
         if (Math.abs(dx) < 40) return;
-        if (dx < 0) onNext();
-        else onPrev();
+        if (dx < 0) handleNext();
+        else handlePrev();
       }}
     >
       <div className="lightbox-card" onClick={(event) => event.stopPropagation()}>
@@ -86,13 +115,18 @@ export default function LightboxModal({ lightbox, onClose, onPrev, onNext, Icon 
         </div>
 
         <div className="lightbox-body">
-          <img src={images[index]} alt="صورة" />
+          <img
+            key={`lightbox-image-${index}-${swipeKey}`}
+            className={`lightbox-image ${swipeDirection ? `swipe-${swipeDirection}` : ""}`}
+            src={images[index]}
+            alt="صورة"
+          />
           {total > 1 ? (
             <>
-              <button type="button" className="icon-btn lightbox-nav lightbox-nav-prev" onClick={onPrev} aria-label="الصورة السابقة">
+              <button type="button" className="icon-btn lightbox-nav lightbox-nav-prev" onClick={handlePrev} aria-label="الصورة السابقة">
                 <Icon name="chevron-right" className="icon" />
               </button>
-              <button type="button" className="icon-btn lightbox-nav lightbox-nav-next" onClick={onNext} aria-label="الصورة التالية">
+              <button type="button" className="icon-btn lightbox-nav lightbox-nav-next" onClick={handleNext} aria-label="الصورة التالية">
                 <Icon name="chevron-left" className="icon" />
               </button>
             </>

@@ -1377,19 +1377,6 @@ export default function OrdersPage() {
     if (!isMobile) return [];
 
     const actions = [];
-    const onOrdersTab = activeTab === "orders";
-    const hasOrder = !!selectedOrder;
-
-    if (onOrdersTab && hasOrder && !isReem) {
-      actions.push({
-        id: "pdf",
-        label: pdfExporting ? "جاري تصدير PDF..." : "تصدير PDF",
-        icon: "📄",
-        show: true,
-        disabled: pdfExporting,
-        onClick: exportPdfNative
-      });
-    }
 
     if (allowedTabs.includes("customers")) {
       actions.push({
@@ -1405,11 +1392,7 @@ export default function OrdersPage() {
   }, [
     activeTab,
     allowedTabs,
-    exportPdfNative,
-    isReem,
-    isMobile,
-    pdfExporting,
-    selectedOrder
+    isMobile
   ]);
 
   if (profile.loading) {

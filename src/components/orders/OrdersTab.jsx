@@ -88,7 +88,7 @@ export default function OrdersTab({
             </button>
           ) : null}
 
-          {canExportPdf ? (
+          {canExportPdf && !isMobile ? (
             <button
               className="btn-ghost-light"
               type="button"

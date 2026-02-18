@@ -1789,6 +1789,10 @@
   object-fit: contain;
 }
 
+.lightbox-image {
+  will-change: transform, opacity;
+}
+
 .lightbox-nav {
   position: absolute;
   top: 50%;
@@ -1838,6 +1842,36 @@
   .lightbox-body img {
     max-height: calc(100svh - 72px);
     max-width: calc(100vw - 24px);
+  }
+
+  .lightbox-image.swipe-left {
+    animation: lightbox-swipe-left 240ms ease;
+  }
+
+  .lightbox-image.swipe-right {
+    animation: lightbox-swipe-right 240ms ease;
+  }
+}
+
+@keyframes lightbox-swipe-left {
+  from {
+    transform: translateX(18px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-swipe-right {
+  from {
+    transform: translateX(-18px);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
