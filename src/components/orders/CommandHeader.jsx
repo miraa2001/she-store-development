@@ -64,7 +64,7 @@ export default function CommandHeader({
 
   const renderTabs = (className = "") => {
     if (!showOrdersCustomersTabs) {
-      return <div className="readonly-chip">وضع العرض فقط</div>;
+      return null;
     }
 
     return (

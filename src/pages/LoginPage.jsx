@@ -151,7 +151,7 @@ export default function LoginPage() {
     setSuccess(true);
     window.setTimeout(() => {
       navigate(nextRoute, { replace: true });
-    }, 350);
+    }, 2350);
   };
 
   if (checkingSession) {
