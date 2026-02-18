@@ -1177,6 +1177,17 @@
   padding: 4px 10px;
 }
 
+.purchaseVMenuRow {
+  padding: 0 12px 12px;
+  display: flex;
+  justify-content: flex-end;
+  direction: rtl;
+}
+
+.purchaseVMenuRow .purchase-head-actions {
+  justify-content: flex-end;
+}
+
 .purchaseVWa {
   padding: 0 12px 12px;
 }
@@ -3316,6 +3327,7 @@
   .purchase-mobile-actions {
     display: flex;
     justify-content: flex-end;
+    direction: rtl;
   }
 
   .purchase-mobile-actions .purchase-head-actions {

@@ -147,48 +147,44 @@ export default function OrdersTab({
             const totalImages = imageList.length;
             const currentSlide = normalizeSlideIndex(cardSlideIndexes[purchase.id] || 0, totalImages);
 
-            const actionsNode = (
-              <div className="purchase-head-actions">
-                <span className={`status-chip ${state.key}`}>{state.label}</span>
+            const showStatusChip = state.key !== "completed";
+            const statusChipNode = showStatusChip ? <span className={`status-chip ${state.key}`}>{state.label}</span> : null;
+            const menuNode = isRahaf && editMode ? (
+              <div className="purchase-menu-wrap" data-menu-root>
+                <button
+                  type="button"
+                  className="icon-btn menu-dots menu-dots-trigger"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onTogglePurchaseMenu(purchase.id);
+                  }}
+                  aria-label="إجراءات"
+                  aria-haspopup="menu"
+                  aria-expanded={String(menuPurchaseId) === String(purchase.id)}
+                >
+                  ⋯
+                </button>
 
-                {isRahaf && editMode ? (
-                  <div className="purchase-menu-wrap" data-menu-root>
+                {String(menuPurchaseId) === String(purchase.id) ? (
+                  <div className="purchase-menu-pop" role="menu">
+                    <button type="button" className="value" role="menuitem" onClick={() => onEditPurchase(purchase)}>
+                      تعديل
+                    </button>
+                    <button type="button" className="value" role="menuitem" onClick={() => onMarkPaid(purchase)}>
+                      تعديل المدفوع
+                    </button>
                     <button
                       type="button"
-                      className="icon-btn menu-dots menu-dots-trigger"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onTogglePurchaseMenu(purchase.id);
-                      }}
-                      aria-label="إجراءات"
-                      aria-haspopup="menu"
-                      aria-expanded={String(menuPurchaseId) === String(purchase.id)}
+                      className="value danger"
+                      role="menuitem"
+                      onClick={() => onDeletePurchase(purchase)}
                     >
-                      ⋯
+                      حذف
                     </button>
-
-                    {String(menuPurchaseId) === String(purchase.id) ? (
-                      <div className="purchase-menu-pop" role="menu">
-                        <button type="button" className="value" role="menuitem" onClick={() => onEditPurchase(purchase)}>
-                          تعديل
-                        </button>
-                        <button type="button" className="value" role="menuitem" onClick={() => onMarkPaid(purchase)}>
-                          تعديل المدفوع
-                        </button>
-                        <button
-                          type="button"
-                          className="value danger"
-                          role="menuitem"
-                          onClick={() => onDeletePurchase(purchase)}
-                        >
-                          حذف
-                        </button>
-                      </div>
-                    ) : null}
                   </div>
                 ) : null}
               </div>
-            );
+            ) : null;
 
             return (
               <article
@@ -258,7 +254,11 @@ export default function OrdersTab({
                         <div className="purchaseVPlaceholder">لا توجد صور</div>
                       )}
 
-                      <div className="purchaseVOverlay">{actionsNode}</div>
+                      {statusChipNode ? (
+                        <div className="purchaseVOverlay">
+                          <div className="purchase-head-actions">{statusChipNode}</div>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="purchaseVBody" dir="rtl">
@@ -287,6 +287,12 @@ export default function OrdersTab({
                             رابط {index + 1}
                           </a>
                         ))}
+                      </div>
+                    ) : null}
+
+                    {menuNode ? (
+                      <div className="purchaseVMenuRow">
+                        <div className="purchase-head-actions">{menuNode}</div>
                       </div>
                     ) : null}
 
@@ -353,7 +359,14 @@ export default function OrdersTab({
                     ) : null}
                   </div>
 
-                  <div className="purchase-mobile-actions">{actionsNode}</div>
+                  {statusChipNode || menuNode ? (
+                    <div className="purchase-mobile-actions">
+                      <div className="purchase-head-actions">
+                        {statusChipNode}
+                        {menuNode}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </article>
             );
