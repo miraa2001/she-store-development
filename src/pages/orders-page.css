@@ -1565,6 +1565,22 @@
   padding: 6px 8px;
 }
 
+.customer-picked-note {
+  border: 1px solid rgba(79, 138, 123, 0.45);
+  border-radius: 12px;
+  background: rgba(79, 138, 123, 0.12);
+  color: #1f5142;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 10px 12px;
+}
+
+.customer-picked-input {
+  border-color: rgba(79, 138, 123, 0.8) !important;
+  background: rgba(79, 138, 123, 0.08) !important;
+  box-shadow: 0 0 0 3px rgba(79, 138, 123, 0.14);
+}
+
 .customer-add-btn {
   border: 1px dashed rgba(79, 138, 123, 0.5);
   border-radius: 10px;

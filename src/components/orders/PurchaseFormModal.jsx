@@ -32,10 +32,12 @@ export default function PurchaseFormModal({
   Icon
 }) {
   const [customerSearch, setCustomerSearch] = useState("");
+  const [customerPicked, setCustomerPicked] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setCustomerSearch(formState.customerName || "");
+    setCustomerPicked(Boolean(formState.customerId && formState.customerName));
   }, [open, formState.customerId, formState.customerName]);
 
   const filteredCustomers = useMemo(() => {
@@ -62,49 +64,65 @@ export default function PurchaseFormModal({
         <input
           type="text"
           value={customerSearch}
-          onChange={(event) => setCustomerSearch(event.target.value)}
+          className={customerPicked ? "customer-picked-input" : ""}
+          onChange={(event) => {
+            const nextValue = event.target.value;
+            setCustomerSearch(nextValue);
+            if (customerPicked) {
+              setCustomerPicked(false);
+            }
+          }}
           placeholder="اكتبي اسم الزبون..."
           disabled={customersLoading || formSaving}
         />
       </label>
 
-      <div
-        className={`customer-search-results customer-field-full ${String(customerSearch || "").trim() ? "has-query" : ""} ${
-          filteredCustomers.length ? "has-results" : ""
-        }`}
-      >
-        {String(customerSearch || "").trim() ? (
-          filteredCustomers.length ? (
-            filteredCustomers.map((customer) => (
-              <button
-                key={customer.id}
-                type="button"
-                className={`customer-search-item ${String(formState.customerId) === String(customer.id) ? "active" : ""}`}
-                onClick={() => {
-                  onCustomerChange(customer.id);
-                  setCustomerSearch(customer.name || "");
-                }}
-                disabled={formSaving}
-              >
-                {customer.name}
-              </button>
-            ))
-          ) : (
-            <div className="customer-search-empty">لا توجد نتائج مطابقة.</div>
-          )
-        ) : (
-          <div className="customer-search-empty">ابدئي بكتابة اسم الزبون لعرض النتائج.</div>
-        )}
-
-        <button
-          type="button"
-          className="customer-add-btn"
-          onClick={() => onOpenAddCustomerModal?.(customerSearch)}
-          disabled={formSaving}
+      {customerPicked ? (
+        <div className="customer-picked-note customer-field-full">
+          {"\u062A\u0645 \u0627\u062E\u062A\u064A\u0627\u0631 \u0627\u0644\u0632\u0628\u0648\u0646 \u0628\u0646\u062C\u0627\u062D."}
+        </div>
+      ) : (
+        <div
+          className={`customer-search-results customer-field-full ${String(customerSearch || "").trim() ? "has-query" : ""} ${
+            filteredCustomers.length ? "has-results" : ""
+          }`}
         >
-          + إضافة زبون جديد
-        </button>
-      </div>
+          {String(customerSearch || "").trim() ? (
+            filteredCustomers.length ? (
+              filteredCustomers.map((customer) => (
+                <button
+                  key={customer.id}
+                  type="button"
+                  className={`customer-search-item ${String(formState.customerId) === String(customer.id) ? "active" : ""}`}
+                  onClick={() => {
+                    onCustomerChange(customer.id);
+                    setCustomerSearch(customer.name || "");
+                    setCustomerPicked(true);
+                  }}
+                  disabled={formSaving}
+                >
+                  {customer.name}
+                </button>
+              ))
+            ) : (
+              <div className="customer-search-empty">
+                {"\u0644\u0627 \u062A\u0648\u062C\u062F \u0646\u062A\u0627\u0626\u062C \u0645\u0637\u0627\u0628\u0642\u0629."}
+              </div>
+            )
+          ) : (
+            <div className="customer-search-empty">
+              {"\u0627\u0628\u062F\u0626\u064A \u0628\u0643\u062A\u0627\u0628\u0629 \u0627\u0633\u0645 \u0627\u0644\u0632\u0628\u0648\u0646 \u0644\u0639\u0631\u0636 \u0627\u0644\u0646\u062A\u0627\u0626\u062C."}
+            </div>
+          )}
+
+          <button
+            type="button"
+            className="customer-add-btn"
+            onClick={() => onOpenAddCustomerModal?.(customerSearch)}
+            disabled={formSaving}
+          >{"+ \u0625\u0636\u0627\u0641\u0629 \u0632\u0628\u0648\u0646 \u062C\u062F\u064A\u062F"}</button>
+        </div>
+      )}
 
       <label>
         <span>الزبون</span>
@@ -115,6 +133,7 @@ export default function PurchaseFormModal({
             onCustomerChange(customerId);
             const selected = customers.find((customer) => String(customer.id) === String(customerId));
             setCustomerSearch(selected?.name || "");
+            setCustomerPicked(Boolean(customerId && selected?.name));
           }}
           disabled={customersLoading || formSaving}
         >
