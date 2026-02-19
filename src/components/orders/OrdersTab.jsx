@@ -5,6 +5,10 @@ import OrderStatusDropdown from "./OrderStatusDropdown";
 import pdfExportIconWeb from "../../assets/icons8-pdf-70-web.png";
 import pdfExportIconAndroid from "../../assets/icons8-pdf-96-android.png";
 import pdfExportIconIos from "../../assets/icons8-pdf-76-ios.png";
+import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
+import editIcon from "../../assets/icons8-edit-96.png";
+import editPriceIcon from "../../assets/icons8-edit-price-96.png";
+import deleteIcon from "../../assets/icons8-delete-96.png";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
@@ -171,16 +175,18 @@ export default function OrdersTab({
                   aria-haspopup="menu"
                   aria-expanded={String(menuPurchaseId) === String(purchase.id)}
                 >
-                  ⋯
+                  <img src={actionsMenuIcon} alt="" aria-hidden="true" className="menu-dots-icon" />
                 </button>
 
                 {String(menuPurchaseId) === String(purchase.id) ? (
                   <div className="purchase-menu-pop" role="menu">
                     <button type="button" className="value" role="menuitem" onClick={() => onEditPurchase(purchase)}>
-                      تعديل
+                      <img src={editIcon} alt="" aria-hidden="true" className="value-icon" />
+                      <span>تعديل</span>
                     </button>
                     <button type="button" className="value" role="menuitem" onClick={() => onMarkPaid(purchase)}>
-                      تعديل المدفوع
+                      <img src={editPriceIcon} alt="" aria-hidden="true" className="value-icon" />
+                      <span>تعديل المدفوع</span>
                     </button>
                     <button
                       type="button"
@@ -188,7 +194,8 @@ export default function OrdersTab({
                       role="menuitem"
                       onClick={() => onDeletePurchase(purchase)}
                     >
-                      حذف
+                      <img src={deleteIcon} alt="" aria-hidden="true" className="value-icon" />
+                      <span>حذف</span>
                     </button>
                   </div>
                 ) : null}

@@ -1,3 +1,8 @@
+import { useEffect, useState } from "react";
+import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
+import editIcon from "../../assets/icons8-edit-96.png";
+import deleteIcon from "../../assets/icons8-delete-96.png";
+
 export default function CustomersTab({
   customerSearch,
   setCustomerSearch,
@@ -21,6 +26,23 @@ export default function CustomersTab({
   cityOptions,
   pickupOptions
 }) {
+  const [openCustomerMenuId, setOpenCustomerMenuId] = useState("");
+
+  useEffect(() => {
+    const onDocClick = (event) => {
+      if (!event.target.closest("[data-customer-menu-root]")) {
+        setOpenCustomerMenuId("");
+      }
+    };
+
+    document.addEventListener("click", onDocClick);
+    return () => document.removeEventListener("click", onDocClick);
+  }, []);
+
+  useEffect(() => {
+    if (editingCustomerId) setOpenCustomerMenuId("");
+  }, [editingCustomerId]);
+
   return (
     <>
       <div className="order-detail-header">
@@ -125,6 +147,7 @@ export default function CustomersTab({
               {filteredCustomers.map((customer) => {
                 const isEditing = String(editingCustomerId) === String(customer.id);
                 const form = isEditing ? editingCustomerForm : null;
+                const isMenuOpen = String(openCustomerMenuId) === String(customer.id);
 
                 return (
                   <article key={customer.id} className="customer-item-card">
@@ -213,16 +236,52 @@ export default function CustomersTab({
 
                         {isRahaf ? (
                           <div className="customer-item-actions">
-                            <button type="button" className="btn-ghost-light" onClick={() => beginEditCustomer(customer)}>
-                              تعديل
-                            </button>
-                            <button
-                              type="button"
-                              className="btn-ghost-light danger-btn"
-                              onClick={() => handleDeleteCustomer(customer)}
-                            >
-                              حذف
-                            </button>
+                            <div className="customer-actions-menu-wrap" data-customer-menu-root>
+                              <button
+                                type="button"
+                                className="icon-btn tiny actions-menu-trigger"
+                                aria-label={"\u0625\u062C\u0631\u0627\u0621\u0627\u062A \u0627\u0644\u0639\u0645\u064A\u0644"}
+                                aria-haspopup="menu"
+                                aria-expanded={isMenuOpen}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setOpenCustomerMenuId((prev) =>
+                                    String(prev) === String(customer.id) ? "" : customer.id
+                                  );
+                                }}
+                              >
+                                <img src={actionsMenuIcon} alt="" aria-hidden="true" />
+                              </button>
+
+                              {isMenuOpen ? (
+                                <div className="actions-menu-pop customer-actions-menu" role="menu">
+                                  <button
+                                    type="button"
+                                    className="actions-menu-item"
+                                    role="menuitem"
+                                    onClick={() => {
+                                      setOpenCustomerMenuId("");
+                                      beginEditCustomer(customer);
+                                    }}
+                                  >
+                                    <img src={editIcon} alt="" aria-hidden="true" className="actions-menu-item-icon" />
+                                    <span>{"\u062A\u0639\u062F\u064A\u0644"}</span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="actions-menu-item danger"
+                                    role="menuitem"
+                                    onClick={() => {
+                                      setOpenCustomerMenuId("");
+                                      handleDeleteCustomer(customer);
+                                    }}
+                                  >
+                                    <img src={deleteIcon} alt="" aria-hidden="true" className="actions-menu-item-icon" />
+                                    <span>{"\u062D\u0630\u0641"}</span>
+                                  </button>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         ) : null}
                       </>

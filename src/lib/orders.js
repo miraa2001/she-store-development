@@ -207,6 +207,24 @@ export async function updateOrderWorkflowStatus(orderId, nextStatus) {
   };
 }
 
+export async function updateOrderName(orderId, orderName) {
+  const name = String(orderName || "").trim();
+  if (!name) throw new Error("اسم الطلب مطلوب.");
+
+  const { error } = await sb
+    .from("orders")
+    .update({ order_name: name })
+    .eq("id", orderId);
+
+  if (error) throw error;
+  return { id: orderId, name };
+}
+
+export async function deleteOrderById(orderId) {
+  const { error } = await sb.from("orders").delete().eq("id", orderId);
+  if (error) throw error;
+}
+
 export function groupOrdersByMonth(orders, query = "") {
   const needle = String(query || "").trim().toLowerCase();
 

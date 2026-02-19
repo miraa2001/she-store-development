@@ -5,11 +5,13 @@ import {
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
   deriveOrderStatus,
+  deleteOrderById,
   fetchOrdersWithSummary,
   formatILS,
   groupOrdersByMonth,
   isOrderFullyCollected,
   parsePrice,
+  updateOrderName,
   updateOrderWorkflowStatus
 } from "../lib/orders";
 import { useAuthProfile } from "../hooks/useAuthProfile";
@@ -57,6 +59,7 @@ import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import ordersMenuIcon from "../assets/icons8-orders-96.png";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
@@ -131,14 +134,7 @@ function Icon({ name, className = "" }) {
   }
 
   if (name === "package") {
-    return (
-      <svg className={className} {...common}>
-        <path d="M16.5 9.4 7.55 4.24" />
-        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-        <path d="m3.3 7 8.7 5 8.7-5" />
-        <path d="M12 22V12" />
-      </svg>
-    );
+    return <img src={ordersMenuIcon} alt="" aria-hidden="true" className={className} />;
   }
 
   if (name === "map") {
@@ -321,6 +317,8 @@ export default function OrdersPage() {
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false);
+  const [orderDialog, setOrderDialog] = useState(null);
+  const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const hasInitializedUrlState = useRef(false);
@@ -1143,6 +1141,73 @@ export default function OrdersPage() {
     }
   };
 
+  const openRenameOrderDialog = (order) => {
+    if (!isRahaf || !order) return;
+    setOrderDialog({
+      kind: "rename",
+      orderId: order.id,
+      name: String(order.name || "")
+    });
+  };
+
+  const openDeleteOrderDialog = (order) => {
+    if (!isRahaf || !order) return;
+    setOrderDialog({
+      kind: "delete",
+      orderId: order.id,
+      name: String(order.name || "")
+    });
+  };
+
+  const closeOrderDialog = () => {
+    if (orderDialogBusy) return;
+    setOrderDialog(null);
+  };
+
+  const submitRenameOrder = async () => {
+    if (!orderDialog || orderDialog.kind !== "rename" || orderDialogBusy) return;
+    const nextName = String(orderDialog.name || "").trim();
+    if (!nextName) {
+      setToast({ type: "warn", text: "اسم الطلب مطلوب." });
+      return;
+    }
+
+    setOrderDialogBusy(true);
+    try {
+      await updateOrderName(orderDialog.orderId, nextName);
+      setToast({ type: "success", text: "تم تعديل اسم الطلب." });
+      await refreshOrders(orderDialog.orderId);
+      setOrderDialog(null);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "فشل تعديل اسم الطلب." });
+    } finally {
+      setOrderDialogBusy(false);
+    }
+  };
+
+  const confirmDeleteOrder = async () => {
+    if (!orderDialog || orderDialog.kind !== "delete" || orderDialogBusy) return;
+
+    setOrderDialogBusy(true);
+    try {
+      await deleteOrderById(orderDialog.orderId);
+      setToast({ type: "success", text: "تم حذف الطلب." });
+      await refreshOrders();
+      setOrderDialog(null);
+    } catch (error) {
+      console.error(error);
+      const message = String(error?.message || "");
+      if (message.toLowerCase().includes("foreign key")) {
+        setToast({ type: "danger", text: "لا يمكن حذف الطلب قبل حذف المشتريات المرتبطة به." });
+      } else {
+        setToast({ type: "danger", text: "فشل حذف الطلب." });
+      }
+    } finally {
+      setOrderDialogBusy(false);
+    }
+  };
+
   const undoDeletePurchase = async () => {
     if (!deleteSnapshot || !selectedOrder) return;
 
@@ -1546,6 +1611,8 @@ export default function OrdersPage() {
           onSelectOrder={setSelectedOrderId}
           isRahaf={isRahaf}
           onForceOrdersTab={() => setActiveTab("orders")}
+          onRenameOrder={openRenameOrderDialog}
+          onDeleteOrder={openDeleteOrderDialog}
           totalOrders={totalOrders}
           statusLabel={statusLabel}
           Icon={Icon}
@@ -1563,6 +1630,8 @@ export default function OrdersPage() {
           onSelectOrder={setSelectedOrderId}
           isRahaf={isRahaf}
           onForceOrdersTab={() => setActiveTab("orders")}
+          onRenameOrder={openRenameOrderDialog}
+          onDeleteOrder={openDeleteOrderDialog}
         />
       ) : null}
 
@@ -1736,6 +1805,87 @@ export default function OrdersPage() {
                   إلغاء
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {orderDialog ? (
+        <div className="purchase-modal-backdrop" onClick={closeOrderDialog}>
+          <div
+            className="purchase-modal-card purchase-modal-card-customer purchase-modal-card-delete"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="purchase-modal-head">
+              <h3>{orderDialog.kind === "rename" ? "تعديل اسم الطلب" : "حذف الطلب"}</h3>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={closeOrderDialog}
+                disabled={orderDialogBusy}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="purchase-modal-body delete-confirm-body">
+              {orderDialog.kind === "rename" ? (
+                <>
+                  <label>
+                    <span>اسم الطلب</span>
+                    <input
+                      type="text"
+                      value={orderDialog.name}
+                      onChange={(event) =>
+                        setOrderDialog((prev) => (prev ? { ...prev, name: event.target.value } : prev))
+                      }
+                      disabled={orderDialogBusy}
+                      autoFocus
+                    />
+                  </label>
+                  <div className="purchase-modal-foot">
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={submitRenameOrder}
+                      disabled={orderDialogBusy}
+                    >
+                      {orderDialogBusy ? "جاري الحفظ..." : "حفظ"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={closeOrderDialog}
+                      disabled={orderDialogBusy}
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="delete-confirm-text">هل تريدين حذف هذا الطلب؟</p>
+                  {orderDialog.name ? <div className="delete-confirm-target">{orderDialog.name}</div> : null}
+                  <div className="purchase-modal-foot">
+                    <button
+                      type="button"
+                      className="btn-ghost-light danger-btn"
+                      onClick={confirmDeleteOrder}
+                      disabled={orderDialogBusy}
+                    >
+                      {orderDialogBusy ? "جاري الحذف..." : "تأكيد الحذف"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={closeOrderDialog}
+                      disabled={orderDialogBusy}
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
