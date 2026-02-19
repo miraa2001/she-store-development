@@ -78,7 +78,7 @@ const StyledWrapper = styled.div`
   .minimal-label.active {
     top: -8px;
     font-size: 12px;
-    color: #6D1E4F;
+    color: #47143F;
     font-weight: 600;
   }
 
@@ -88,12 +88,12 @@ const StyledWrapper = styled.div`
     ${(props) => (props.$isRtl ? "right: 0;" : "left: 0;")}
     width: 0;
     height: 2px;
-    background: #6D1E4F;
+    background: #47143F;
     transition: width 0.3s ease;
   }
 
   &.is-active .minimal-input {
-    border-bottom-color: #6D1E4F;
+    border-bottom-color: #47143F;
   }
 
   &.is-active .minimal-border {

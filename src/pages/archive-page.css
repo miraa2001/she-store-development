@@ -177,8 +177,8 @@
 
 .archive-tab.active {
   color: #fff;
-  background: #6D1E4F;
-  box-shadow: 0 8px 16px rgba(158, 54, 101, 0.24);
+  background: #47143F;
+  box-shadow: 0 8px 16px rgba(109, 63, 107, 0.24);
 }
 
 .archive-orders-meta {
@@ -245,7 +245,7 @@
 }
 
 .archive-order-item.active {
-  border-color: #9E3665;
+  border-color: #6D3F6B;
   background: #f2ebf4;
 }
 

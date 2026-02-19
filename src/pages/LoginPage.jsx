@@ -263,10 +263,10 @@ export default function LoginPage() {
           transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
           -webkit-appearance: none;
         }
-        .login-input:hover { border-color: #C06084; }
+        .login-input:hover { border-color: #8F6E97; }
         .login-input:focus {
-          border-color: #9E3665;
-          box-shadow: 0 0 0 3.5px rgba(158, 54, 101, 0.12);
+          border-color: #6D3F6B;
+          box-shadow: 0 0 0 3.5px rgba(109, 63, 107, 0.12);
           background: #fff;
         }
         .login-input.error-state {
@@ -280,7 +280,7 @@ export default function LoginPage() {
           padding: 14px;
           border-radius: 12px;
           border: none;
-          background: #6D1E4F;
+          background: #47143F;
           color: #fff;
           font-size: 15px;
           font-weight: 600;
@@ -292,14 +292,14 @@ export default function LoginPage() {
           justify-content: center;
           gap: 8px;
           transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-          box-shadow: 0 4px 16px rgba(109, 30, 79, 0.25);
+          box-shadow: 0 4px 16px rgba(71, 20, 63, 0.25);
           position: relative;
           overflow: hidden;
         }
         .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(109, 30, 79, 0.32);
-          background: #6D1E4F;
+          box-shadow: 0 8px 28px rgba(71, 20, 63, 0.32);
+          background: #47143F;
         }
         .login-btn:active:not(:disabled) { transform: translateY(0); }
         .login-btn:disabled { opacity: 0.85; cursor: not-allowed; }
@@ -307,7 +307,7 @@ export default function LoginPage() {
         .remember-check {
           width: 18px; height: 18px;
           border-radius: 5px;
-          border: 1.5px solid #C06084;
+          border: 1.5px solid #8F6E97;
           background: #fff;
           cursor: pointer;
           display: flex; align-items: center; justify-content: center;
@@ -315,8 +315,8 @@ export default function LoginPage() {
           flex-shrink: 0;
         }
         .remember-check.checked {
-          background: #9E3665;
-          border-color: #9E3665;
+          background: #6D3F6B;
+          border-color: #6D3F6B;
         }
         .remember-row {
           display: flex; align-items: center; gap: 9px;
@@ -332,7 +332,7 @@ export default function LoginPage() {
           padding: 2px;
           transition: color 0.2s;
         }
-        .eye-btn:hover { color: #9E3665; }
+        .eye-btn:hover { color: #6D3F6B; }
 
         .icon-prefix {
           position: absolute; left: 14px; top: 50%;
@@ -355,16 +355,16 @@ export default function LoginPage() {
         .success-icon {
           width: 64px; height: 64px;
           border-radius: 50%;
-          background: #6D1E4F;
+          background: #47143F;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 8px 24px rgba(109, 30, 79, 0.3);
+          box-shadow: 0 8px 24px rgba(71, 20, 63, 0.3);
           animation: successPop 0.5s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         .blob1 {
           position: absolute; border-radius: 50%;
           width: 420px; height: 420px;
-          background: radial-gradient(circle, rgba(158, 54, 101, 0.13) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(109, 63, 107, 0.13) 0%, transparent 70%);
           top: -80px; left: -100px;
           filter: blur(40px);
           animation: blobFloat1 10s ease-in-out infinite;
@@ -373,7 +373,7 @@ export default function LoginPage() {
         .blob2 {
           position: absolute; border-radius: 50%;
           width: 380px; height: 380px;
-          background: radial-gradient(circle, rgba(109, 30, 79, 0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(71, 20, 63, 0.1) 0%, transparent 70%);
           bottom: -60px; right: -80px;
           filter: blur(50px);
           animation: blobFloat2 13s ease-in-out infinite;
@@ -383,7 +383,7 @@ export default function LoginPage() {
         .divider-dot {
           width: 4px; height: 4px;
           border-radius: 50%;
-          background: #C06084;
+          background: #8F6E97;
           display: inline-block;
         }
 
@@ -400,7 +400,7 @@ export default function LoginPage() {
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          backgroundImage: "radial-gradient(circle, rgba(158, 54, 101, 0.08) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(109, 63, 107, 0.08) 1px, transparent 1px)",
           backgroundSize: "28px 28px"
         }}
       />
@@ -413,7 +413,7 @@ export default function LoginPage() {
           background: "#ffffff",
           borderRadius: 24,
           padding: "44px 40px",
-          boxShadow: "0 2px 8px rgba(109, 30, 79, 0.06), 0 16px 48px rgba(109, 30, 79, 0.1), 0 1px 0 rgba(255,255,255,0.8) inset",
+          boxShadow: "0 2px 8px rgba(71, 20, 63, 0.06), 0 16px 48px rgba(71, 20, 63, 0.1), 0 1px 0 rgba(255,255,255,0.8) inset",
           border: "1px solid rgba(221,231,227,0.8)",
           position: "relative",
           overflow: "hidden"
@@ -438,7 +438,7 @@ export default function LoginPage() {
             left: 0,
             right: 0,
             height: 4,
-            background: "#6D1E4F",
+            background: "#47143F",
             borderRadius: "24px 24px 0 0"
           }}
         />
@@ -458,12 +458,12 @@ export default function LoginPage() {
               style={{
                 width: 38,
                 height: 38,
-                background: "#6D1E4F",
+                background: "#47143F",
                 borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(109, 30, 79, 0.25)"
+                boxShadow: "0 4px 12px rgba(71, 20, 63, 0.25)"
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,7 +473,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#9E3665", letterSpacing: "0.1em", textTransform: "uppercase" }}>Order Management</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#6D3F6B", letterSpacing: "0.1em", textTransform: "uppercase" }}>Order Management</p>
               <p style={{ fontSize: 13, color: "#64748b", fontWeight: 400, marginTop: 1 }}>Shein Agent Portal</p>
             </div>
           </div>
@@ -491,7 +491,7 @@ export default function LoginPage() {
           >
             Sign in to your
             <br />
-            <span style={{ color: "#9E3665", fontStyle: "italic" }}>workspace</span>
+            <span style={{ color: "#6D3F6B", fontStyle: "italic" }}>workspace</span>
           </h1>
           <p style={{ color: "#64748b", fontSize: 14, fontWeight: 400 }}>Manage orders and pickup points in one place</p>
         </div>
@@ -511,7 +511,7 @@ export default function LoginPage() {
               Username
             </label>
             <div style={{ position: "relative" }}>
-              <span className="icon-prefix" style={{ color: focused === "username" ? "#9E3665" : "#a0b4ae" }}>
+              <span className="icon-prefix" style={{ color: focused === "username" ? "#6D3F6B" : "#a0b4ae" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
@@ -544,7 +544,7 @@ export default function LoginPage() {
               Password
             </label>
             <div style={{ position: "relative" }}>
-              <span className="icon-prefix" style={{ color: focused === "password" ? "#9E3665" : "#a0b4ae" }}>
+              <span className="icon-prefix" style={{ color: focused === "password" ? "#6D3F6B" : "#a0b4ae" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
                   <path d="M8 11V7a4 4 0 018 0v4" />

@@ -26,18 +26,18 @@ const STATUSES = [
     label: "في نقطة الاستلام",
     description: "المشتريات قيد الاستلام",
     icon: MapPin,
-    color: "#48163F",
-    bgColor: "rgba(158, 54, 101, 0.12)",
-    borderColor: "rgba(158, 54, 101, 0.34)"
+    color: "#592955",
+    bgColor: "rgba(109, 63, 107, 0.12)",
+    borderColor: "rgba(109, 63, 107, 0.34)"
   },
   {
     id: "collected",
     label: "تم التحصيل",
     description: "تم معالجة الطلب كاملًا",
     icon: CheckCircle,
-    color: "#6D1E4F",
-    bgColor: "rgba(109, 30, 79, 0.11)",
-    borderColor: "rgba(109, 30, 79, 0.30)"
+    color: "#47143F",
+    bgColor: "rgba(71, 20, 63, 0.11)",
+    borderColor: "rgba(71, 20, 63, 0.30)"
   }
 ];
 
@@ -142,7 +142,7 @@ const StyledWrapper = styled.div`
     justify-content: space-between;
     gap: 8px;
     border-radius: 12px;
-    border: 1px solid rgba(158, 54, 101, 0.35);
+    border: 1px solid rgba(109, 63, 107, 0.35);
     background: #fff;
     color: #1f2937;
     padding: 0 12px;
@@ -154,8 +154,8 @@ const StyledWrapper = styled.div`
 
   .trigger:hover:not(:disabled),
   .trigger.open {
-    border-color: #9E3665;
-    box-shadow: 0 0 0 3px rgba(158, 54, 101, 0.14);
+    border-color: #6D3F6B;
+    box-shadow: 0 0 0 3px rgba(109, 63, 107, 0.14);
   }
 
   .trigger:disabled {
@@ -175,7 +175,7 @@ const StyledWrapper = styled.div`
   .chevron {
     width: 16px;
     height: 16px;
-    color: #6D1E4F;
+    color: #47143F;
     transition: transform 260ms ease;
     flex-shrink: 0;
   }
@@ -236,8 +236,8 @@ const StyledWrapper = styled.div`
   }
 
   .menu-item:hover:not(:disabled) {
-    background: rgba(158, 54, 101, 0.05);
-    border-color: rgba(158, 54, 101, 0.2);
+    background: rgba(109, 63, 107, 0.05);
+    border-color: rgba(109, 63, 107, 0.2);
   }
 
   .menu-item.selected {
@@ -303,11 +303,11 @@ const StyledWrapper = styled.div`
   }
 
   .webkit-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(158, 54, 101, 0.25);
+    background: rgba(109, 63, 107, 0.25);
     border-radius: 999px;
   }
 
   .webkit-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: rgba(158, 54, 101, 0.45);
+    background: rgba(109, 63, 107, 0.45);
   }
 `;

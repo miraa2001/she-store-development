@@ -16,7 +16,7 @@
   height: 20px;
   position: absolute;
   border-radius: 50%;
-  background-color: #9E3665;
+  background-color: #6D3F6B;
   left: 15%;
   transform-origin: 50%;
   animation: session-circle-bounce 0.5s alternate infinite ease;
@@ -37,7 +37,7 @@
   width: 20px;
   height: 4px;
   border-radius: 50%;
-  background-color: rgba(109, 30, 79, 0.45);
+  background-color: rgba(71, 20, 63, 0.45);
   position: absolute;
   top: 62px;
   transform-origin: 50%;
@@ -60,7 +60,7 @@
 
 .session-loader-label {
   font-size: 13px;
-  color: #6D1E4F;
+  color: #47143F;
   font-weight: 600;
 }
 

@@ -89,7 +89,7 @@ const StyledWrapper = styled.div`
 
   .file-upload {
     position: relative;
-    border: 2px dashed rgba(158, 54, 101, 0.38);
+    border: 2px dashed rgba(109, 63, 107, 0.38);
     border-radius: 12px;
     padding: 24px 16px;
     text-align: center;
@@ -98,13 +98,13 @@ const StyledWrapper = styled.div`
   }
 
   .file-upload:hover {
-    background-color: rgba(158, 54, 101, 0.06);
-    border-color: rgba(158, 54, 101, 0.62);
+    background-color: rgba(109, 63, 107, 0.06);
+    border-color: rgba(109, 63, 107, 0.62);
   }
 
   .file-upload.dragover {
-    background-color: rgba(158, 54, 101, 0.14);
-    border-color: #9E3665;
+    background-color: rgba(109, 63, 107, 0.14);
+    border-color: #6D3F6B;
   }
 
   .file-upload.disabled {
@@ -126,7 +126,7 @@ const StyledWrapper = styled.div`
 
   .upload-icon {
     font-size: 36px;
-    color: #9E3665;
+    color: #6D3F6B;
     margin-bottom: 2px;
     font-style: normal;
   }

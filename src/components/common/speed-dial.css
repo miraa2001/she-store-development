@@ -89,7 +89,7 @@
   width: 56px;
   height: 56px;
   color: #fff;
-  background: #6D1E4F;
+  background: #47143F;
   box-shadow: 0 10px 24px rgba(46, 125, 50, 0.38);
   animation: speed-dial-pulse 2s ease-in-out infinite;
 }
@@ -124,8 +124,8 @@
   height: 56px;
   border: 1px solid transparent;
   color: #fff;
-  background: #6D1E4F;
-  box-shadow: 0 10px 22px rgba(158, 54, 101, 0.32);
+  background: #47143F;
+  box-shadow: 0 10px 22px rgba(109, 63, 107, 0.32);
 }
 
 .speed-dial-btn:disabled {
@@ -136,7 +136,7 @@
 .speed-dial-btn:focus-visible,
 .speed-dial-main:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(158, 54, 101, 0.24);
+  box-shadow: 0 0 0 3px rgba(109, 63, 107, 0.24);
 }
 
 .speed-dial-icon-text {

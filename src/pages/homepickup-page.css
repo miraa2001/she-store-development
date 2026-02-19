@@ -245,10 +245,10 @@
 }
 
 .homepickup-order-item.active {
-  border-color: #9E3665;
+  border-color: #6D3F6B;
   background: #f2ebf4;
   border-radius: 18px;
-  box-shadow: 0 12px 20px rgba(158, 54, 101, 0.16);
+  box-shadow: 0 12px 20px rgba(109, 63, 107, 0.16);
 }
 
 .homepickup-spacer {

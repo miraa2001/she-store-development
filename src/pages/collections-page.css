@@ -205,7 +205,7 @@
 }
 
 .collections-order-item.active {
-  border-color: #9E3665;
+  border-color: #6D3F6B;
   background: #f2ebf4;
 }
 
@@ -215,7 +215,7 @@
   border: 1px solid #d9bfdc;
   border-radius: 999px;
   background: #f5eef7;
-  color: #6D1E4F;
+  color: #47143F;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;

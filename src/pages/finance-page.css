@@ -89,8 +89,8 @@
 }
 
 .finance-btn.primary {
-  background: #9E3665;
-  border-color: #9E3665;
+  background: #6D3F6B;
+  border-color: #6D3F6B;
   color: #fff;
 }
 
@@ -266,7 +266,7 @@
 }
 
 .finance-order-item.active {
-  border-color: #9E3665;
+  border-color: #6D3F6B;
   background: #f2ebf4;
 }
 
@@ -329,7 +329,7 @@
 .finance-progress span {
   display: block;
   height: 100%;
-  background: #9E3665;
+  background: #6D3F6B;
   border-radius: 999px;
 }
 
@@ -343,7 +343,7 @@
 
 .finance-status.success {
   border-color: #d9bfdc;
-  color: #6D1E4F;
+  color: #47143F;
   background: #f5eef7;
 }
 
@@ -499,11 +499,11 @@
 .finance-day-bar {
   width: 100%;
   border-radius: 6px 6px 2px 2px;
-  background: #9E3665;
+  background: #6D3F6B;
 }
 
 .finance-day-bar.neg {
-  background: linear-gradient(180deg, #FFADC0 0%, #9E3665 100%);
+  background: linear-gradient(180deg, #A47EAD 0%, #6D3F6B 100%);
 }
 
 .finance-empty,
