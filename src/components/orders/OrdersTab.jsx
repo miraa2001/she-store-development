@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { formatILS } from "../../lib/orders";
 import SessionLoader from "../common/SessionLoader";
 import OrderStatusDropdown from "./OrderStatusDropdown";
-import pdfExportIcon from "../../assets/pdf-export-v3.png";
+import pdfExportIconWeb from "../../assets/icons8-pdf-70-web.png";
+import pdfExportIconAndroid from "../../assets/icons8-pdf-96-android.png";
+import pdfExportIconIos from "../../assets/icons8-pdf-76-ios.png";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
@@ -42,6 +44,13 @@ export default function OrdersTab({
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
   const highlightRef = useRef(null);
   const canEditOrderStatus = isRahaf && editMode && !!selectedOrder;
+  const pdfExportIcon = useMemo(() => {
+    if (typeof navigator === "undefined") return pdfExportIconWeb;
+    const ua = String(navigator.userAgent || "").toLowerCase();
+    if (ua.includes("android")) return pdfExportIconAndroid;
+    if (ua.includes("iphone") || ua.includes("ipad") || ua.includes("ipod")) return pdfExportIconIos;
+    return pdfExportIconWeb;
+  }, []);
 
   useEffect(() => {
     if (!highlightPurchaseId) return;
