@@ -1,4 +1,4 @@
-import womanImageSrc from "../assets/woman.png";
+import sheStoreLogoSrc from "../assets/She Store Logo - Upscaled.png";
 import TypewriterEffect from "../components/common/TypewriterEffect";
 
 export default function WelcomePage({ onContinue }) {
@@ -6,7 +6,7 @@ export default function WelcomePage({ onContinue }) {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(145deg, #f3f5f4 0%, #e8f0ed 50%, #dde7e3 100%)",
+        background: "linear-gradient(145deg, #f6f2f8 0%, #ede5f1 50%, #e7dfeb 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -48,7 +48,7 @@ export default function WelcomePage({ onContinue }) {
 
         .hero-image {
           animation: gentleFloat 5s ease-in-out infinite;
-          filter: drop-shadow(0 16px 32px rgba(79, 138, 123, 0.2));
+          filter: drop-shadow(0 16px 32px rgba(158, 54, 101, 0.2));
         }
 
         .feature-card {
@@ -81,11 +81,11 @@ export default function WelcomePage({ onContinue }) {
         }
 
         .auth-welcome-word--accent {
-          color: #4f8a7b;
+          color: #9E3665;
         }
 
         .auth-welcome-cursor {
-          background: #4f8a7b;
+          background: #9E3665;
           height: 1.05em;
         }
 
@@ -99,7 +99,7 @@ export default function WelcomePage({ onContinue }) {
         }
 
         .login-button {
-          background: linear-gradient(135deg, #4f8a7b 0%, #3d6f61 100%);
+          background: #6D1E4F;
           color: #fff;
           border: none;
           border-radius: 14px;
@@ -108,7 +108,7 @@ export default function WelcomePage({ onContinue }) {
           font-weight: 700;
           font-family: 'Nunito', sans-serif;
           cursor: pointer;
-          box-shadow: 0 8px 24px rgba(79, 138, 123, 0.3);
+          box-shadow: 0 8px 24px rgba(158, 54, 101, 0.3);
           position: relative;
           overflow: hidden;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -117,18 +117,16 @@ export default function WelcomePage({ onContinue }) {
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-          background-size: 200% 100%;
+          background: rgba(255, 255, 255, 0.12);
           opacity: 0;
           transition: opacity 0.3s;
         }
         .login-button:hover {
           transform: translateY(-3px);
-          box-shadow: 0 12px 32px rgba(79, 138, 123, 0.4);
+          box-shadow: 0 12px 32px rgba(158, 54, 101, 0.4);
         }
         .login-button:hover::before {
           opacity: 1;
-          animation: shimmer 0.8s ease;
         }
         .login-button:active {
           transform: translateY(-1px);
@@ -144,13 +142,13 @@ export default function WelcomePage({ onContinue }) {
         .blob1 {
           top: -60px; left: -80px;
           width: 380px; height: 380px;
-          background: radial-gradient(circle, rgba(79, 138, 123, 0.2), transparent);
+          background: radial-gradient(circle, rgba(158, 54, 101, 0.2), transparent);
           animation-delay: 0s;
         }
         .blob2 {
           bottom: -80px; right: -60px;
           width: 420px; height: 420px;
-          background: radial-gradient(circle, rgba(61, 111, 97, 0.18), transparent);
+          background: radial-gradient(circle, rgba(109, 30, 79, 0.18), transparent);
           animation-delay: 3s;
         }
 
@@ -200,7 +198,7 @@ export default function WelcomePage({ onContinue }) {
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: "radial-gradient(circle, rgba(79,138,123,0.06) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(158, 54, 101, 0.06) 1px, transparent 1px)",
           backgroundSize: "32px 32px",
           pointerEvents: "none"
         }}
@@ -217,7 +215,7 @@ export default function WelcomePage({ onContinue }) {
           maxWidth: 480,
           width: "100%",
           textAlign: "center",
-          boxShadow: "0 20px 60px rgba(79, 138, 123, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
+          boxShadow: "0 20px 60px rgba(158, 54, 101, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255,255,255,0.9)",
           border: "1px solid rgba(221, 231, 227, 0.6)",
           position: "relative",
           zIndex: 1
@@ -230,18 +228,18 @@ export default function WelcomePage({ onContinue }) {
             left: "20%",
             right: "20%",
             height: 3,
-            background: "linear-gradient(90deg, transparent, #4f8a7b, transparent)",
+            background: "linear-gradient(90deg, transparent, #9E3665, transparent)",
             borderRadius: "0 0 6px 6px"
           }}
         />
 
         <div style={{ marginBottom: 36 }}>
           <img
-            src={womanImageSrc}
-            alt="Shopping"
+            src={sheStoreLogoSrc}
+            alt="She-Store Logo"
             className="hero-image"
             style={{
-              maxWidth: 240,
+              maxWidth: 280,
               width: "100%",
               height: "auto",
               margin: "0 auto",
@@ -284,10 +282,10 @@ export default function WelcomePage({ onContinue }) {
               key={i}
               className="feature-card"
               style={{
-                background: "rgba(79, 138, 123, 0.08)",
+                background: "rgba(158, 54, 101, 0.08)",
                 borderRadius: 12,
                 padding: "10px 18px",
-                border: "1px solid rgba(79, 138, 123, 0.15)",
+                border: "1px solid rgba(158, 54, 101, 0.15)",
                 display: "flex",
                 alignItems: "center",
                 gap: 8

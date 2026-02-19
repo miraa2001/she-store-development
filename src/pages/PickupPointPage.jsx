@@ -10,6 +10,7 @@ import { isAuraPickup, PICKUP_POINT } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./pickuppoint-page.css";
 
 const AURA_PICKUP_LABEL = `${PICKUP_POINT} (La Aura)`;
@@ -452,7 +453,10 @@ export default function PickupPointPage({ embedded = false }) {
           />
           <aside className={`pickuppoint-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="pickuppoint-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
+              <div className="app-sidebar-brand">
+                <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+                <b>القائمة</b>
+              </div>
               <button
                 type="button"
                 className="pickuppoint-menu-btn danger app-sidebar-close"
@@ -482,9 +486,12 @@ export default function PickupPointPage({ embedded = false }) {
       <div className="pickuppoint-wrap">
         {!embedded ? (
           <div className="pickuppoint-topbar">
-            <div className="pickuppoint-brand">
-              <b>نقطة الاستلام - La Aura</b>
-              <div className="pickuppoint-muted">طلبات الاستلام من نقطة الاستلام</div>
+            <div className="topbar-brand-with-logo">
+              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+              <div className="pickuppoint-brand">
+                <b>نقطة الاستلام - La Aura</b>
+                <div className="pickuppoint-muted">طلبات الاستلام من نقطة الاستلام</div>
+              </div>
             </div>
             <button type="button" className="pickuppoint-menu-btn" onClick={() => setSidebarOpen(true)}>
               ☰

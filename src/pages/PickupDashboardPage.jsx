@@ -8,6 +8,7 @@ import PickupPointPage from "./PickupPointPage";
 import CollectionsPage from "./CollectionsPage";
 import "./pickup-dashboard-page.css";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 
 const TAB_CONFIG = {
   home: { id: "home", label: "مستلمو البيت" },
@@ -103,7 +104,10 @@ export default function PickupDashboardPage() {
           />
           <aside className={`pickup-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="pickup-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
+              <div className="app-sidebar-brand">
+                <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+                <b>القائمة</b>
+              </div>
               <button
                 type="button"
                 className="pickup-btn pickup-btn-icon danger app-sidebar-close"
@@ -133,10 +137,13 @@ export default function PickupDashboardPage() {
 
       <div className="pickup-wrap">
         <div className="pickup-topbar">
-          <div className="pickup-brand">
-            <b>الاستلام والتحصيل</b>
-            <div className="pickup-muted">
-              {profile.role === "laaura" ? "نقطة La Aura" : "من البيت + La Aura + التحصيل"} — {getRoleLabel(profile.role)}
+          <div className="topbar-brand-with-logo">
+            <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+            <div className="pickup-brand">
+              <b>الاستلام والتحصيل</b>
+              <div className="pickup-muted">
+                {profile.role === "laaura" ? "نقطة La Aura" : "من البيت + La Aura + التحصيل"} — {getRoleLabel(profile.role)}
+              </div>
             </div>
           </div>
           {showSidebar ? (

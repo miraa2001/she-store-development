@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SheStoreLogo from "../common/SheStoreLogo";
 
 const MOBILE_BREAKPOINT = 768;
 const DESKTOP_BREAKPOINT = 1024;
@@ -93,6 +94,9 @@ export default function CommandHeader({
   if (isMobile) {
     return (
       <header className="command-header command-header-mobile">
+        <div className="command-logo-row">
+          <SheStoreLogo className="she-store-logo-link command-logo-link" imageClassName="she-store-logo-img command-logo-img" />
+        </div>
         <div className="command-mobile-row">
           <button
             type="button"
@@ -154,6 +158,9 @@ export default function CommandHeader({
   if (isTablet) {
     return (
       <header className="command-header command-header-tablet">
+        <div className="command-logo-row">
+          <SheStoreLogo className="she-store-logo-link command-logo-link" imageClassName="she-store-logo-img command-logo-img" />
+        </div>
         <div className="command-tablet-row">
           <button
             type="button"
@@ -194,6 +201,9 @@ export default function CommandHeader({
 
   return (
     <header className="command-header">
+      <div className="command-logo-row">
+        <SheStoreLogo className="she-store-logo-link command-logo-link" imageClassName="she-store-logo-img command-logo-img" />
+      </div>
       <div className="command-main command-main-group">
         {renderTabs()}
 

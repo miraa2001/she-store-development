@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+﻿import { useEffect, useId, useState } from "react";
 import styled from "styled-components";
 
 function extractImageFiles(dataTransfer) {
@@ -89,7 +89,7 @@ const StyledWrapper = styled.div`
 
   .file-upload {
     position: relative;
-    border: 2px dashed rgba(79, 138, 123, 0.38);
+    border: 2px dashed rgba(158, 54, 101, 0.38);
     border-radius: 12px;
     padding: 24px 16px;
     text-align: center;
@@ -98,13 +98,13 @@ const StyledWrapper = styled.div`
   }
 
   .file-upload:hover {
-    background-color: rgba(79, 138, 123, 0.06);
-    border-color: rgba(79, 138, 123, 0.62);
+    background-color: rgba(158, 54, 101, 0.06);
+    border-color: rgba(158, 54, 101, 0.62);
   }
 
   .file-upload.dragover {
-    background-color: rgba(79, 138, 123, 0.14);
-    border-color: #4f8a7b;
+    background-color: rgba(158, 54, 101, 0.14);
+    border-color: #9E3665;
   }
 
   .file-upload.disabled {
@@ -126,7 +126,7 @@ const StyledWrapper = styled.div`
 
   .upload-icon {
     font-size: 36px;
-    color: #4f8a7b;
+    color: #9E3665;
     margin-bottom: 2px;
     font-style: normal;
   }

@@ -38,7 +38,7 @@
 }
 
 .homepickup-menu-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 14px;
   min-height: 40px;
@@ -75,7 +75,7 @@
   width: min(240px, 84vw);
   height: 100dvh;
   background: #fff;
-  border-left: 1px solid #d7e3de;
+  border-left: 1px solid #dfd5e5;
   box-shadow: -24px 0 40px rgba(15, 23, 42, 0.12);
   z-index: 50;
   transform: translateX(100%);
@@ -114,7 +114,7 @@
 
 .homepickup-sidebar-content a,
 .homepickup-sidebar-content button {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 12px;
   background: #fff;
   min-height: 40px;
@@ -142,7 +142,7 @@
 .homepickup-search-box {
   width: 100%;
   max-width: 420px;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   border-radius: 12px;
   min-height: 40px;
   padding: 0 12px;
@@ -161,7 +161,7 @@
 }
 
 .homepickup-search-results {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
@@ -199,7 +199,7 @@
 
 .homepickup-card {
   background: #fff;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 24px 24px 12px 24px;
   padding: 12px;
 }
@@ -208,7 +208,7 @@
   position: sticky;
   top: 88px;
   border-radius: 20px 20px 10px 20px;
-  background: linear-gradient(180deg, #fff 0%, #f7fbf9 100%);
+  background: linear-gradient(180deg, #fff 0%, #fbf8fc 100%);
 }
 
 .homepickup-page.embedded .homepickup-list-card {
@@ -231,7 +231,7 @@
 }
 
 .homepickup-order-item {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 11px 12px;
@@ -245,10 +245,10 @@
 }
 
 .homepickup-order-item.active {
-  border-color: #4f8a7b;
-  background: #eaf4f1;
+  border-color: #9E3665;
+  background: #f2ebf4;
   border-radius: 18px;
-  box-shadow: 0 12px 20px rgba(79, 138, 123, 0.16);
+  box-shadow: 0 12px 20px rgba(158, 54, 101, 0.16);
 }
 
 .homepickup-spacer {
@@ -264,7 +264,7 @@
 }
 
 .homepickup-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 12px;
   min-height: 38px;
@@ -322,7 +322,7 @@
 .homepickup-paid-input {
   width: 90px;
   min-height: 32px;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   border-radius: 10px;
   padding: 0 8px;
   font-family: inherit;
@@ -339,7 +339,7 @@
   height: 72px;
   object-fit: cover;
   border-radius: 12px;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   box-shadow: 0 6px 10px rgba(15, 23, 42, 0.08);
   cursor: pointer;
 }
@@ -470,7 +470,7 @@
 
 .homepickup-note {
   width: min(460px, 100%);
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 16px;
@@ -493,7 +493,7 @@
 .homepickup-link {
   margin-top: 12px;
   display: inline-flex;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   border-radius: 12px;
   min-height: 38px;
   align-items: center;

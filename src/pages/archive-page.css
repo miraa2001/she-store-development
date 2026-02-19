@@ -28,7 +28,7 @@
 }
 
 .archive-menu-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 14px;
   min-height: 40px;
@@ -65,7 +65,7 @@
   width: min(240px, 84vw);
   height: 100dvh;
   background: #fff;
-  border-left: 1px solid #d7e3de;
+  border-left: 1px solid #dfd5e5;
   box-shadow: -24px 0 40px rgba(15, 23, 42, 0.12);
   z-index: 50;
   transform: translateX(100%);
@@ -103,7 +103,7 @@
 
 .archive-sidebar-content a,
 .archive-sidebar-content button {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 12px;
   background: #fff;
   min-height: 40px;
@@ -129,7 +129,7 @@
 
 .archive-card {
   background: #fff;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 22px 22px 12px 22px;
   padding: 12px;
 }
@@ -138,7 +138,7 @@
   position: sticky;
   top: 88px;
   border-radius: 20px 20px 10px 20px;
-  background: linear-gradient(180deg, #fff 0%, #f7fbf9 100%);
+  background: linear-gradient(180deg, #fff 0%, #fbf8fc 100%);
 }
 
 .archive-row {
@@ -177,8 +177,8 @@
 
 .archive-tab.active {
   color: #fff;
-  background: linear-gradient(135deg, #4f8a7b, #3d6f61);
-  box-shadow: 0 8px 16px rgba(79, 138, 123, 0.24);
+  background: #6D1E4F;
+  box-shadow: 0 8px 16px rgba(158, 54, 101, 0.24);
 }
 
 .archive-orders-meta {
@@ -216,7 +216,7 @@
 }
 
 .archive-order-item {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 10px;
@@ -245,8 +245,8 @@
 }
 
 .archive-order-item.active {
-  border-color: #4f8a7b;
-  background: #eaf4f1;
+  border-color: #9E3665;
+  background: #f2ebf4;
 }
 
 .archive-spacer {
@@ -258,7 +258,7 @@
 }
 
 .archive-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 12px;
   min-height: 38px;
@@ -312,7 +312,7 @@
 
 .archive-note {
   width: min(460px, 100%);
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 16px;
@@ -335,7 +335,7 @@
 .archive-link {
   margin-top: 12px;
   display: inline-flex;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   border-radius: 12px;
   min-height: 38px;
   align-items: center;

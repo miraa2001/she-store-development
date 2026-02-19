@@ -10,6 +10,7 @@ import { PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./homepickup-page.css";
 
 const BUCKET = "purchase-images";
@@ -363,7 +364,10 @@ export default function HomePickupPage({ embedded = false }) {
           />
           <aside className={`homepickup-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="homepickup-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
+              <div className="app-sidebar-brand">
+                <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+                <b>القائمة</b>
+              </div>
               <button
                 type="button"
                 className="homepickup-menu-btn danger app-sidebar-close"
@@ -393,9 +397,12 @@ export default function HomePickupPage({ embedded = false }) {
       <div className="homepickup-wrap">
         {!embedded ? (
           <div className="homepickup-topbar">
-            <div className="homepickup-brand">
-              <b>مستلمو البيت</b>
-              <div className="homepickup-muted">طلبات الاستلام من البيت</div>
+            <div className="topbar-brand-with-logo">
+              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+              <div className="homepickup-brand">
+                <b>مستلمو البيت</b>
+                <div className="homepickup-muted">طلبات الاستلام من البيت</div>
+              </div>
             </div>
             <button type="button" className="homepickup-menu-btn" onClick={() => setSidebarOpen(true)}>
               ☰

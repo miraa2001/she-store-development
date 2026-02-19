@@ -80,7 +80,7 @@
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  background-color: #4f8a7b;
+  background-color: #9E3665;
   color: #fff;
   font-weight: 600;
   letter-spacing: -0.025em;
@@ -91,7 +91,7 @@
 }
 
 .next-button:hover {
-  background-color: #3f7467;
+  background-color: #6D1E4F;
 }
 
 .next-button:disabled {

@@ -15,7 +15,7 @@ export default function WelcomeEntryPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(145deg, #f3f5f4 0%, #e8f0ed 40%, #dde7e3 100%)"
+          background: "linear-gradient(145deg, #f6f2f8 0%, #ede5f1 40%, #e7dfeb 100%)"
         }}
       >
         <SessionLoader />

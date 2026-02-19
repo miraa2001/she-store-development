@@ -34,7 +34,7 @@
   width: 120px;
   height: 4px;
   margin: 24px auto 56px;
-  background: #2e7d32;
+  background: #6D1E4F;
 }
 
 .login-fields {
@@ -58,7 +58,7 @@
 }
 
 .login-btn:hover {
-  background: #2e7d32;
+  background: #6D1E4F;
 }
 
 .login-btn:active {

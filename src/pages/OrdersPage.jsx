@@ -56,6 +56,7 @@ import CustomerQuickAddModal from "../components/orders/CustomerQuickAddModal";
 import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
@@ -318,6 +319,8 @@ export default function OrdersPage() {
 
   const [toast, setToast] = useState(null);
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+  const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const hasInitializedUrlState = useRef(false);
@@ -819,21 +822,9 @@ export default function OrdersPage() {
     }
   };
 
-  const handleDeleteCustomer = async (customer) => {
-    const ok = window.confirm(`هل تريدين حذف العميل${customer?.name ? ` (${customer.name})` : ""}؟`);
-    if (!ok) return;
-
-    try {
-      await deleteCustomer(customer.id);
-      setToast({ type: "success", text: "تم حذف العميل." });
-      if (String(editingCustomerId) === String(customer.id)) {
-        cancelEditCustomer();
-      }
-      await refreshCustomers();
-    } catch (error) {
-      console.error(error);
-      setToast({ type: "danger", text: customerFriendlyError(error, "فشل حذف العميل.") });
-    }
+  const handleDeleteCustomer = (customer) => {
+    if (!customer) return;
+    setConfirmDelete({ kind: "customer", item: customer });
   };
 
   const signOut = async () => {
@@ -1082,42 +1073,73 @@ export default function OrdersPage() {
     }
   };
 
-  const handleDeletePurchase = async (purchase) => {
-    const ok = window.confirm("هل تريدين حذف هذا المشترى؟");
-    if (!ok) return;
-
+  const handleDeletePurchase = (purchase) => {
+    if (!purchase) return;
     setMenuPurchaseId("");
+    setConfirmDelete({ kind: "purchase", item: purchase });
+  };
+
+  const closeConfirmDelete = () => {
+    if (confirmDeleteBusy) return;
+    setConfirmDelete(null);
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!confirmDelete || !confirmDelete.item || confirmDeleteBusy) return;
+
+    const target = confirmDelete.item;
+    setConfirmDeleteBusy(true);
 
     try {
-      await deletePurchaseById(purchase.id);
+      if (confirmDelete.kind === "customer") {
+        await deleteCustomer(target.id);
+        setToast({ type: "success", text: "تم حذف العميل." });
+        if (String(editingCustomerId) === String(target.id)) {
+          cancelEditCustomer();
+        }
+        await refreshCustomers();
+      } else if (confirmDelete.kind === "purchase") {
+        setMenuPurchaseId("");
+        await deletePurchaseById(target.id);
 
-      setDeleteSnapshot({
-        purchase: {
-          id: purchase.id,
-          order_id: purchase.order_id,
-          customer_id: purchase.customer_id,
-          customer_name: purchase.customer_name,
-          qty: purchase.qty,
-          price: purchase.price,
-          paid_price: purchase.paid_price,
-          bag_size: purchase.bag_size,
-          pickup_point: purchase.pickup_point,
-          note: purchase.note,
-          created_at: purchase.created_at
-        },
-        links: purchase.links || [],
-        images: (purchase.images || []).map((img) => ({
-          id: img.id,
-          storage_path: img.storage_path
-        }))
-      });
+        setDeleteSnapshot({
+          purchase: {
+            id: target.id,
+            order_id: target.order_id,
+            customer_id: target.customer_id,
+            customer_name: target.customer_name,
+            qty: target.qty,
+            price: target.price,
+            paid_price: target.paid_price,
+            bag_size: target.bag_size,
+            pickup_point: target.pickup_point,
+            note: target.note,
+            created_at: target.created_at
+          },
+          links: target.links || [],
+          images: (target.images || []).map((img) => ({
+            id: img.id,
+            storage_path: img.storage_path
+          }))
+        });
 
-      setToast({ type: "info", text: "تم حذف المشترى.", action: "تراجع" });
-      await refreshPurchases(selectedOrder.id);
-      await refreshOrders(selectedOrder.id);
+        setToast({ type: "info", text: "تم حذف المشترى.", action: "تراجع" });
+
+        const orderIdToRefresh = target.order_id || selectedOrder?.id;
+        await refreshPurchases(orderIdToRefresh);
+        await refreshOrders(orderIdToRefresh);
+      }
+
+      setConfirmDelete(null);
     } catch (error) {
       console.error(error);
-      setToast({ type: "danger", text: "فشل حذف المشترى." });
+      if (confirmDelete.kind === "customer") {
+        setToast({ type: "danger", text: customerFriendlyError(error, "فشل حذف العميل.") });
+      } else {
+        setToast({ type: "danger", text: "فشل حذف المشترى." });
+      }
+    } finally {
+      setConfirmDeleteBusy(false);
     }
   };
 
@@ -1438,7 +1460,10 @@ export default function OrdersPage() {
 
         <aside className={`global-sidebar app-sidebar-drawer ${globalOpen ? "open" : ""}`}>
           <div className="global-sidebar-head app-sidebar-head">
-            <b>القائمة</b>
+            <div className="app-sidebar-brand">
+              <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+              <b>القائمة</b>
+            </div>
             <button type="button" className="app-sidebar-close" onClick={() => setGlobalOpen(false)}>
               ✕
             </button>
@@ -1661,6 +1686,60 @@ export default function OrdersPage() {
         onChange={(patch) => setQuickCustomerForm((prev) => ({ ...prev, ...patch }))}
         Icon={Icon}
       />
+
+      {confirmDelete ? (
+        <div className="purchase-modal-backdrop" onClick={closeConfirmDelete}>
+          <div
+            className="purchase-modal-card purchase-modal-card-customer purchase-modal-card-delete"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="purchase-modal-head">
+              <h3>{confirmDelete.kind === "customer" ? "حذف عميل" : "حذف مشترى"}</h3>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={closeConfirmDelete}
+                disabled={confirmDeleteBusy}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="purchase-modal-body delete-confirm-body">
+              <p className="delete-confirm-text">
+                {confirmDelete.kind === "customer"
+                  ? "هل تريدين حذف هذا العميل؟"
+                  : "هل تريدين حذف هذا المشترى؟"}
+              </p>
+
+              {confirmDelete.item?.name || confirmDelete.item?.customer_name ? (
+                <div className="delete-confirm-target">
+                  {confirmDelete.item?.name || confirmDelete.item?.customer_name}
+                </div>
+              ) : null}
+
+              <div className="purchase-modal-foot">
+                <button
+                  type="button"
+                  className="btn-ghost-light danger-btn"
+                  onClick={confirmDeleteAction}
+                  disabled={confirmDeleteBusy}
+                >
+                  {confirmDeleteBusy ? "جاري الحذف..." : "تأكيد الحذف"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost-light"
+                  onClick={closeConfirmDelete}
+                  disabled={confirmDeleteBusy}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <LightboxModal
         lightbox={lightbox}

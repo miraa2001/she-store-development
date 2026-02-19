@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import SheStoreLogo from "../common/SheStoreLogo";
 
 export default function OrdersDrawer({
   open = false,
@@ -32,9 +33,7 @@ export default function OrdersDrawer({
       <aside className="orders-drawer-panel" onClick={(event) => event.stopPropagation()}>
         <div className="orders-drawer-head">
           <div className="workspace-brand">
-            <span className="cube-wrap">
-              <Icon name="package" className="icon" />
-            </span>
+            <SheStoreLogo className="she-store-logo-link orders-drawer-logo-link" imageClassName="she-store-logo-img orders-drawer-logo-img" />
             <div>
               <h3>الطلبات</h3>
               <p>{totalOrders} طلب</p>

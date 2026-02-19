@@ -6,6 +6,7 @@ import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./archive-page.css";
 
 const IMAGE_BUCKET = "purchase-images";
@@ -234,7 +235,10 @@ export default function ArchivePage() {
       />
       <aside className={`archive-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
         <div className="archive-sidebar-head app-sidebar-head">
-          <b>القائمة</b>
+          <div className="app-sidebar-brand">
+            <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+            <b>القائمة</b>
+          </div>
           <button
             type="button"
             className="archive-menu-btn danger app-sidebar-close"
@@ -262,9 +266,12 @@ export default function ArchivePage() {
 
       <div className="archive-wrap">
         <div className="archive-topbar">
-          <div className="archive-brand">
-            <b>الأرشيف</b>
-            <div className="archive-muted">طلبات تم تحصيلها + طلبات أقدم من الشهر الحالي</div>
+          <div className="topbar-brand-with-logo">
+            <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+            <div className="archive-brand">
+              <b>???????</b>
+              <div className="archive-muted">?????? ?? ??????? + ?????? ???? ?? ????? ??????</div>
+            </div>
           </div>
           <button type="button" className="archive-menu-btn" onClick={() => setSidebarOpen(true)}>
             ☰

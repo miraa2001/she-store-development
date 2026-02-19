@@ -1,7 +1,8 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 
 const EMAIL_DOMAIN = "she-store.com";
 const REMEMBER_ME_STORAGE_KEY = "she_store:remember_me";
@@ -163,7 +164,7 @@ export default function LoginPage() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(145deg, #f3f5f4 0%, #e8f0ed 40%, #dde7e3 100%)"
+          background: "linear-gradient(145deg, #f6f2f8 0%, #ede5f1 40%, #e7dfeb 100%)"
         }}
       >
         <SessionLoader />
@@ -176,7 +177,7 @@ export default function LoginPage() {
       dir="ltr"
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(145deg, #f3f5f4 0%, #e8f0ed 40%, #dde7e3 100%)",
+        background: "linear-gradient(145deg, #f6f2f8 0%, #ede5f1 40%, #e7dfeb 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -228,6 +229,20 @@ export default function LoginPage() {
         .login-card {
           animation: fadeUp 0.65s cubic-bezier(0.16,1,0.3,1) both;
         }
+        .login-logo-wrap {
+          margin: 8px 0 26px;
+          display: flex;
+          justify-content: center;
+        }
+        .login-logo-link {
+          border-radius: 14px;
+        }
+        .login-logo-img {
+          width: clamp(200px, 40vw, 250px);
+          display: block;
+          height: auto;
+          object-fit: contain;
+        }
         .field-wrap { animation: fadeUp 0.65s cubic-bezier(0.16,1,0.3,1) both; }
         .field-wrap:nth-child(1) { animation-delay: 0.1s; }
         .field-wrap:nth-child(2) { animation-delay: 0.18s; }
@@ -238,7 +253,7 @@ export default function LoginPage() {
           width: 100%;
           padding: 13px 16px 13px 44px;
           border-radius: 12px;
-          border: 1.5px solid #dde7e3;
+          border: 1.5px solid #e7dfeb;
           background: #ffffff;
           color: #111827;
           font-size: 15px;
@@ -248,10 +263,10 @@ export default function LoginPage() {
           transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
           -webkit-appearance: none;
         }
-        .login-input:hover { border-color: #b0cdc5; }
+        .login-input:hover { border-color: #C06084; }
         .login-input:focus {
-          border-color: #4f8a7b;
-          box-shadow: 0 0 0 3.5px rgba(79,138,123,0.12);
+          border-color: #9E3665;
+          box-shadow: 0 0 0 3.5px rgba(158, 54, 101, 0.12);
           background: #fff;
         }
         .login-input.error-state {
@@ -265,7 +280,7 @@ export default function LoginPage() {
           padding: 14px;
           border-radius: 12px;
           border: none;
-          background: linear-gradient(135deg, #4f8a7b 0%, #3d6f61 100%);
+          background: #6D1E4F;
           color: #fff;
           font-size: 15px;
           font-weight: 600;
@@ -277,14 +292,14 @@ export default function LoginPage() {
           justify-content: center;
           gap: 8px;
           transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-          box-shadow: 0 4px 16px rgba(61,111,97,0.25);
+          box-shadow: 0 4px 16px rgba(109, 30, 79, 0.25);
           position: relative;
           overflow: hidden;
         }
         .login-btn:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 8px 28px rgba(61,111,97,0.32);
-          background: linear-gradient(135deg, #56978a 0%, #44796b 100%);
+          box-shadow: 0 8px 28px rgba(109, 30, 79, 0.32);
+          background: #6D1E4F;
         }
         .login-btn:active:not(:disabled) { transform: translateY(0); }
         .login-btn:disabled { opacity: 0.85; cursor: not-allowed; }
@@ -292,7 +307,7 @@ export default function LoginPage() {
         .remember-check {
           width: 18px; height: 18px;
           border-radius: 5px;
-          border: 1.5px solid #b0cdc5;
+          border: 1.5px solid #C06084;
           background: #fff;
           cursor: pointer;
           display: flex; align-items: center; justify-content: center;
@@ -300,8 +315,8 @@ export default function LoginPage() {
           flex-shrink: 0;
         }
         .remember-check.checked {
-          background: #4f8a7b;
-          border-color: #4f8a7b;
+          background: #9E3665;
+          border-color: #9E3665;
         }
         .remember-row {
           display: flex; align-items: center; gap: 9px;
@@ -317,7 +332,7 @@ export default function LoginPage() {
           padding: 2px;
           transition: color 0.2s;
         }
-        .eye-btn:hover { color: #4f8a7b; }
+        .eye-btn:hover { color: #9E3665; }
 
         .icon-prefix {
           position: absolute; left: 14px; top: 50%;
@@ -340,16 +355,16 @@ export default function LoginPage() {
         .success-icon {
           width: 64px; height: 64px;
           border-radius: 50%;
-          background: linear-gradient(135deg, #4f8a7b, #3d6f61);
+          background: #6D1E4F;
           display: flex; align-items: center; justify-content: center;
-          box-shadow: 0 8px 24px rgba(61,111,97,0.3);
+          box-shadow: 0 8px 24px rgba(109, 30, 79, 0.3);
           animation: successPop 0.5s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         .blob1 {
           position: absolute; border-radius: 50%;
           width: 420px; height: 420px;
-          background: radial-gradient(circle, rgba(79,138,123,0.13) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(158, 54, 101, 0.13) 0%, transparent 70%);
           top: -80px; left: -100px;
           filter: blur(40px);
           animation: blobFloat1 10s ease-in-out infinite;
@@ -358,7 +373,7 @@ export default function LoginPage() {
         .blob2 {
           position: absolute; border-radius: 50%;
           width: 380px; height: 380px;
-          background: radial-gradient(circle, rgba(61,111,97,0.1) 0%, transparent 70%);
+          background: radial-gradient(circle, rgba(109, 30, 79, 0.1) 0%, transparent 70%);
           bottom: -60px; right: -80px;
           filter: blur(50px);
           animation: blobFloat2 13s ease-in-out infinite;
@@ -368,7 +383,7 @@ export default function LoginPage() {
         .divider-dot {
           width: 4px; height: 4px;
           border-radius: 50%;
-          background: #b0cdc5;
+          background: #C06084;
           display: inline-block;
         }
 
@@ -385,7 +400,7 @@ export default function LoginPage() {
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          backgroundImage: "radial-gradient(circle, rgba(79,138,123,0.08) 1px, transparent 1px)",
+          backgroundImage: "radial-gradient(circle, rgba(158, 54, 101, 0.08) 1px, transparent 1px)",
           backgroundSize: "28px 28px"
         }}
       />
@@ -398,7 +413,7 @@ export default function LoginPage() {
           background: "#ffffff",
           borderRadius: 24,
           padding: "44px 40px",
-          boxShadow: "0 2px 8px rgba(61,111,97,0.06), 0 16px 48px rgba(61,111,97,0.1), 0 1px 0 rgba(255,255,255,0.8) inset",
+          boxShadow: "0 2px 8px rgba(109, 30, 79, 0.06), 0 16px 48px rgba(109, 30, 79, 0.1), 0 1px 0 rgba(255,255,255,0.8) inset",
           border: "1px solid rgba(221,231,227,0.8)",
           position: "relative",
           overflow: "hidden"
@@ -423,10 +438,19 @@ export default function LoginPage() {
             left: 0,
             right: 0,
             height: 4,
-            background: "linear-gradient(90deg, #4f8a7b, #3d6f61, #4f8a7b)",
+            background: "#6D1E4F",
             borderRadius: "24px 24px 0 0"
           }}
         />
+
+        <div className="login-logo-wrap">
+          <SheStoreLogo
+            href="#/"
+            className="she-store-logo-link login-logo-link"
+            imageClassName="she-store-logo-img login-logo-img"
+            ariaLabel="She-Store Home"
+          />
+        </div>
 
         <div style={{ marginBottom: 36, animation: "fadeUp 0.5s both" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 28 }}>
@@ -434,12 +458,12 @@ export default function LoginPage() {
               style={{
                 width: 38,
                 height: 38,
-                background: "linear-gradient(135deg, #4f8a7b, #3d6f61)",
+                background: "#6D1E4F",
                 borderRadius: 10,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(61,111,97,0.25)"
+                boxShadow: "0 4px 12px rgba(109, 30, 79, 0.25)"
               }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -449,7 +473,7 @@ export default function LoginPage() {
               </svg>
             </div>
             <div>
-              <p style={{ fontSize: 11, fontWeight: 600, color: "#4f8a7b", letterSpacing: "0.1em", textTransform: "uppercase" }}>Order Management</p>
+              <p style={{ fontSize: 11, fontWeight: 600, color: "#9E3665", letterSpacing: "0.1em", textTransform: "uppercase" }}>Order Management</p>
               <p style={{ fontSize: 13, color: "#64748b", fontWeight: 400, marginTop: 1 }}>Shein Agent Portal</p>
             </div>
           </div>
@@ -467,7 +491,7 @@ export default function LoginPage() {
           >
             Sign in to your
             <br />
-            <span style={{ color: "#4f8a7b", fontStyle: "italic" }}>workspace</span>
+            <span style={{ color: "#9E3665", fontStyle: "italic" }}>workspace</span>
           </h1>
           <p style={{ color: "#64748b", fontSize: 14, fontWeight: 400 }}>Manage orders and pickup points in one place</p>
         </div>
@@ -487,7 +511,7 @@ export default function LoginPage() {
               Username
             </label>
             <div style={{ position: "relative" }}>
-              <span className="icon-prefix" style={{ color: focused === "username" ? "#4f8a7b" : "#a0b4ae" }}>
+              <span className="icon-prefix" style={{ color: focused === "username" ? "#9E3665" : "#a0b4ae" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
                   <circle cx="12" cy="7" r="4" />
@@ -520,7 +544,7 @@ export default function LoginPage() {
               Password
             </label>
             <div style={{ position: "relative" }}>
-              <span className="icon-prefix" style={{ color: focused === "password" ? "#4f8a7b" : "#a0b4ae" }}>
+              <span className="icon-prefix" style={{ color: focused === "password" ? "#9E3665" : "#a0b4ae" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="5" y="11" width="14" height="10" rx="2" ry="2" />
                   <path d="M8 11V7a4 4 0 018 0v4" />
@@ -621,7 +645,7 @@ export default function LoginPage() {
           style={{
             marginTop: 28,
             paddingTop: 20,
-            borderTop: "1px solid #f3f5f4",
+            borderTop: "1px solid #f6f2f8",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

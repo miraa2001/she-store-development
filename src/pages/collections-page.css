@@ -38,7 +38,7 @@
 }
 
 .collections-menu-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 14px;
   min-height: 40px;
@@ -75,7 +75,7 @@
   width: min(240px, 84vw);
   height: 100dvh;
   background: #fff;
-  border-left: 1px solid #d7e3de;
+  border-left: 1px solid #dfd5e5;
   box-shadow: -24px 0 40px rgba(15, 23, 42, 0.12);
   z-index: 50;
   transform: translateX(100%);
@@ -113,7 +113,7 @@
 
 .collections-sidebar-content a,
 .collections-sidebar-content button {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 12px;
   background: #fff;
   min-height: 40px;
@@ -143,7 +143,7 @@
 
 .collections-card {
   background: #fff;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 22px 22px 12px 22px;
   padding: 12px;
 }
@@ -152,7 +152,7 @@
   position: sticky;
   top: 88px;
   border-radius: 20px 20px 10px 20px;
-  background: linear-gradient(180deg, #fff 0%, #f7fbf9 100%);
+  background: linear-gradient(180deg, #fff 0%, #fbf8fc 100%);
 }
 
 .collections-page.embedded .collections-list-card {
@@ -192,7 +192,7 @@
 }
 
 .collections-order-item {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 10px;
@@ -205,17 +205,17 @@
 }
 
 .collections-order-item.active {
-  border-color: #4f8a7b;
-  background: #eaf4f1;
+  border-color: #9E3665;
+  background: #f2ebf4;
 }
 
 .collections-status-badge {
   display: inline-flex;
   margin-top: 6px;
-  border: 1px solid #bfe6d3;
+  border: 1px solid #d9bfdc;
   border-radius: 999px;
-  background: #e8f5ef;
-  color: #1f7a4b;
+  background: #f5eef7;
+  color: #6D1E4F;
   padding: 4px 10px;
   font-size: 12px;
   font-weight: 700;
@@ -270,7 +270,7 @@
 }
 
 .collections-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 12px;
   min-height: 38px;
@@ -291,7 +291,7 @@
 
 .collections-note {
   width: min(460px, 100%);
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 16px;
@@ -314,7 +314,7 @@
 .collections-link {
   margin-top: 12px;
   display: inline-flex;
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   border-radius: 12px;
   min-height: 38px;
   align-items: center;

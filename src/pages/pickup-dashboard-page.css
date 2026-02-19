@@ -16,7 +16,7 @@
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 20px 20px 10px 20px;
   background: #fff;
   box-shadow: 0 8px 20px rgba(15, 23, 42, 0.08);
@@ -34,7 +34,7 @@
 }
 
 .pickup-btn {
-  border: 1px solid #d7e3de;
+  border: 1px solid #dfd5e5;
   background: #fff;
   border-radius: 14px;
   min-height: 40px;
@@ -76,7 +76,7 @@
   inset: 0 0 0 auto;
   width: min(240px, 84vw);
   background: #fff;
-  border-left: 1px solid #dde7e3;
+  border-left: 1px solid #e7dfeb;
   box-shadow: -24px 0 40px rgba(15, 23, 42, 0.12);
   z-index: 50;
   transform: translateX(100%);
@@ -115,7 +115,7 @@
 
 .pickup-sidebar-content a,
 .pickup-sidebar-content button {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 12px;
   background: #fff;
   min-height: 40px;
@@ -136,7 +136,7 @@
   display: flex;
   gap: 8px;
   padding: 7px;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 16px 16px 10px 16px;
   background: #fff;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
@@ -157,7 +157,7 @@
 
 .pickup-tab-btn.active {
   position: relative;
-  background: #eaf4f1;
+  background: #f2ebf4;
   color: #25584c;
   box-shadow: inset 0 0 0 1px #b9d5cc;
 }
@@ -170,14 +170,14 @@
   bottom: 7px;
   width: 3px;
   border-radius: 999px;
-  background: #4f8a7b;
+  background: #9E3665;
 }
 
 .pickup-panel {
   display: none;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 20px 20px 12px 20px;
-  background: linear-gradient(180deg, #ffffff 0%, #f9fcfb 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fcf9fd 100%);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset, 0 8px 18px rgba(15, 23, 42, 0.06);
   padding: 10px;
 }
@@ -197,7 +197,7 @@
 }
 
 .pickup-note {
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   background: #fff;
   padding: 16px;

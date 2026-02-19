@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { ChevronDown, Clock, Truck, MapPin, CheckCircle } from "lucide-react";
 
@@ -26,20 +26,20 @@ const STATUSES = [
     label: "في نقطة الاستلام",
     description: "المشتريات قيد الاستلام",
     icon: MapPin,
-    color: "#4f46e5",
-    bgColor: "rgba(79, 70, 229, 0.11)",
-    borderColor: "rgba(79, 70, 229, 0.30)"
+    color: "#48163F",
+    bgColor: "rgba(158, 54, 101, 0.12)",
+    borderColor: "rgba(158, 54, 101, 0.34)"
   },
   {
     id: "collected",
     label: "تم التحصيل",
     description: "تم معالجة الطلب كاملًا",
     icon: CheckCircle,
-    color: "#15803d",
-    bgColor: "rgba(34, 197, 94, 0.11)",
-    borderColor: "rgba(34, 197, 94, 0.30)"
+    color: "#6D1E4F",
+    bgColor: "rgba(109, 30, 79, 0.11)",
+    borderColor: "rgba(109, 30, 79, 0.30)"
   }
-]
+];
 
 function getStatusById(id) {
   return STATUSES.find((status) => status.id === id) || STATUSES[0];
@@ -142,7 +142,7 @@ const StyledWrapper = styled.div`
     justify-content: space-between;
     gap: 8px;
     border-radius: 12px;
-    border: 1px solid rgba(79, 138, 123, 0.35);
+    border: 1px solid rgba(158, 54, 101, 0.35);
     background: #fff;
     color: #1f2937;
     padding: 0 12px;
@@ -154,8 +154,8 @@ const StyledWrapper = styled.div`
 
   .trigger:hover:not(:disabled),
   .trigger.open {
-    border-color: #4f8a7b;
-    box-shadow: 0 0 0 3px rgba(79, 138, 123, 0.14);
+    border-color: #9E3665;
+    box-shadow: 0 0 0 3px rgba(158, 54, 101, 0.14);
   }
 
   .trigger:disabled {
@@ -175,7 +175,7 @@ const StyledWrapper = styled.div`
   .chevron {
     width: 16px;
     height: 16px;
-    color: #3d6f61;
+    color: #6D1E4F;
     transition: transform 260ms ease;
     flex-shrink: 0;
   }
@@ -236,8 +236,8 @@ const StyledWrapper = styled.div`
   }
 
   .menu-item:hover:not(:disabled) {
-    background: rgba(79, 138, 123, 0.05);
-    border-color: rgba(79, 138, 123, 0.2);
+    background: rgba(158, 54, 101, 0.05);
+    border-color: rgba(158, 54, 101, 0.2);
   }
 
   .menu-item.selected {
@@ -303,11 +303,11 @@ const StyledWrapper = styled.div`
   }
 
   .webkit-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(79, 138, 123, 0.25);
+    background: rgba(158, 54, 101, 0.25);
     border-radius: 999px;
   }
 
   .webkit-scrollbar:hover::-webkit-scrollbar-thumb {
-    background: rgba(79, 138, 123, 0.45);
+    background: rgba(158, 54, 101, 0.45);
   }
 `;

@@ -1,8 +1,8 @@
-﻿:root {
+:root {
   font-family: Alexandria, system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.4;
   color: #111827;
-  background: #f3f5f4;
+  background: #f6f2f8;
 }
 
 * {
@@ -17,6 +17,33 @@ a {
   color: inherit;
 }
 
+.she-store-logo-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.she-store-logo-link:hover {
+  transform: scale(1.02);
+  opacity: 0.92;
+}
+
+.she-store-logo-link:focus-visible {
+  outline: 2px solid rgba(158, 54, 101, 0.55);
+  outline-offset: 2px;
+  border-radius: 12px;
+}
+
+.she-store-logo-img {
+  display: block;
+  width: 140px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
 .app-shell {
   max-width: 1200px;
   margin: 0 auto;
@@ -25,7 +52,7 @@ a {
 
 .hero {
   background: #ffffff;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 18px;
@@ -68,7 +95,7 @@ a {
 
 .card {
   background: #ffffff;
-  border: 1px solid #dde7e3;
+  border: 1px solid #e7dfeb;
   border-radius: 14px;
   padding: 16px;
   display: grid;
@@ -95,7 +122,7 @@ a {
   border: 0;
   border-radius: 999px;
   padding: 9px 16px;
-  background: linear-gradient(135deg, #4f8a7b, #3d6f61);
+  background: #6D1E4F;
   color: #ffffff;
   text-decoration: none;
   font-weight: 700;
@@ -104,7 +131,7 @@ a {
 
 .btn-ghost {
   background: #ffffff;
-  border: 1px solid #d6e2dd;
+  border: 1px solid #ded4e4;
   color: #1f2937;
 }
 
@@ -122,7 +149,7 @@ a {
   justify-content: space-between;
   gap: 12px;
   background: #ffffff;
-  border: 1px solid #dce7e2;
+  border: 1px solid #e7dfea;
   border-radius: 14px;
   padding: 14px 16px;
 }
@@ -146,7 +173,7 @@ a {
 .legacy-frame {
   width: 100%;
   height: calc(100dvh - 108px);
-  border: 1px solid #dce7e2;
+  border: 1px solid #e7dfea;
   border-radius: 14px;
   background: #ffffff;
 }
@@ -198,7 +225,7 @@ a {
   height: 100dvh !important;
   width: min(300px, 90vw) !important;
   background: #ffffff !important;
-  border-left: 1px solid #dde7e3 !important;
+  border-left: 1px solid #e7dfeb !important;
   box-shadow: -24px 0 40px rgba(15, 23, 42, 0.14) !important;
   z-index: 50 !important;
   transform: translateX(100%) !important;
@@ -220,7 +247,69 @@ a {
   justify-content: space-between !important;
   gap: 10px !important;
   padding-bottom: 10px !important;
-  border-bottom: 1px solid #e3ece8 !important;
+  border-bottom: 1px solid #e8e0ec !important;
+}
+
+.app-sidebar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.app-sidebar-brand b {
+  white-space: nowrap;
+}
+
+.app-sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.app-sidebar-logo-link:hover {
+  transform: scale(1.02);
+  opacity: 0.92;
+}
+
+.app-sidebar-logo-img {
+  display: block;
+  width: 104px;
+  min-width: 84px;
+  height: auto;
+  object-fit: contain;
+}
+
+.topbar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.topbar-logo-link:hover {
+  transform: scale(1.02);
+  opacity: 0.92;
+}
+
+.topbar-logo-img {
+  display: block;
+  width: 132px;
+  height: auto;
+  object-fit: contain;
+}
+
+.topbar-brand-with-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.topbar-brand-with-logo > div {
+  min-width: 0;
 }
 
 .app-sidebar-content {
@@ -249,15 +338,15 @@ a {
 }
 
 .app-sidebar-link:hover {
-  background: #f4f8f6 !important;
-  border-color: #d6e2dd !important;
+  background: #f8f4fa !important;
+  border-color: #ded4e4 !important;
 }
 
 .app-sidebar-link.active {
   color: #ffffff !important;
-  background: linear-gradient(135deg, #4f8a7b, #3d6f61) !important;
+  background: #6D1E4F !important;
   border-color: transparent !important;
-  box-shadow: 0 10px 18px rgba(79, 138, 123, 0.2) !important;
+  box-shadow: 0 10px 18px rgba(158, 54, 101, 0.2) !important;
 }
 
 .app-sidebar-link.app-sidebar-danger {
@@ -275,7 +364,7 @@ a {
   width: 34px !important;
   height: 34px !important;
   border-radius: 10px !important;
-  border: 1px solid #d7e3de !important;
+  border: 1px solid #dfd5e5 !important;
   background: #ffffff !important;
   color: #334155 !important;
   display: inline-flex !important;
@@ -289,4 +378,18 @@ a {
 
 .global-sidebar-nav.app-sidebar-content {
   padding: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .she-store-logo-img {
+    width: 112px;
+  }
+
+  .topbar-logo-img {
+    width: 106px;
+  }
+
+  .app-sidebar-logo-img {
+    width: 94px;
+  }
 }

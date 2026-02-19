@@ -6,6 +6,7 @@ import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./finance-page.css";
 
 function getOrderDate(order) {
@@ -255,7 +256,10 @@ export default function FinancePage({ embedded = false }) {
           />
           <aside className={`finance-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="finance-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
+              <div className="app-sidebar-brand">
+                <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+                <b>القائمة</b>
+              </div>
               <button type="button" className="finance-menu-btn danger app-sidebar-close" onClick={() => setSidebarOpen(false)}>
                 ✕
               </button>
@@ -279,7 +283,20 @@ export default function FinancePage({ embedded = false }) {
         </>
       ) : null}
       <div className="finance-wrap">
-        {!embedded ? <div className="finance-topbar"><div className="finance-brand"><b>المالية</b><div className="finance-muted">ملخص المصروفات والإيرادات</div></div><button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>☰</button></div> : null}
+        {!embedded ? (
+          <div className="finance-topbar">
+            <div className="topbar-brand-with-logo">
+              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+              <div className="finance-brand">
+                <b>المالية</b>
+                <div className="finance-muted">ملخص المصروفات والإيرادات</div>
+              </div>
+            </div>
+            <button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>
+              ☰
+            </button>
+          </div>
+        ) : null}
         <div className="finance-tabs"><button type="button" className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>احصاء الطلبات</button><button type="button" className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`} onClick={() => setActiveTab("months")}>احصاء شهري</button></div>
         {error ? <div className="finance-error">{error}</div> : null}
         {loading ? <div className="finance-loading">جاري تحميل البيانات...</div> : null}

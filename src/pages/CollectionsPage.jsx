@@ -7,6 +7,7 @@ import { isAuraPickup, PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./collections-page.css";
 
 export default function CollectionsPage({ embedded = false }) {
@@ -194,7 +195,10 @@ export default function CollectionsPage({ embedded = false }) {
           />
           <aside className={`collections-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="collections-sidebar-head app-sidebar-head">
-              <b>القائمة</b>
+              <div className="app-sidebar-brand">
+                <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
+                <b>القائمة</b>
+              </div>
               <button
                 type="button"
                 className="collections-menu-btn danger app-sidebar-close"
@@ -224,9 +228,12 @@ export default function CollectionsPage({ embedded = false }) {
       <div className="collections-wrap">
         {!embedded ? (
           <div className="collections-topbar">
-            <div className="collections-brand">
-              <b>تحصيل المبالغ</b>
-              <div className="collections-muted">الطلبات المحصلة</div>
+            <div className="topbar-brand-with-logo">
+              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+              <div className="collections-brand">
+                <b>تحصيل المبالغ</b>
+                <div className="collections-muted">الطلبات المحصلة</div>
+              </div>
             </div>
             <button type="button" className="collections-menu-btn" onClick={() => setSidebarOpen(true)}>
               ☰
