@@ -12,14 +12,13 @@ const ORDERS_NAV_ITEMS = [
   { id: "archive", label: "الأرشيف", href: "#/archive", icon: "archive" },
   { id: "finance", label: "المالية", href: "#/finance", icon: "dollar" },
   { id: "collections", label: "المجموعات", href: "#/collections", icon: "bag" },
-  { id: "homepickup", label: "استلام المنزل", href: "#/homepickup", icon: "truck" },
-  { id: "customers", label: "العملاء", href: "#/orders?tab=customers", icon: "users" }
+  { id: "homepickup", label: "استلام المنزل", href: "#/homepickup", icon: "truck" }
 ];
 
 const ORDERS_NAV_ACCESS = {
-  rahaf: ["orders", "pickup-dashboard", "archive", "finance", "customers", "collections"],
+  rahaf: ["orders", "pickup-dashboard", "archive", "finance", "collections"],
   reem: ["orders", "pickup-dashboard", "homepickup"],
-  rawand: ["orders", "pickup-dashboard", "customers", "homepickup"],
+  rawand: ["orders", "pickup-dashboard", "homepickup"],
   laaura: ["orders", "pickuppoint"]
 };
 

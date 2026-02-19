@@ -1454,13 +1454,21 @@ export default function OrdersPage() {
     const actions = [];
 
     if (allowedTabs.includes("customers")) {
-      actions.push({
-        id: "tab-customers",
-        label: "العملاء",
-        icon: "👥",
-        show: activeTab !== "customers",
-        onClick: () => setActiveTab("customers")
-      });
+      if (activeTab === "customers") {
+        actions.push({
+          id: "tab-orders",
+          label: "الطلبات",
+          icon: "📦",
+          onClick: () => setActiveTab("orders")
+        });
+      } else {
+        actions.push({
+          id: "tab-customers",
+          label: "العملاء",
+          icon: "👥",
+          onClick: () => setActiveTab("customers")
+        });
+      }
     }
 
     return actions;
