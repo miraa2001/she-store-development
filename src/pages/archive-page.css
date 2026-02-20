@@ -18,6 +18,20 @@
   margin-bottom: 12px;
 }
 
+.archive-orders-menu-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.archive-main-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
 .archive-brand b {
   font-size: 20px;
 }
@@ -304,6 +318,19 @@
   font-size: 13px;
 }
 
+.archive-th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.archive-th-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: 0 0 16px;
+}
+
 .archive-state {
   display: grid;
   place-items: center;
@@ -357,5 +384,9 @@
 
   .archive-list-card {
     position: static;
+  }
+
+  .archive-orders-menu-row {
+    align-items: stretch;
   }
 }

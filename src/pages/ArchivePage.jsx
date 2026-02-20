@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { formatDMY } from "../lib/dateFormat";
 import { formatILS, isOlderThanCurrentMonth, parsePrice } from "../lib/orders";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
@@ -8,6 +9,10 @@ import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import customerHeaderIcon from "../assets/icons/pickup/customer.png";
+import placeHeaderIcon from "../assets/icons/finance/place.png";
+import amountHeaderIcon from "../assets/icons/pickup/price-ils.png";
+import "./pickup-common.css";
 import "./archive-page.css";
 
 const IMAGE_BUCKET = "purchase-images";
@@ -32,9 +37,31 @@ function formatOrderDate(iso) {
   });
 }
 
+function getOrderDateKey(order) {
+  return formatDMY(order?.createdAt);
+}
+
+function buildOrderGroups(orderList) {
+  const groups = [];
+  const map = new Map();
+
+  orderList.forEach((order) => {
+    const dateKey = getOrderDateKey(order) || "بدون تاريخ";
+    if (!map.has(dateKey)) {
+      const group = { id: `group-${dateKey}`, dateKey, label: dateKey, orders: [] };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orders.push(order);
+  });
+
+  return groups;
+}
+
 export default function ArchivePage() {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [loading, setLoading] = useState(true);
@@ -47,6 +74,7 @@ export default function ArchivePage() {
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orders, selectedOrderId]
   );
+  const groupedOrders = useMemo(() => buildOrderGroups(orders), [orders]);
 
   const totalArchivedPaid = useMemo(
     () => orders.reduce((sum, order) => sum + (order.totalPaid || 0), 0),
@@ -55,11 +83,23 @@ export default function ArchivePage() {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === "Escape") setSidebarOpen(false);
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+        setOrdersMenuOpen(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!ordersMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [ordersMenuOpen]);
 
   const cleanupArchiveImages = useCallback(async (collectedOrders) => {
     const allPaths = [];
@@ -221,7 +261,7 @@ export default function ArchivePage() {
           <h2>لا توجد صلاحية</h2>
           <p>هذه الصفحة متاحة لحساب رهف فقط.</p>
           <a href="#/orders" className="archive-link">
-            العودة للطلبات
+            العودة للطلبيات
           </a>
         </div>
       </div>
@@ -268,132 +308,202 @@ export default function ArchivePage() {
 
       <div className="archive-wrap">
         <div className="archive-topbar">
-            <div className="topbar-brand-with-logo">
-              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
-              <div className="archive-brand">
-                <b>الأرشيف</b>
-                <div className="archive-muted">طلبات تم تحصيلها + طلبات أقدم من الشهر الحالي</div>
-              </div>
+          <div className="topbar-brand-with-logo">
+            <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+            <div className="archive-brand">
+              <b>الأرشيف</b>
+              <div className="archive-muted">طلبات تم تحصيلها + طلبات أقدم من الشهر الحالي</div>
             </div>
+          </div>
           <button type="button" className="archive-menu-btn" onClick={() => setSidebarOpen(true)}>
             ☰
           </button>
         </div>
 
-        <div className="archive-grid">
-          <aside className="archive-card archive-list-card">
-            <div className="archive-row">
-              <b>الطلبات</b>
-              <div className="archive-orders-meta">
-                <span className="archive-pill">{orders.length}</span>
-                <span className="archive-pill">إجمالي التحصيل: {formatILS(totalArchivedPaid)} ₪</span>
+        <div className="archive-orders-menu-row">
+          <button
+            type="button"
+            className="pickup-orders-menu-trigger"
+            onClick={() => setOrdersMenuOpen(true)}
+            aria-label="فتح قائمة الطلبيات"
+          >
+            <AppNavIcon name="package" className="icon" />
+            <span>الطلبيات</span>
+            <b>{orders.length}</b>
+          </button>
+          <span className="archive-pill">
+            {selectedOrder ? `الطلبية المختارة: ${selectedOrder.orderName}` : "اختر طلبية"}
+          </span>
+          <span className="archive-pill">إجمالي التحصيل: {formatILS(totalArchivedPaid)} ₪</span>
+        </div>
+
+        {cleanupMsg ? <div className="archive-cleanup-msg">{cleanupMsg}</div> : null}
+
+        <div
+          className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`}
+          onClick={() => setOrdersMenuOpen(false)}
+        >
+          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="pickup-orders-menu-head">
+              <div className="pickup-orders-menu-title">
+                <AppNavIcon name="package" className="icon" />
+                <strong>الطلبيات</strong>
+                <b>{orders.length}</b>
               </div>
+              <button
+                type="button"
+                className="pickup-orders-menu-close"
+                onClick={() => setOrdersMenuOpen(false)}
+                aria-label="إغلاق قائمة الطلبيات"
+              >
+                ✕
+              </button>
             </div>
-            {cleanupMsg ? <div className="archive-cleanup-msg">{cleanupMsg}</div> : null}
 
-            {loading ? (
-              <div className="archive-spacer">
-                <SessionLoader label="جاري تحميل البيانات..." />
-              </div>
-            ) : null}
-            {error ? <div className="archive-error archive-spacer">{error}</div> : null}
-
-            {!loading && !error && !orders.length ? (
-              <div className="archive-muted archive-spacer">
-                لا يوجد بيانات
-                <div className="archive-refresh-row">
-                  <button className="archive-btn" type="button" onClick={loadArchive}>
-                    تحديث
-                  </button>
-                </div>
-              </div>
-            ) : null}
-
-            {!loading && !error && orders.length ? (
-              <div className="archive-orders-list">
-                {orders.map((order) => {
-                  const active = String(selectedOrderId) === String(order.id);
-                  return (
-                    <button
-                      key={order.id}
-                      type="button"
-                      className={`archive-order-item ${active ? "active" : ""}`}
-                      onClick={() => setSelectedOrderId(order.id)}
-                    >
-                      <div className="archive-order-main">
-                        <span>{order.orderName}</span>
-                        <small>{formatOrderDate(order.createdAt)}</small>
-                      </div>
-                      <div className="archive-orders-meta">
-                        <span className="archive-pill">{order.archiveType}</span>
-                        <span className="archive-pill">{formatILS(order.totalPaid)} ₪</span>
-                      </div>
+            <div className="pickup-orders-menu-list">
+              {!loading && !error && !groupedOrders.length ? (
+                <div className="archive-muted archive-spacer">
+                  لا يوجد بيانات
+                  <div className="archive-refresh-row">
+                    <button className="archive-btn" type="button" onClick={loadArchive}>
+                      تحديث
                     </button>
-                  );
-                })}
-              </div>
-            ) : null}
+                  </div>
+                </div>
+              ) : (
+                groupedOrders.map((group) => (
+                  <section key={group.id} className="group-block">
+                    <div className="month-chip">
+                      <AppNavIcon name="calendar" className="icon" />
+                      <span>{group.label}</span>
+                      <b>({group.orders.length})</b>
+                    </div>
+
+                    <div className="group-orders">
+                      {group.orders.map((order) => {
+                        const active = String(selectedOrderId) === String(order.id);
+                        return (
+                          <button
+                            key={order.id}
+                            type="button"
+                            className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                            onClick={() => {
+                              setSelectedOrderId(order.id);
+                              setOrdersMenuOpen(false);
+                            }}
+                          >
+                            <div className="order-main">
+                              <strong>{order.orderName}</strong>
+                              <span>{formatOrderDate(order.createdAt)}</span>
+                            </div>
+                            <div className="order-meta">
+                              <small className="status at_pickup">{order.archiveType}</small>
+                              <small className="status at_pickup">{formatILS(order.totalPaid)} ₪</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))
+              )}
+            </div>
           </aside>
+        </div>
 
-          <main className="archive-card">
-            {!selectedOrder ? (
-              <div className="archive-muted archive-spacer">
-                لا يوجد بيانات
-                <div className="archive-refresh-row">
-                  <button className="archive-btn" type="button" onClick={loadArchive}>
-                    تحديث
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <div className="archive-row">
-                  <div>
-                    <b>{selectedOrder.orderName}</b>
-                    <div className="archive-muted">{formatOrderDate(selectedOrder.createdAt)}</div>
+        <div className="archive-main-shell">
+          {loading ? (
+            <div className="archive-card archive-spacer">
+              <SessionLoader label="جاري تحميل البيانات..." />
+            </div>
+          ) : null}
+          {error ? <div className="archive-error archive-spacer">{error}</div> : null}
+
+          {!loading && !error ? (
+            <main className="archive-card">
+              {!selectedOrder ? (
+                <div className="archive-muted archive-spacer">
+                  لا يوجد بيانات
+                  <div className="archive-refresh-row">
+                    <button className="archive-btn" type="button" onClick={loadArchive}>
+                      تحديث
+                    </button>
                   </div>
+                </div>
+              ) : (
+                <>
                   <div className="archive-row">
-                    <span className="archive-pill">{selectedOrder.archiveType}</span>
-                    <span className="archive-pill">عدد المشتريات: {selectedOrder.purchases.length}</span>
-                    <span className="archive-pill">المجموع الكلي: {formatILS(selectedOrder.totalPaid)} ₪</span>
+                    <div>
+                      <b>{selectedOrder.orderName}</b>
+                      <div className="archive-muted">{formatOrderDate(selectedOrder.createdAt)}</div>
+                    </div>
+                    <div className="archive-row">
+                      <span className="archive-pill">{selectedOrder.archiveType}</span>
+                      <span className="archive-pill">عدد المشتريات: {selectedOrder.purchases.length}</span>
+                      <span className="archive-pill">المجموع الكلي: {formatILS(selectedOrder.totalPaid)} ₪</span>
+                    </div>
                   </div>
-                </div>
 
-                <hr className="archive-divider" />
+                  <hr className="archive-divider" />
 
-                <div className="archive-table-wrap">
-                  <table className="archive-table">
-                    <thead>
-                      <tr>
-                        <th>الزبون</th>
-                        <th>المكان</th>
-                        <th>السعر</th>
-                        <th>المدفوع</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {selectedOrder.purchases.length ? (
-                        selectedOrder.purchases.map((purchase) => (
-                          <tr key={purchase.id}>
-                            <td>{purchase.customer_name || ""}</td>
-                            <td>{purchase.pickup_point || ""}</td>
-                            <td>{purchase.price ?? ""}</td>
-                            <td>{purchase.paid_price ?? "—"}</td>
-                          </tr>
-                        ))
-                      ) : (
+                  <div className="archive-table-wrap">
+                    <table className="archive-table">
+                      <thead>
                         <tr>
-                          <td colSpan={4} className="archive-muted">
-                            لا يوجد مشتريات
-                          </td>
+                          <th>
+                            <span className="archive-th-label">
+                              <img src={customerHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                              <span>الزبون</span>
+                            </span>
+                          </th>
+                          <th>
+                            <span className="archive-th-label">
+                              <img src={placeHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                              <span>المكان</span>
+                            </span>
+                          </th>
+                          <th>
+                            <span className="archive-th-label">
+                              <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                              <span>السعر</span>
+                            </span>
+                          </th>
+                          <th>
+                            <span className="archive-th-label">
+                              <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                              <span>المدفوع</span>
+                            </span>
+                          </th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
-          </main>
+                      </thead>
+                      <tbody>
+                        {selectedOrder.purchases.length ? (
+                          selectedOrder.purchases.map((purchase) => (
+                            <tr key={purchase.id}>
+                              <td>{purchase.customer_name || ""}</td>
+                              <td>{purchase.pickup_point || ""}</td>
+                              <td>{formatILS(parsePrice(purchase.price))} ₪</td>
+                              <td>
+                                {purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
+                                  ? "—"
+                                  : `${formatILS(parsePrice(purchase.paid_price))} ₪`}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="archive-muted">
+                              لا يوجد مشتريات
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </main>
+          ) : null}
         </div>
       </div>
     </div>
