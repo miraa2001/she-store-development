@@ -51,31 +51,6 @@ function buildOrderGroups(orderList) {
   return groups;
 }
 
-function buildMergedDateOrders(orderList) {
-  const map = new Map();
-  const list = [];
-
-  orderList.forEach((order) => {
-    const dateKey = getOrderDateKey(order) || "غير محدد";
-    if (!map.has(dateKey)) {
-      const item = {
-        id: `date-${dateKey}`,
-        dateKey,
-        label: `طلبية ${dateKey}`,
-        orderIds: [],
-        orders: []
-      };
-      map.set(dateKey, item);
-      list.push(item);
-    }
-    const target = map.get(dateKey);
-    target.orderIds.push(order.id);
-    target.orders.push(order);
-  });
-
-  return list;
-}
-
 export default function PickupPointPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -115,28 +90,14 @@ export default function PickupPointPage({ embedded = false }) {
   });
 
   const groupedOrders = useMemo(() => buildOrderGroups(orders), [orders]);
-  const mergedDateOrders = useMemo(() => buildMergedDateOrders(orders), [orders]);
-  const orderSearchLabelById = useMemo(() => {
-    const map = new Map();
-    orders.forEach((order) => {
-      const dateKey = getOrderDateKey(order) || "غير محدد";
-      map.set(String(order.id), `طلبية ${dateKey}`);
-    });
-    return map;
-  }, [orders]);
-
   const selectedOrder = useMemo(() => {
-    if (isLaaura) {
-      return mergedDateOrders.find((item) => String(item.id) === String(selectedItemId)) || null;
-    }
     return orders.find((order) => String(order.id) === String(selectedItemId)) || null;
-  }, [isLaaura, mergedDateOrders, orders, selectedItemId]);
+  }, [orders, selectedItemId]);
 
   const selectedOrderIds = useMemo(() => {
     if (!selectedOrder) return [];
-    if (isLaaura) return selectedOrder.orderIds || [];
     return [selectedOrder.id];
-  }, [isLaaura, selectedOrder]);
+  }, [selectedOrder]);
 
   const visiblePurchases = useMemo(() => purchases.filter((purchase) => !purchase.collected), [purchases]);
   const pickedTotal = useMemo(
@@ -179,15 +140,11 @@ export default function PickupPointPage({ embedded = false }) {
 
   useEffect(() => {
     setSelectedItemId((prev) => {
-      if (isLaaura) {
-        if (prev && mergedDateOrders.some((item) => String(item.id) === String(prev))) return prev;
-        return mergedDateOrders[0]?.id || "";
-      }
       if (prev && orders.some((order) => String(order.id) === String(prev))) return prev;
       return groupedOrders[0]?.orders?.[0]?.id || "";
     });
     if (!orders.length) setPurchases([]);
-  }, [groupedOrders, isLaaura, mergedDateOrders, orders]);
+  }, [groupedOrders, orders]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -466,15 +423,7 @@ export default function PickupPointPage({ embedded = false }) {
   function openSearchResult(result) {
     const targetOrder = orders.find((order) => String(order.id) === String(result.order_id));
     if (!targetOrder) return;
-
-    if (isLaaura) {
-      const targetDateKey = getOrderDateKey(targetOrder) || "غير محدد";
-      const merged = mergedDateOrders.find((item) => item.dateKey === targetDateKey);
-      if (!merged) return;
-      setSelectedItemId(merged.id);
-    } else {
-      setSelectedItemId(targetOrder.id);
-    }
+    setSelectedItemId(targetOrder.id);
 
     clearSearchResults();
     setHighlightPurchaseId(result.id);
@@ -608,9 +557,7 @@ export default function PickupPointPage({ embedded = false }) {
               <button key={result.id} type="button" onClick={() => openSearchResult(result)}>
                 <b>{result.customer_name || ""}</b>
                 <div className="pickuppoint-muted">
-                  {(isLaaura
-                    ? orderSearchLabelById.get(String(result.order_id)) || "طلبية غير محددة"
-                    : result.orderName)}{" "}
+                  {result.orderName}{" "}
                   — السعر: {formatILS(result.price)}
                 </div>
               </button>
@@ -650,7 +597,7 @@ export default function PickupPointPage({ embedded = false }) {
               <>
                 <div className="pickuppoint-row">
                   <div>
-                    <b>{isLaaura ? selectedOrder.label || "طلبية" : selectedOrder.orderName || "طلبية"}</b>
+                    <b>{selectedOrder.orderName || "طلبية"}</b>
                   </div>
                   <div className="pickuppoint-row pickup-main-actions">
                     <span className="pickuppoint-pill">عدد المشتريات: {visiblePurchases.length}</span>
@@ -852,7 +799,7 @@ export default function PickupPointPage({ embedded = false }) {
                   ) : null}
                   {!loadingOrders && error ? <div className="pickuppoint-error pickuppoint-spacer">{error}</div> : null}
 
-                  {!loadingOrders && !error && !(isLaaura ? mergedDateOrders.length : groupedOrders.length) ? (
+                  {!loadingOrders && !error && !groupedOrders.length ? (
                     <div className="pickuppoint-muted pickuppoint-spacer">
                       لا يوجد بيانات
                       <div className="pickuppoint-refresh-row">
@@ -863,34 +810,7 @@ export default function PickupPointPage({ embedded = false }) {
                     </div>
                   ) : null}
 
-                  {!loadingOrders && !error && isLaaura && mergedDateOrders.length ? (
-                    <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
-                      {mergedDateOrders.map((item) => {
-                        const active = String(item.id) === String(selectedItemId);
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                            onClick={() => {
-                              setSelectedItemId(item.id);
-                              setOrdersMenuOpen(false);
-                            }}
-                          >
-                            <div className="order-main">
-                              <strong>{item.label}</strong>
-                              <span>{item.orderIds.length > 1 ? `${item.orderIds.length} طلبيات` : "طلبية واحدة"}</span>
-                            </div>
-                            <div className="order-meta">
-                              <small className="status at_pickup">نقطة الاستلام</small>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  ) : null}
-
-                  {!loadingOrders && !error && !isLaaura && groupedOrders.length ? (
+                  {!loadingOrders && !error && groupedOrders.length ? (
                     <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
                       {groupedOrders.map((group) => (
                         <section key={group.id} className="group-block">

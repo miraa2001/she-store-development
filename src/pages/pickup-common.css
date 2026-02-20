@@ -214,7 +214,7 @@
   padding: 12px;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1024px) {
   .pickup-embedded-container {
     width: 100%;
     max-width: 100%;

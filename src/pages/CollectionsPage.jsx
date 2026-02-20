@@ -112,7 +112,6 @@ export default function CollectionsPage({ embedded = false }) {
         .select(
           "id, order_name, created_at, purchases!inner(id, pickup_point, collected, paid_price, price)"
         )
-        .eq("arrived", true)
         .order("created_at", { ascending: false });
 
       if (ordersError) throw ordersError;
