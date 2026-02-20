@@ -570,7 +570,7 @@ export default function PickupPointPage({ embedded = false }) {
           <main className="pickuppoint-card pickup-main-pane">
             {isRahaf ? (
               <div className="pickuppoint-global-summary">
-                <div className="pickuppoint-row pickup-main-header">
+                <div className="pickuppoint-global-collect-row">
                   <span className="pickuppoint-pill">اجمالي المبلغ للتحصيل: {formatILS(allOrdersTotal)} ₪</span>
                   <button
                     className="pickuppoint-btn"
@@ -599,20 +599,23 @@ export default function PickupPointPage({ embedded = false }) {
                   <div>
                     <b>{selectedOrder.orderName || "طلبية"}</b>
                   </div>
-                  <div className="pickuppoint-row pickup-main-actions">
+                </div>
+
+                <div className="pickuppoint-order-summary-card">
+                  <div className="pickuppoint-order-pills-row">
                     <span className="pickuppoint-pill">عدد المشتريات: {visiblePurchases.length}</span>
                     <span className="pickuppoint-pill">مجموع المستلم: {formatILS(pickedTotal)} ₪</span>
-                    {isRahaf ? (
-                      <button
-                        type="button"
-                        className="pickuppoint-btn"
-                        onClick={collectCurrentOrder}
-                        disabled={collecting}
-                      >
-                        {collecting ? "جاري التحصيل..." : "تم استلام تحصيل المستلمين"}
-                      </button>
-                    ) : null}
                   </div>
+                  {isRahaf ? (
+                    <button
+                      type="button"
+                      className="pickuppoint-btn pickuppoint-order-collect-btn"
+                      onClick={collectCurrentOrder}
+                      disabled={collecting}
+                    >
+                      {collecting ? "جاري التحصيل..." : "تم استلام تحصيل المستلمين"}
+                    </button>
+                  ) : null}
                 </div>
 
                 {loadingPurchases ? (

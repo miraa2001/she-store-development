@@ -281,6 +281,47 @@
   box-shadow: 0 8px 18px rgba(109, 63, 107, 0.1);
 }
 
+.pickuppoint-global-collect-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.pickuppoint-global-collect-row .pickuppoint-pill {
+  justify-content: center;
+  min-height: 42px;
+  width: 100%;
+  margin: 0;
+}
+
+.pickuppoint-order-summary-card {
+  border: 1px solid rgba(109, 63, 107, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(109, 63, 107, 0.12) 0%, rgba(109, 63, 107, 0.05) 100%);
+  padding: 10px 12px;
+  margin: 10px 0 12px;
+  box-shadow: 0 8px 18px rgba(109, 63, 107, 0.1);
+}
+
+.pickuppoint-order-pills-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.pickuppoint-order-pills-row .pickuppoint-pill {
+  min-height: 42px;
+  width: 100%;
+  justify-content: center;
+  margin: 0;
+}
+
+.pickuppoint-order-collect-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
 .pickuppoint-spacer {
   margin-top: 10px;
 }
@@ -666,27 +707,44 @@
     border-radius: 16px;
   }
 
-  .pickuppoint-global-summary .pickuppoint-row,
-  .pickuppoint-card > .pickuppoint-row,
-  .pickuppoint-row.pickup-main-actions {
+  .pickuppoint-card > .pickuppoint-row {
     display: grid;
     grid-template-columns: 1fr;
     align-items: stretch;
     gap: 8px;
   }
 
-  .pickuppoint-global-summary .pickuppoint-row > *,
-  .pickuppoint-card > .pickuppoint-row > *,
-  .pickuppoint-row.pickup-main-actions > * {
+  .pickuppoint-card > .pickuppoint-row > * {
     width: 100%;
   }
 
-  .pickuppoint-global-summary .pickuppoint-pill,
-  .pickuppoint-global-summary .pickuppoint-btn,
-  .pickuppoint-row.pickup-main-actions > .pickuppoint-pill,
-  .pickuppoint-row.pickup-main-actions > .pickuppoint-btn {
+  .pickuppoint-global-collect-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pickuppoint-global-collect-row .pickuppoint-pill,
+  .pickuppoint-order-pills-row .pickuppoint-pill {
     min-height: 44px;
     justify-content: center;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.3;
+  }
+
+  .pickuppoint-global-collect-row .pickuppoint-btn {
+    min-height: 44px;
+    white-space: nowrap;
+    padding-inline: 10px;
+  }
+
+  .pickuppoint-order-summary-card {
+    margin-top: 8px;
+  }
+
+  .pickuppoint-order-pills-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
