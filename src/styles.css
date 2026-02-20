@@ -11,6 +11,11 @@
 
 body {
   margin: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  overflow-x: hidden;
 }
 
 a {

@@ -237,6 +237,7 @@
   overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
 }
 
 .pickup-tabs::-webkit-scrollbar {
@@ -323,6 +324,16 @@
 
 .pickup-panel-content {
   min-height: 400px;
+}
+
+.pickup-panel-scroll-shell {
+  width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
+  border-radius: 12px;
 }
 
 /* ===================================

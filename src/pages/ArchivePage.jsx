@@ -460,59 +460,61 @@ export default function ArchivePage() {
 
                   <hr className="archive-divider" />
 
-                  <div className="archive-table-wrap">
-                    <table className="archive-table">
-                      <thead>
-                        <tr>
-                          <th>
-                            <span className="archive-th-label">
-                              <img src={customerHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
-                              <span>الزبون</span>
-                            </span>
-                          </th>
-                          <th>
-                            <span className="archive-th-label">
-                              <img src={placeHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
-                              <span>المكان</span>
-                            </span>
-                          </th>
-                          <th>
-                            <span className="archive-th-label">
-                              <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
-                              <span>السعر</span>
-                            </span>
-                          </th>
-                          <th>
-                            <span className="archive-th-label">
-                              <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
-                              <span>المدفوع</span>
-                            </span>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedOrder.purchases.length ? (
-                          selectedOrder.purchases.map((purchase) => (
-                            <tr key={purchase.id}>
-                              <td>{purchase.customer_name || ""}</td>
-                              <td>{purchase.pickup_point || ""}</td>
-                              <td>{formatILS(parsePrice(purchase.price))} ₪</td>
-                              <td>
-                                {purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
-                                  ? "—"
-                                  : `${formatILS(parsePrice(purchase.paid_price))} ₪`}
+                  <div className="archive-table-shell">
+                    <div className="archive-table-wrap">
+                      <table className="archive-table">
+                        <thead>
+                          <tr>
+                            <th>
+                              <span className="archive-th-label">
+                                <img src={customerHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                                <span>الزبون</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="archive-th-label">
+                                <img src={placeHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                                <span>المكان</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="archive-th-label">
+                                <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                                <span>السعر</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="archive-th-label">
+                                <img src={amountHeaderIcon} alt="" className="archive-th-icon" aria-hidden="true" />
+                                <span>المدفوع</span>
+                              </span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedOrder.purchases.length ? (
+                            selectedOrder.purchases.map((purchase) => (
+                              <tr key={purchase.id}>
+                                <td>{purchase.customer_name || ""}</td>
+                                <td>{purchase.pickup_point || ""}</td>
+                                <td>{formatILS(parsePrice(purchase.price))} ₪</td>
+                                <td>
+                                  {purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
+                                    ? "—"
+                                    : `${formatILS(parsePrice(purchase.paid_price))} ₪`}
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="archive-muted">
+                                لا يوجد مشتريات
                               </td>
                             </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="archive-muted">
-                              لا يوجد مشتريات
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </>
               )}

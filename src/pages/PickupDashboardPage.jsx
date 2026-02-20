@@ -215,7 +215,9 @@ export default function PickupDashboardPage() {
             aria-labelledby={`tab-${activeTab}`}
             className="pickup-panel active"
           >
-            <div className="pickup-panel-content">{renderPanel(activeTab)}</div>
+            <div className="pickup-panel-content">
+              <div className="pickup-panel-scroll-shell">{renderPanel(activeTab)}</div>
+            </div>
           </div>
         </div>
       </div>

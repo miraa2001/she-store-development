@@ -298,6 +298,7 @@
   max-width: 100%;
   min-width: 0;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
 }
 
 .archive-table {
@@ -333,6 +334,13 @@
   height: 16px;
   object-fit: contain;
   flex: 0 0 16px;
+}
+
+.archive-table-shell {
+  border: 1px solid #eadff0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fff 0%, #fcf9fd 100%);
+  padding: 6px;
 }
 
 .archive-state {
