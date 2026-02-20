@@ -56,6 +56,10 @@ export default function PickupDashboardPage() {
     };
   }, [sidebarOpen]);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
   async function signOut() {
     await signOutAndRedirect();
   }

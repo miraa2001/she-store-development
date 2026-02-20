@@ -2,12 +2,14 @@
   min-height: 100dvh;
   background: #f6f8f7;
   color: #0f172a;
+  overflow-x: hidden;
 }
 
 .archive-wrap {
   max-width: 1280px;
   margin: 0 auto;
   padding: 16px;
+  overflow-x: hidden;
 }
 
 .archive-topbar {
@@ -30,6 +32,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
+  min-width: 0;
 }
 
 .archive-brand b {
@@ -295,6 +298,7 @@
   overflow-x: auto;
   direction: ltr;
   max-width: 100%;
+  min-width: 0;
 }
 
 .archive-table {
@@ -388,5 +392,17 @@
 
   .archive-orders-menu-row {
     align-items: stretch;
+    gap: 6px;
+  }
+
+  .archive-orders-menu-row .pickup-orders-menu-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .archive-orders-menu-row .archive-pill {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
   }
 }
