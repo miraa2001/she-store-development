@@ -305,83 +305,6 @@ export default function CollectionsPage({ embedded = false }) {
           <span className="collections-pill">إجمالي التحصيل: {formatILS(overallCollected)} ₪</span>
         </div>
 
-        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
-          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="pickup-orders-menu-head">
-              <div className="pickup-orders-menu-title">
-                <AppNavIcon name="package" className="icon" />
-                <strong>الطلبات</strong>
-                <b>{orders.length}</b>
-              </div>
-              <button
-                type="button"
-                className="pickup-orders-menu-close"
-                onClick={() => setOrdersMenuOpen(false)}
-                aria-label="إغلاق قائمة الطلبات"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="pickup-orders-menu-list">
-              {loadingOrders ? (
-                <div className="collections-spacer">
-                  <SessionLoader label="جاري تحميل البيانات..." />
-                </div>
-              ) : null}
-              {!loadingOrders && error ? <div className="collections-error collections-spacer">{error}</div> : null}
-
-              {!loadingOrders && !error && !groupedOrders.length ? (
-                <div className="collections-muted collections-spacer">
-                  لا يوجد بيانات
-                  <div className="collections-refresh-row">
-                    <button className="collections-btn" type="button" onClick={loadOrders}>
-                      تحديث
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {!loadingOrders && !error
-                ? groupedOrders.map((group) => (
-                    <section key={group.id} className="group-block">
-                      <div className="month-chip">
-                        <AppNavIcon name="calendar" className="icon" />
-                        <span>{group.label}</span>
-                        <b>({group.orders.length})</b>
-                      </div>
-
-                      <div className="group-orders">
-                        {group.orders.map((order) => {
-                          const active = String(selectedOrderId) === String(order.id);
-                          return (
-                            <button
-                              key={order.id}
-                              type="button"
-                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                              onClick={() => {
-                                setSelectedOrderId(order.id);
-                                setOrdersMenuOpen(false);
-                              }}
-                            >
-                              <div className="order-main">
-                                <strong>{order.orderName || "طلبية"}</strong>
-                                <span>{getOrderDateKey(order) || "—"}</span>
-                              </div>
-                              <div className="order-meta">
-                                <b>{formatILS(order.collectedTotal)} ₪</b>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))
-                : null}
-            </div>
-          </aside>
-        </div>
-
         <div className="collections-grid collections-grid--single">
 
           <main className="collections-card">
@@ -481,6 +404,84 @@ export default function CollectionsPage({ embedded = false }) {
           </main>
         </div>
       </div>
+
+        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
+          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="pickup-orders-menu-head">
+              <div className="pickup-orders-menu-title">
+                <AppNavIcon name="package" className="icon" />
+                <strong>الطلبات</strong>
+                <b>{orders.length}</b>
+              </div>
+              <button
+                type="button"
+                className="pickup-orders-menu-close"
+                onClick={() => setOrdersMenuOpen(false)}
+                aria-label="إغلاق قائمة الطلبات"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="pickup-orders-menu-list">
+              {loadingOrders ? (
+                <div className="collections-spacer">
+                  <SessionLoader label="جاري تحميل البيانات..." />
+                </div>
+              ) : null}
+              {!loadingOrders && error ? <div className="collections-error collections-spacer">{error}</div> : null}
+
+              {!loadingOrders && !error && !groupedOrders.length ? (
+                <div className="collections-muted collections-spacer">
+                  لا يوجد بيانات
+                  <div className="collections-refresh-row">
+                    <button className="collections-btn" type="button" onClick={loadOrders}>
+                      تحديث
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {!loadingOrders && !error
+                ? groupedOrders.map((group) => (
+                    <section key={group.id} className="group-block">
+                      <div className="month-chip">
+                        <AppNavIcon name="calendar" className="icon" />
+                        <span>{group.label}</span>
+                        <b>({group.orders.length})</b>
+                      </div>
+
+                      <div className="group-orders">
+                        {group.orders.map((order) => {
+                          const active = String(selectedOrderId) === String(order.id);
+                          return (
+                            <button
+                              key={order.id}
+                              type="button"
+                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                              onClick={() => {
+                                setSelectedOrderId(order.id);
+                                setOrdersMenuOpen(false);
+                              }}
+                            >
+                              <div className="order-main">
+                                <strong>{order.orderName || "طلبية"}</strong>
+                                <span>{getOrderDateKey(order) || "—"}</span>
+                              </div>
+                              <div className="order-meta">
+                                <b>{formatILS(order.collectedTotal)} ₪</b>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                : null}
+            </div>
+          </aside>
+        </div>
+
     </div>
   );
 }
