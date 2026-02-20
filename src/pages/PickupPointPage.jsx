@@ -792,7 +792,14 @@ export default function PickupPointPage({ embedded = false }) {
                               <span>السعر</span>
                             </span>
                           </th>
-                          {isRahaf ? <th>المدفوع</th> : null}
+                          {isRahaf ? (
+                            <th>
+                              <span className="pickuppoint-th-label">
+                                <img src={priceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                <span>المدفوع</span>
+                              </span>
+                            </th>
+                          ) : null}
                           {isRahaf ? <th className="pickuppoint-edit-col" /> : null}
                           <th>
                             <span className="pickuppoint-th-label">

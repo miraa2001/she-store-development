@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
-import editIcon from "../../assets/icons8-edit-96.png";
-import deleteIcon from "../../assets/icons8-delete-96.png";
+import actionsMenuIcon from "../../assets/icons/actions/menu-vertical.png";
+import editIcon from "../../assets/icons/actions/edit.png";
+import deleteIcon from "../../assets/icons/actions/delete.png";
 import SessionLoader from "../common/SessionLoader";
 
 export default function CustomersTab({

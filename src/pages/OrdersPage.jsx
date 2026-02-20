@@ -59,7 +59,7 @@ import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
 import SheStoreLogo from "../components/common/SheStoreLogo";
-import ordersMenuIcon from "../assets/icons8-orders-96.png";
+import ordersMenuIcon from "../assets/icons/navigation/orders.png";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;

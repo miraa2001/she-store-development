@@ -1,4 +1,4 @@
-import ordersMenuIcon from "../../assets/icons8-orders-96.png";
+import ordersMenuIcon from "../../assets/icons/navigation/orders.png";
 
 export default function AppNavIcon({ name, className = "icon" }) {
   const common = {

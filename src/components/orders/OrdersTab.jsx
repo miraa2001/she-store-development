@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { formatILS } from "../../lib/orders";
 import SessionLoader from "../common/SessionLoader";
 import OrderStatusDropdown from "./OrderStatusDropdown";
-import pdfExportIconWeb from "../../assets/icons8-pdf-70-web.png";
-import pdfExportIconAndroid from "../../assets/icons8-pdf-96-android.png";
-import pdfExportIconIos from "../../assets/icons8-pdf-76-ios.png";
-import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
-import editIcon from "../../assets/icons8-edit-96.png";
-import editPriceIcon from "../../assets/icons8-edit-price-96.png";
-import deleteIcon from "../../assets/icons8-delete-96.png";
+import pdfExportIconWeb from "../../assets/icons/documents/pdf-web.png";
+import pdfExportIconAndroid from "../../assets/icons/documents/pdf-android.png";
+import pdfExportIconIos from "../../assets/icons/documents/pdf-ios.png";
+import actionsMenuIcon from "../../assets/icons/actions/menu-vertical.png";
+import editIcon from "../../assets/icons/actions/edit.png";
+import editPriceIcon from "../../assets/icons/actions/edit-price.png";
+import deleteIcon from "../../assets/icons/actions/delete.png";
 
 function normalizeSlideIndex(index, total) {
   if (!total) return 0;
