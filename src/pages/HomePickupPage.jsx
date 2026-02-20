@@ -13,6 +13,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import imagesHeaderIcon from "../assets/icons/pickup/images.png";
 import "./pickup-common.css";
 import "./homepickup-page.css";
 
@@ -616,7 +617,12 @@ export default function HomePickupPage({ embedded = false }) {
                           <th>السعر</th>
                           {isRahaf ? <th>المدفوع</th> : null}
                           {isRahaf ? <th className="homepickup-edit-col" /> : null}
-                          <th>صور</th>
+                          <th>
+                            <span className="homepickup-th-label">
+                              <img src={imagesHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                              <span>صور</span>
+                            </span>
+                          </th>
                           <th>تم الاستلام</th>
                           <th>وقت الاستلام</th>
                         </tr>

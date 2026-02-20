@@ -313,6 +313,20 @@
   font-size: 13px;
 }
 
+.homepickup-th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.homepickup-th-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: 0 0 16px;
+}
+
 .homepickup-edit-col {
   width: 1%;
   white-space: nowrap;
