@@ -44,6 +44,18 @@ export default function PickupDashboardPage() {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [sidebarOpen]);
+
   async function signOut() {
     await signOutAndRedirect();
   }
@@ -96,12 +108,16 @@ export default function PickupDashboardPage() {
       {showSidebar ? (
         <>
           <div
-            className={`app-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
+            className={`pickup-sidebar-overlay app-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
 
-          <aside className={`app-sidebar-drawer ${sidebarOpen ? "open" : ""}`} role="navigation" aria-label="القائمة الجانبية">
+          <aside
+            className={`pickup-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}
+            role="navigation"
+            aria-label="القائمة الجانبية"
+          >
             <div className="app-sidebar-head">
               <div className="app-sidebar-brand">
                 <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />

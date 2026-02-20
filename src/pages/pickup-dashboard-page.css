@@ -7,6 +7,8 @@
   min-height: 100dvh;
   background: #f6f8f7;
   color: #111827;
+  overflow-x: clip;
+  position: relative;
   
   /* Design tokens matching orders-page */
   --pd-space-1: 8px;
@@ -31,6 +33,7 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--pd-space-3);
+  overflow-x: clip;
 }
 
 /* ===================================
@@ -136,6 +139,14 @@
 
 .pickup-sidebar.open {
   transform: translateX(0);
+}
+
+.pickup-sidebar-overlay.app-sidebar-overlay {
+  z-index: 1900 !important;
+}
+
+.pickup-sidebar.app-sidebar-drawer {
+  z-index: 1910 !important;
 }
 
 .pickup-sidebar-head {
@@ -471,6 +482,10 @@
 @media (max-width: 900px) {
   .pickup-wrap {
     padding: var(--pd-space-2);
+  }
+
+  .pickup-tabs-container {
+    overflow: hidden;
   }
 
   .pickup-command-header {
