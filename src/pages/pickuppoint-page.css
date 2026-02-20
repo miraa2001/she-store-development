@@ -551,6 +551,12 @@
     padding: 10px;
   }
 
+  .pickuppoint-page.embedded .pickuppoint-wrap > * {
+    width: min(95vw, 100%);
+    max-width: 95vw;
+    margin-inline: auto;
+  }
+
   .pickuppoint-search-row {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -575,6 +581,23 @@
     min-height: 44px;
     justify-content: center;
     text-align: center;
+  }
+
+  .pickuppoint-search-results,
+  .pickuppoint-grid,
+  .pickuppoint-card,
+  .pickuppoint-global-summary {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .pickuppoint-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(58vh, 520px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
   }
 
   .pickuppoint-global-summary,

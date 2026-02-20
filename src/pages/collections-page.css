@@ -401,6 +401,12 @@
     padding: 10px;
   }
 
+  .collections-page.embedded .collections-wrap > * {
+    width: min(95vw, 100%);
+    max-width: 95vw;
+    margin-inline: auto;
+  }
+
   .collections-topbar {
     gap: 8px;
   }
@@ -423,6 +429,8 @@
   .collections-card {
     border-radius: 16px;
     padding: 10px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .collections-row {
@@ -447,5 +455,14 @@
     width: 100%;
     justify-content: center;
     text-align: center;
+  }
+
+  .collections-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    max-height: min(58vh, 520px);
+    overflow: auto;
+    overscroll-behavior: contain;
+    touch-action: pan-x pan-y;
   }
 }
