@@ -334,6 +334,7 @@
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pinch-zoom;
   border-radius: 12px;
+  position: relative;
 }
 
 /* ===================================
@@ -508,6 +509,18 @@
   .pickup-command-header {
     flex-wrap: wrap;
     padding: 10px 12px;
+  }
+
+  .pickup-btn,
+  .pickup-btn-icon,
+  .pickup-tab-btn {
+    min-height: 44px;
+  }
+
+  .pickup-btn-icon {
+    width: 44px;
+    min-width: 44px;
+    height: 44px;
   }
 
   .pickup-brand b {

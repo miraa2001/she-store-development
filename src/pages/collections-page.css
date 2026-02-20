@@ -251,6 +251,9 @@
   direction: ltr;
   max-width: 100%;
   margin-bottom: 10px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pinch-zoom;
+  position: relative;
 }
 
 .collections-table {
@@ -343,6 +346,21 @@
     padding: 12px;
   }
 
+  .collections-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .collections-menu-btn,
+  .collections-btn,
+  .pickup-orders-menu-trigger {
+    min-height: 44px;
+  }
+
+  .collections-menu-btn {
+    min-width: 44px;
+  }
+
   .collections-grid {
     grid-template-columns: 1fr;
   }
@@ -354,5 +372,26 @@
 
   .collections-list-card {
     position: static;
+  }
+
+  .collections-table-wrap::before,
+  .collections-table-wrap::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .collections-table-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, #f6f8f7, rgba(246, 248, 247, 0));
+  }
+
+  .collections-table-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, #f6f8f7, rgba(246, 248, 247, 0));
   }
 }

@@ -244,6 +244,13 @@ a {
 
 .app-sidebar-drawer.open {
   transform: translateX(0) !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+.app-sidebar-drawer:not(.open) {
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 .app-sidebar-head {
