@@ -57,6 +57,13 @@
   gap: var(--pd-space-2);
 }
 
+.pickup-command-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pd-space-2);
+}
+
 .pickup-brand {
   display: flex;
   align-items: center;
@@ -97,9 +104,12 @@
 
   .pickup-command-main {
     flex: 1;
-    flex-direction: row;
-    align-items: center;
-    gap: 18px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .pickup-command-meta {
+    justify-content: flex-end;
   }
 }
 
@@ -315,11 +325,9 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(8px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -552,6 +560,12 @@
   .pickup-command-main {
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .pickup-command-meta {
+    width: 100%;
+    justify-content: space-between;
+    gap: 8px;
   }
 
   .pickup-role-chip {

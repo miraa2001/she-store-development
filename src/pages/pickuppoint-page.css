@@ -591,6 +591,14 @@
     padding: 10px;
   }
 
+  .pickuppoint-wrap > .pickuppoint-search-row,
+  .pickuppoint-wrap > .pickuppoint-search-results,
+  .pickuppoint-wrap > .pickuppoint-grid {
+    width: min(95vw, 100%);
+    max-width: 95vw;
+    margin-inline: auto;
+  }
+
   .pickuppoint-page.embedded .pickuppoint-wrap > * {
     width: min(95vw, 100%);
     max-width: 95vw;

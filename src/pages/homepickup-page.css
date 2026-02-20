@@ -810,6 +810,14 @@
     padding: 10px;
   }
 
+  .homepickup-wrap > .homepickup-search-row,
+  .homepickup-wrap > .homepickup-search-results,
+  .homepickup-wrap > .homepickup-grid {
+    width: min(95vw, 100%);
+    max-width: 95vw;
+    margin-inline: auto;
+  }
+
   .homepickup-page.embedded .homepickup-wrap > * {
     width: min(95vw, 100%);
     max-width: 95vw;

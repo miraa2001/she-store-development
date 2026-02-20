@@ -165,26 +165,29 @@ export default function PickupDashboardPage() {
                 <div className="pickup-muted">متابعة الاستلام والتحصيل</div>
               </div>
             </div>
-            <span className="pickup-role-chip">{getRoleLabel(profile.role)}</span>
           </div>
 
-          <div className="pickup-command-actions">
-            {showSidebar ? (
-              <button
-                type="button"
-                className="pickup-btn pickup-btn-icon"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="فتح القائمة"
-              >
-                ☰
-              </button>
-            ) : (
-              <button type="button" className="pickup-btn" onClick={signOut}>
-                تسجيل خروج
-              </button>
-            )}
+          <div className="pickup-command-meta">
+            <span className="pickup-role-chip">{getRoleLabel(profile.role)}</span>
+            <div className="pickup-command-actions">
+              {showSidebar ? (
+                <button
+                  type="button"
+                  className="pickup-btn pickup-btn-icon"
+                  onClick={() => setSidebarOpen(true)}
+                  aria-label="فتح القائمة"
+                >
+                  ☰
+                </button>
+              ) : (
+                <button type="button" className="pickup-btn" onClick={signOut}>
+                  تسجيل خروج
+                </button>
+              )}
+            </div>
           </div>
-        </header>
+
+          </header>
 
         <div className="pickup-tabs-container">
           <div className="pickup-tabs" role="tablist" aria-label="أقسام لوحة الاستلام">

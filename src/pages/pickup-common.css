@@ -132,7 +132,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.35);
-  z-index: 1600;
+  z-index: 2600;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.16s ease;
@@ -157,6 +157,7 @@
   transition: transform 0.18s ease;
   display: flex;
   flex-direction: column;
+  z-index: 2610;
 }
 
 .pickup-orders-menu-overlay.open .pickup-orders-menu-panel {
@@ -265,12 +266,17 @@
     left: 0;
     bottom: 0;
     width: 100%;
-    max-height: min(70vh, 560px);
+    height: min(84vh, 680px);
+    max-height: min(84vh, 680px);
     border-left: 0;
     border-top: 1px solid var(--pickup-border);
     border-radius: 16px 16px 0 0;
     box-shadow: 0 -14px 34px rgba(15, 23, 42, 0.2);
     transform: translateY(100%);
+  }
+
+  .pickup-orders-menu-list {
+    -webkit-overflow-scrolling: touch;
   }
 
   .pickup-orders-menu-overlay.open .pickup-orders-menu-panel {
