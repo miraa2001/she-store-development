@@ -9,10 +9,6 @@ import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
-import placeHeaderIcon from "../assets/icons/finance/place.png";
-import countHeaderIcon from "../assets/icons/navigation/orders.png";
-import collectedHeaderIcon from "../assets/icons/pickup/picked-up.png";
-import amountHeaderIcon from "../assets/icons/pickup/price-ils.png";
 import "./pickup-common.css";
 import "./finance-page.css";
 
@@ -241,31 +237,6 @@ export default function FinancePage({ embedded = false }) {
     }
     setSpentInput(selectedOrder.spent ? String(selectedOrder.spent) : "");
     setSpentMessage("");
-  }, [selectedOrder]);
-
-  const selectedOrderBreakdown = useMemo(() => {
-    if (!selectedOrder) return [];
-
-    const keys = new Set([
-      ...Array.from(selectedOrder.pickupTotals.keys()),
-      ...Array.from(selectedOrder.pickupCollectedTotals.keys()),
-      ...Array.from(selectedOrder.pickupCounts.keys())
-    ]);
-
-    const rows = Array.from(keys).map((pickup) => {
-      const expected = selectedOrder.pickupTotals.get(pickup) || 0;
-      const collected = selectedOrder.pickupCollectedTotals.get(pickup) || 0;
-      return {
-        pickup,
-        count: selectedOrder.pickupCounts.get(pickup) || 0,
-        collected,
-        expected,
-        pending: Math.max(0, expected - collected)
-      };
-    });
-
-    rows.sort((a, b) => b.expected - a.expected);
-    return rows;
   }, [selectedOrder]);
 
   const monthSummary = useMemo(() => {
@@ -660,63 +631,6 @@ export default function FinancePage({ embedded = false }) {
                         {savingSpent ? "جاري الحفظ..." : "حفظ المصروف"}
                       </button>
                       {spentMessage ? <span className="finance-muted">{spentMessage}</span> : null}
-                    </div>
-
-                    <div className="finance-section-title finance-spacer-top">تفصيل حسب نقاط الاستلام</div>
-                    <div className="finance-table-wrap">
-                      <table className="finance-table">
-                        <thead>
-                          <tr>
-                            <th>
-                              <span className="finance-th-label">
-                                <img src={placeHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>مكان الاستلام</span>
-                              </span>
-                            </th>
-                            <th>
-                              <span className="finance-th-label">
-                                <img src={countHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>عدد العمليات</span>
-                              </span>
-                            </th>
-                            <th>
-                              <span className="finance-th-label">
-                                <img src={collectedHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>تم تحصيله</span>
-                              </span>
-                            </th>
-                            <th>
-                              <span className="finance-th-label">
-                                <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>المتبقي</span>
-                              </span>
-                            </th>
-                            <th>
-                              <span className="finance-th-label">
-                                <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>إجمالي المطلوب</span>
-                              </span>
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {selectedOrderBreakdown.length ? (
-                            selectedOrderBreakdown.map((item) => (
-                              <tr key={item.pickup}>
-                                <td>{item.pickup}</td>
-                                <td>{item.count}</td>
-                                <td>{formatILS(item.collected)}</td>
-                                <td>{formatILS(item.pending)}</td>
-                                <td>{formatILS(item.expected)}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={5} className="finance-muted">لا توجد بيانات</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
                     </div>
                   </>
                 )}
