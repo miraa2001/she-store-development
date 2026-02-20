@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatDMY } from "../lib/dateFormat";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
+import { setBodyScrollLock } from "../lib/bodyScrollLock";
 import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
@@ -171,13 +172,12 @@ export default function FinancePage({ embedded = false }) {
   }, []);
 
   useEffect(() => {
-    if (!ordersMenuOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const shouldLockBody = sidebarOpen || ordersMenuOpen;
+    setBodyScrollLock("finance-page", shouldLockBody);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      setBodyScrollLock("finance-page", false);
     };
-  }, [ordersMenuOpen]);
+  }, [ordersMenuOpen, sidebarOpen]);
 
   useEffect(() => {
     setSidebarOpen(false);

@@ -298,7 +298,7 @@
   max-width: 100%;
   min-width: 0;
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pinch-zoom;
+  scrollbar-width: thin;
   position: relative;
 }
 

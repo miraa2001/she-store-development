@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getOrdersNavItems, getPickupDashboardTabs, getRoleLabel, isNavHrefActive } from "../lib/navigation";
+import { setBodyScrollLock } from "../lib/bodyScrollLock";
 import { signOutAndRedirect } from "../lib/session";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SessionLoader from "../components/common/SessionLoader";
@@ -45,11 +46,9 @@ export default function PickupDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (!sidebarOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    setBodyScrollLock("pickup-dashboard-sidebar", sidebarOpen);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      setBodyScrollLock("pickup-dashboard-sidebar", false);
     };
   }, [sidebarOpen]);
 

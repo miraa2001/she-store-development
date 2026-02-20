@@ -7,6 +7,7 @@ import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { buildCollectedMoneyMessage, buildPickupStatusMessage, notifyPickupStatus } from "../lib/pickupNotifications";
 import { PICKUP_HOME } from "../lib/pickup";
+import { setBodyScrollLock } from "../lib/bodyScrollLock";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
@@ -124,13 +125,12 @@ export default function HomePickupPage({ embedded = false }) {
   }, []);
 
   useEffect(() => {
-    if (!ordersMenuOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const shouldLockBody = ordersMenuOpen || (!embedded && sidebarOpen);
+    setBodyScrollLock(`homepickup-${embedded ? "embedded" : "page"}`, shouldLockBody);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      setBodyScrollLock(`homepickup-${embedded ? "embedded" : "page"}`, false);
     };
-  }, [ordersMenuOpen]);
+  }, [embedded, ordersMenuOpen, sidebarOpen]);
 
   useEffect(() => {
     setSidebarOpen(false);

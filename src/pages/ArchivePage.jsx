@@ -4,6 +4,7 @@ import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatDMY } from "../lib/dateFormat";
 import { formatILS, isOlderThanCurrentMonth, parsePrice } from "../lib/orders";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
+import { setBodyScrollLock } from "../lib/bodyScrollLock";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
@@ -93,27 +94,17 @@ export default function ArchivePage() {
   }, []);
 
   useEffect(() => {
-    if (!sidebarOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    const shouldLockBody = sidebarOpen || ordersMenuOpen;
+    setBodyScrollLock("archive-page", shouldLockBody);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      setBodyScrollLock("archive-page", false);
     };
-  }, [sidebarOpen]);
+  }, [ordersMenuOpen, sidebarOpen]);
 
   useEffect(() => {
     setSidebarOpen(false);
     setOrdersMenuOpen(false);
   }, [location.pathname, location.search, location.hash]);
-
-  useEffect(() => {
-    if (!ordersMenuOpen) return undefined;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [ordersMenuOpen]);
 
   const cleanupArchiveImages = useCallback(async (collectedOrders) => {
     const allPaths = [];
