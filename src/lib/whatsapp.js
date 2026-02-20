@@ -3,12 +3,14 @@ import { formatILS } from "./orders";
 import { PICKUP_HOME, PICKUP_POINT } from "./pickup";
 
 const EMOJI = {
-  sparkleHeart: "\u{1F496}",
-  package: "\u{1F4E6}",
-  pin: "\u{1F4CD}",
-  alarm: "\u23F0",
-  kiss: "\u{1F48C}",
-  heart: "\u2764\uFE0F"
+  sparkleHeart: "💖",
+  package: "📦",
+  pin: "📍",
+  alarm: "⏰",
+  kiss: "💌",
+  heart: "❤️",
+  bell: "🔔",
+  question: "❓"
 };
 
 function normalizePhone(value) {
@@ -39,17 +41,23 @@ export function isValidWhatsappPhone(value) {
   return /^(970|972)\d{8,9}$/.test(phone);
 }
 
+export function buildWhatsappUrl(phone, message) {
+  const safePhone = toWhatsappPhone(phone);
+  const safeText = String(message || "").normalize("NFC");
+  return `https://wa.me/${safePhone}?text=${encodeURIComponent(safeText)}`;
+}
+
 export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) {
   const priceText = formatILS(price);
   const name = String(customerName || "").trim();
-  const greeting = name ? `مرحبا ${name}${EMOJI.sparkleHeart}` : `مرحبا حبيبتي${EMOJI.sparkleHeart}`;
+  const greeting = name ? `مرحباً ${name} ${EMOJI.sparkleHeart}` : `مرحباً حبيبتي ${EMOJI.sparkleHeart}`;
 
   if (pickupPoint === PICKUP_POINT) {
     return [
       greeting,
-      "طلبك جاهز بنقطة الاستلام",
-      `${EMOJI.pin}كافيه la aura سوق الذهب`,
-      `${EMOJI.alarm} بفتحو من ال٨ صباحًا لل١٠ مساءً`,
+      `${EMOJI.bell} طلبك جاهز في نقطة الاستلام`,
+      `${EMOJI.pin} كافيه La Aura - سوق الذهب`,
+      `${EMOJI.alarm} أوقات العمل: من ٨ صباحاً حتى ١٠ مساءً`,
       `${EMOJI.package} حسابك: ${priceText} شيكل`
     ].join("\n");
   }
@@ -57,27 +65,27 @@ export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) 
   if (pickupPoint === PICKUP_HOME) {
     return [
       greeting,
-      "طلبك جاهز عندي بالبيت",
-      `خبريني قبل بوقت وينتا رح تستلمي${EMOJI.kiss}`,
+      `${EMOJI.bell} طلبك جاهز عندي في البيت`,
+      `خبريني قبل بوقت متى رح تستلمي ${EMOJI.kiss}`,
       `${EMOJI.package} حسابك: ${priceText} شيكل`
     ].join("\n");
   }
 
   return [
     greeting,
-    `طلبك جاهز للاستلام (${pickupPoint || "—"})`,
+    `${EMOJI.bell} طلبك جاهز للاستلام (${pickupPoint || "—"})`,
     `${EMOJI.package} حسابك: ${priceText} شيكل`
   ].join("\n");
 }
 
 export function buildPickupInquiryMessage() {
   return [
-    `مرحبا حبيبتي طلبك وصل ${EMOJI.package}`,
+    `مرحباً حبيبتي، طلبك وصل ${EMOJI.package}`,
     "بتحبي تستلمي من:",
-    `${EMOJI.pin}بيتي بالحي الجنوبي`,
+    `${EMOJI.pin} بيتي في الحي الجنوبي`,
     "أو",
-    `${EMOJI.pin}نقطة الاستلام كافيه la aura سوق الذهب ؟`,
-    `خبريني لو سمحتي${EMOJI.heart}`
+    `${EMOJI.pin} نقطة الاستلام كافيه La Aura - سوق الذهب ${EMOJI.question}`,
+    `خبريني لو سمحتي ${EMOJI.heart}`
   ].join("\n");
 }
 

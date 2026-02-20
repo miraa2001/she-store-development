@@ -151,7 +151,7 @@ export default function OrdersTab({
       {!purchasesLoading && !purchasesError && filteredPurchases.length && !hidePurchaseGrid ? (
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
-            const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
+            const canShowWhatsapp = !!selectedOrder?.arrived;
             const imageList = Array.isArray(purchase.images)
               ? purchase.images.filter((img) => img?.url)
               : [];
@@ -202,7 +202,6 @@ export default function OrdersTab({
                 key={purchase.id}
                 className={`purchase-card ${String(highlightPurchaseId) === String(purchase.id) ? "purchase-highlight" : ""}`}
                 ref={String(highlightPurchaseId) === String(purchase.id) ? highlightRef : null}
-                data-menu-root
               >
                 <div className="purchase-desktop-shell">
                   <article className="purchaseVCard">
@@ -301,10 +300,10 @@ export default function OrdersTab({
                         {canShowWhatsapp ? (
                           <>
                             <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                              استعلام عن نقطة الاستلام❓
+                              استعلام عن نقطة الاستلام ❓
                             </button>
                             <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                              اعلام بوصول الطلب🔔
+                              إعلام بوصول الطلب 🔔
                             </button>
                           </>
                         ) : null}
@@ -355,10 +354,10 @@ export default function OrdersTab({
                     {canShowWhatsapp ? (
                       <div className="wa-actions-row purchase-mobile-wa">
                         <button type="button" className="wa-btn wa-btn-inquiry" onClick={() => onInquireWhatsapp(purchase)}>
-                          استعلام عن نقطة الاستلام❓
+                          استعلام عن نقطة الاستلام ❓
                         </button>
                         <button type="button" className="wa-btn wa-btn-notify" onClick={() => onNotifyWhatsapp(purchase)}>
-                          اعلام بوصول الطلب🔔
+                          إعلام بوصول الطلب 🔔
                         </button>
                       </div>
                     ) : null}

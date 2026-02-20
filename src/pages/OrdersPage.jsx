@@ -41,6 +41,7 @@ import {
 import {
   buildArrivalNotifyMessage,
   buildPickupInquiryMessage,
+  buildWhatsappUrl,
   resolvePurchaseWhatsappTarget
 } from "../lib/whatsapp";
 import { exportOrderPdf } from "../lib/pdfExport";
@@ -595,15 +596,16 @@ export default function OrdersPage() {
   }, [highlightPurchaseId]);
 
   useEffect(() => {
-    const onDocClick = (event) => {
-      if (!event.target.closest("[data-menu-root]")) {
-        setMenuPurchaseId("");
-      }
+    const onDocPointerDown = (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest(".purchase-menu-wrap")) return;
+      setMenuPurchaseId("");
     };
 
-    document.addEventListener("click", onDocClick);
+    document.addEventListener("pointerdown", onDocPointerDown);
     return () => {
-      document.removeEventListener("click", onDocClick);
+      document.removeEventListener("pointerdown", onDocPointerDown);
     };
   }, []);
 
@@ -1271,7 +1273,7 @@ export default function OrdersPage() {
   };
 
   const notifyViaWhatsapp = async (purchase) => {
-    if (!selectedOrder?.arrived || !isRahaf) {
+    if (!selectedOrder?.arrived) {
       setToast({ type: "warn", text: "يجب أن تكون الطلبية واصلة أولًا." });
       return;
     }
@@ -1283,7 +1285,7 @@ export default function OrdersPage() {
         price: purchase.price,
         customerName: target.customerName
       });
-      const url = `https://wa.me/${target.phone}?text=${encodeURIComponent(message)}`;
+      const url = buildWhatsappUrl(target.phone, message);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error(error);
@@ -1292,7 +1294,7 @@ export default function OrdersPage() {
   };
 
   const inquirePickupViaWhatsapp = async (purchase) => {
-    if (!selectedOrder?.arrived || !isRahaf) {
+    if (!selectedOrder?.arrived) {
       setToast({ type: "warn", text: "يجب أن تكون الطلبية واصلة أولًا." });
       return;
     }
@@ -1300,7 +1302,7 @@ export default function OrdersPage() {
     try {
       const target = await resolvePurchaseWhatsappTarget(purchase);
       const message = buildPickupInquiryMessage();
-      const url = `https://wa.me/${target.phone}?text=${encodeURIComponent(message)}`;
+      const url = buildWhatsappUrl(target.phone, message);
       window.open(url, "_blank", "noopener,noreferrer");
     } catch (error) {
       console.error(error);
