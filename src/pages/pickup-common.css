@@ -131,6 +131,8 @@
 .pickup-orders-menu-overlay {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100dvh;
   background: rgba(15, 23, 42, 0.35);
   z-index: 2600;
   opacity: 0;
@@ -270,8 +272,8 @@
     left: 0;
     bottom: 0;
     width: 100%;
-    height: min(84vh, 680px);
-    max-height: min(84vh, 680px);
+    height: min(92dvh, 760px);
+    max-height: min(92dvh, 760px);
     border-left: 0;
     border-top: 1px solid var(--pickup-border);
     border-radius: 16px 16px 0 0;

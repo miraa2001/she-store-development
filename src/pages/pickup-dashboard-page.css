@@ -557,10 +557,7 @@
     width: 100%;
     max-width: 100%;
     min-width: 0;
-  }
-
-  .pickup-panel-scroll-shell {
-    overflow-x: hidden;
+    overflow: visible;
   }
 
   .pickup-command-header {
