@@ -6,6 +6,7 @@ import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import "./archive-page.css";
 
@@ -255,7 +256,8 @@ export default function ArchivePage() {
               className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
               onClick={() => setSidebarOpen(false)}
             >
-              {item.label}
+              <AppNavIcon name={item.icon} className="icon" />
+              <span>{item.label}</span>
             </a>
           ))}
           <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>

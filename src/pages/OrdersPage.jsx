@@ -59,6 +59,7 @@ import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import AppNavIcon from "../components/common/AppNavIcon";
 import ordersMenuIcon from "../assets/icons/navigation/orders.png";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
@@ -1539,7 +1540,8 @@ export default function OrdersPage() {
                 href={item.href}
                 onClick={() => setGlobalOpen(false)}
               >
-                {item.label}
+                <AppNavIcon name={item.icon} className="icon" />
+                <span>{item.label}</span>
               </a>
             ))}
           </nav>
