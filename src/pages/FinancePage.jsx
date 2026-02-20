@@ -34,7 +34,7 @@ function buildOrderGroups(orderList) {
   const map = new Map();
 
   orderList.forEach((order) => {
-    const dateKey = getOrderDateKey(order) || "??? ????";
+    const dateKey = getOrderDateKey(order) || "بدون تاريخ";
     if (!map.has(dateKey)) {
       const group = {
         id: `group-${dateKey}`,
@@ -60,11 +60,11 @@ function monthLabel(date) {
 }
 
 function monthNames() {
-  return ["?????", "??????", "????", "?????", "????", "?????", "?????", "?????", "??????", "??????", "??????", "??????"];
+  return ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
 }
 
 function topPickupPoint(map) {
-  let top = "?";
+  let top = "—";
   let max = 0;
   map.forEach((value, key) => {
     if (value > max) {
@@ -137,7 +137,7 @@ export default function FinancePage({ embedded = false }) {
 
         const stat = stats.get(orderId);
         const value = parsePrice(purchase.paid_price ?? purchase.price);
-        const pickup = String(purchase.pickup_point || "").trim() || "??? ????";
+        const pickup = String(purchase.pickup_point || "").trim() || "بدون نقطة";
 
         stat.expected += value;
         stat.purchaseCount += 1;
@@ -157,7 +157,7 @@ export default function FinancePage({ embedded = false }) {
       console.error(err);
       setOrders([]);
       setOrderStatsMap(new Map());
-      setError("???? ????? ?????? ???????.");
+      setError("تعذر تحميل بيانات المالية.");
     } finally {
       setLoading(false);
     }
@@ -202,7 +202,7 @@ export default function FinancePage({ embedded = false }) {
       const pending = Math.max(0, stats.expected - stats.collected);
       return {
         id: order.id,
-        name: order.order_name || "?????",
+        name: order.order_name || "طلبية",
         createdAt: order.created_at,
         orderDate: order.order_date,
         spent,
@@ -345,12 +345,12 @@ export default function FinancePage({ embedded = false }) {
 
     const value = spentInput.trim() === "" ? 0 : Number(spentInput);
     if (!Number.isFinite(value) || value < 0) {
-      setSpentMessage("??????? ??? ????.");
+      setSpentMessage("المصروف غير صحيح.");
       return;
     }
 
     setSavingSpent(true);
-    setSpentMessage("???? ?????...");
+    setSpentMessage("جاري الحفظ...");
 
     const { error: updateError } = await sb
       .from("orders")
@@ -359,7 +359,7 @@ export default function FinancePage({ embedded = false }) {
 
     if (updateError) {
       console.error(updateError);
-      setSpentMessage("??? ?????.");
+      setSpentMessage("فشل الحفظ.");
       setSavingSpent(false);
       return;
     }
@@ -371,7 +371,7 @@ export default function FinancePage({ embedded = false }) {
     );
 
     setSavingSpent(false);
-    setSpentMessage("?? ?");
+    setSpentMessage("تم ✅");
     window.setTimeout(() => setSpentMessage(""), 1500);
   }
 
@@ -391,9 +391,9 @@ export default function FinancePage({ embedded = false }) {
     return (
       <div className="finance-page finance-state" dir="rtl">
         <div className="finance-note finance-note-danger">
-          <h2>?? ???? ???? ????</h2>
-          <p>???? ????? ?????? ?????.</p>
-          <a href="#/login" className="finance-link">??? ????? ??????</a>
+          <h2>لا توجد جلسة نشطة</h2>
+          <p>يلزم تسجيل الدخول أولًا.</p>
+          <a href="#/login" className="finance-link">فتح تسجيل الدخول</a>
         </div>
       </div>
     );
@@ -403,9 +403,9 @@ export default function FinancePage({ embedded = false }) {
     return (
       <div className="finance-page finance-state" dir="rtl">
         <div className="finance-note finance-note-danger">
-          <h2>?? ???? ??????</h2>
-          <p>??? ?????? ????? ????? ??? ???.</p>
-          <a href="#/orders" className="finance-link">?????? ???????</a>
+          <h2>لا توجد صلاحية</h2>
+          <p>هذه الصفحة متاحة لحساب رهف فقط.</p>
+          <a href="#/orders" className="finance-link">العودة للطلبيات</a>
         </div>
       </div>
     );
@@ -424,14 +424,14 @@ export default function FinancePage({ embedded = false }) {
             <div className="finance-sidebar-head app-sidebar-head">
               <div className="app-sidebar-brand">
                 <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
-                <b>???????</b>
+                <b>شي ستور</b>
               </div>
               <button
                 type="button"
                 className="finance-menu-btn danger app-sidebar-close"
                 onClick={() => setSidebarOpen(false)}
               >
-                ?
+                ✕
               </button>
             </div>
 
@@ -449,7 +449,7 @@ export default function FinancePage({ embedded = false }) {
               ))}
 
               <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
-                ????? ????
+                تسجيل الخروج
               </button>
             </div>
           </aside>
@@ -462,13 +462,13 @@ export default function FinancePage({ embedded = false }) {
             <div className="topbar-brand-with-logo">
               <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
               <div className="finance-brand">
-                <b>???????</b>
-                <div className="finance-muted">???? ????????? ??????????</div>
+                <b>المالية</b>
+                <div className="finance-muted">متابعة التحصيل والمصاريف</div>
               </div>
             </div>
 
             <button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>
-              ?
+              ☰
             </button>
           </div>
         ) : null}
@@ -479,14 +479,14 @@ export default function FinancePage({ embedded = false }) {
             className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`}
             onClick={() => setActiveTab("orders")}
           >
-            ????? ????????
+            حسب الطلبية
           </button>
           <button
             type="button"
             className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`}
             onClick={() => setActiveTab("months")}
           >
-            ????? ????
+            حسب الشهر
           </button>
         </div>
 
@@ -494,7 +494,7 @@ export default function FinancePage({ embedded = false }) {
 
         {loading ? (
           <div className="finance-loading">
-            <SessionLoader label="???? ????? ????????..." />
+            <SessionLoader label="جاري تحميل البيانات..." />
           </div>
         ) : null}
 
@@ -505,15 +505,15 @@ export default function FinancePage({ embedded = false }) {
                 type="button"
                 className="pickup-orders-menu-trigger"
                 onClick={() => setOrdersMenuOpen(true)}
-                aria-label="??? ????? ???????"
+                aria-label="فتح قائمة الطلبيات"
               >
                 <AppNavIcon name="package" className="icon" />
-                <span>????????</span>
+                <span>الطلبيات</span>
                 <b>{orderRows.length}</b>
               </button>
 
               <span className="finance-pill">
-                {selectedOrder ? `????? ??????: ${selectedOrder.name}` : "?????? ?????"}
+                {selectedOrder ? `الطلبية المختارة: ${selectedOrder.name}` : "اختر طلبية"}
               </span>
             </div>
 
@@ -525,25 +525,25 @@ export default function FinancePage({ embedded = false }) {
                 <div className="pickup-orders-menu-head">
                   <div className="pickup-orders-menu-title">
                     <AppNavIcon name="package" className="icon" />
-                    <strong>????????</strong>
+                    <strong>الطلبيات</strong>
                     <b>{orderRows.length}</b>
                   </div>
                   <button
                     type="button"
                     className="pickup-orders-menu-close"
                     onClick={() => setOrdersMenuOpen(false)}
-                    aria-label="????? ????? ???????"
+                    aria-label="إغلاق قائمة الطلبيات"
                   >
-                    ?
+                    ✕
                   </button>
                 </div>
 
                 <div className="pickup-orders-menu-list">
                   {!groupedOrders.length ? (
                     <div className="finance-empty">
-                      ?? ???? ??????
+                      لا توجد طلبيات
                       <div className="finance-refresh-row">
-                        <button type="button" className="finance-btn" onClick={loadData}>?????</button>
+                        <button type="button" className="finance-btn" onClick={loadData}>إعادة تحميل</button>
                       </div>
                     </div>
                   ) : (
@@ -569,11 +569,11 @@ export default function FinancePage({ embedded = false }) {
                                 }}
                               >
                                 <div className="order-main">
-                                  <strong>{order.name || "?????"}</strong>
-                                  <span>{getOrderDateKey(order) || "?"}</span>
+                                  <strong>{order.name || "طلبية"}</strong>
+                                  <span>{getOrderDateKey(order) || "—"}</span>
                                 </div>
                                 <div className="order-meta">
-                                  <small className="status at_pickup">{formatILS(order.collected)} ?</small>
+                                  <small className="status at_pickup">{formatILS(order.collected)} ₪</small>
                                 </div>
                               </button>
                             );
@@ -589,7 +589,7 @@ export default function FinancePage({ embedded = false }) {
             <div className="finance-grid finance-grid--single">
               <main className="finance-card">
                 {!selectedOrder ? (
-                  <div className="finance-empty">?????? ????? ?? ???????</div>
+                  <div className="finance-empty">اختر طلبية من القائمة</div>
                 ) : (
                   <>
                     <div className="finance-row">
@@ -604,49 +604,49 @@ export default function FinancePage({ embedded = false }) {
                         }`}
                       >
                         {selectedOrder.expected === 0
-                          ? "?? ???? ???????"
+                          ? "لا يوجد تحصيل"
                           : selectedOrder.pending === 0
-                            ? "?????"
-                            : "??? ???????"}
+                            ? "مكتمل"
+                            : "قيد التحصيل"}
                       </span>
                     </div>
 
                     <div className="finance-kpi-grid">
                       <div className="finance-kpi">
-                        <div className="label">?? ??????</div>
+                        <div className="label">تم تحصيله</div>
                         <div className="value">{formatILS(selectedOrder.collected)}</div>
                       </div>
                       <div className="finance-kpi">
-                        <div className="label">????? ???????</div>
+                        <div className="label">متبقي للتحصيل</div>
                         <div className="value">{formatILS(selectedOrder.pending)}</div>
                       </div>
                       <div className="finance-kpi">
-                        <div className="label">?????? ?????</div>
+                        <div className="label">إجمالي المطلوب</div>
                         <div className="value">{formatILS(selectedOrder.expected)}</div>
                       </div>
                     </div>
 
                     <div className="finance-kpi-grid compact">
                       <div className="finance-kpi">
-                        <div className="label">???? ?????</div>
+                        <div className="label">صافي المحصل</div>
                         <div className={`value ${selectedOrder.collected - selectedOrder.spent < 0 ? "neg" : ""}`}>
                           {formatILS(selectedOrder.collected - selectedOrder.spent)}
                         </div>
                       </div>
                       <div className="finance-kpi">
-                        <div className="label">???? ?????</div>
+                        <div className="label">صافي المتوقع</div>
                         <div className={`value ${selectedOrder.expected - selectedOrder.spent < 0 ? "neg" : ""}`}>
                           {formatILS(selectedOrder.expected - selectedOrder.spent)}
                         </div>
                       </div>
                       <div className="finance-kpi">
-                        <div className="label">???????</div>
+                        <div className="label">المصروف</div>
                         <div className="value">{formatILS(selectedOrder.spent)}</div>
                       </div>
                     </div>
 
                     <div className="finance-spent-row">
-                      <label htmlFor="financeSpentInput">???????:</label>
+                      <label htmlFor="financeSpentInput">المصروف:</label>
                       <input
                         id="financeSpentInput"
                         type="number"
@@ -654,15 +654,15 @@ export default function FinancePage({ embedded = false }) {
                         min="0"
                         value={spentInput}
                         onChange={(event) => setSpentInput(event.target.value)}
-                        placeholder="??????? ??? ???????"
+                        placeholder="اكتب قيمة المصروف"
                       />
                       <button type="button" className="finance-btn primary" onClick={saveSpent} disabled={savingSpent}>
-                        {savingSpent ? "???? ?????..." : "??? ???????"}
+                        {savingSpent ? "جاري الحفظ..." : "حفظ المصروف"}
                       </button>
                       {spentMessage ? <span className="finance-muted">{spentMessage}</span> : null}
                     </div>
 
-                    <div className="finance-section-title finance-spacer-top">????? ??? ???? ????????</div>
+                    <div className="finance-section-title finance-spacer-top">تفصيل حسب نقاط الاستلام</div>
                     <div className="finance-table-wrap">
                       <table className="finance-table">
                         <thead>
@@ -670,31 +670,31 @@ export default function FinancePage({ embedded = false }) {
                             <th>
                               <span className="finance-th-label">
                                 <img src={placeHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>???? ????????</span>
+                                <span>مكان الاستلام</span>
                               </span>
                             </th>
                             <th>
                               <span className="finance-th-label">
                                 <img src={countHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>??? ????????</span>
+                                <span>عدد العمليات</span>
                               </span>
                             </th>
                             <th>
                               <span className="finance-th-label">
                                 <img src={collectedHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>?? ??????</span>
+                                <span>تم تحصيله</span>
                               </span>
                             </th>
                             <th>
                               <span className="finance-th-label">
                                 <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>?????</span>
+                                <span>المتبقي</span>
                               </span>
                             </th>
                             <th>
                               <span className="finance-th-label">
                                 <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
-                                <span>?????? ?????</span>
+                                <span>إجمالي المطلوب</span>
                               </span>
                             </th>
                           </tr>
@@ -712,7 +712,7 @@ export default function FinancePage({ embedded = false }) {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={5} className="finance-muted">?? ???? ??????</td>
+                              <td colSpan={5} className="finance-muted">لا توجد بيانات</td>
                             </tr>
                           )}
                         </tbody>
@@ -728,7 +728,7 @@ export default function FinancePage({ embedded = false }) {
         {!loading && activeTab === "months" ? (
           <main className="finance-card">
             <div className="finance-row center">
-              <div className="finance-section-title">???? ????</div>
+              <div className="finance-section-title">ملخص شهري</div>
             </div>
 
             <div className="finance-month-picker">
@@ -745,9 +745,9 @@ export default function FinancePage({ embedded = false }) {
                     )
                   }
                 >
-                  ?
+                  ‹
                 </button>
-                <b>{selectedYear ?? "?"}</b>
+                <b>{selectedYear ?? "—"}</b>
                 <button
                   type="button"
                   className="finance-btn mini"
@@ -760,7 +760,7 @@ export default function FinancePage({ embedded = false }) {
                     )
                   }
                 >
-                  ?
+                  ›
                 </button>
               </div>
 
@@ -784,7 +784,7 @@ export default function FinancePage({ embedded = false }) {
             </div>
 
             {!selectedMonth ? (
-              <div className="finance-empty">?? ???? ?????? ?????</div>
+              <div className="finance-empty">لا توجد بيانات للشهر</div>
             ) : (
               <div className="finance-month-shell">
                 <div className="finance-row">
@@ -797,50 +797,50 @@ export default function FinancePage({ embedded = false }) {
                     }`}
                   >
                     {selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected
-                      ? "?????"
-                      : "??? ???????"}
+                      ? "مكتمل"
+                      : "قيد التحصيل"}
                   </span>
                 </div>
 
                 <div className="finance-health-row">
-                  <span className="finance-pill">????????: {selectedMonth.orders}</span>
-                  <span className="finance-pill">?????????: {selectedMonth.purchases}</span>
+                  <span className="finance-pill">الطلبيات: {selectedMonth.orders}</span>
+                  <span className="finance-pill">العمليات: {selectedMonth.purchases}</span>
                   <span className="finance-pill">
-                    ???? ???????: {selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0}%
+                    نسبة التحصيل: {selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0}%
                   </span>
-                  <span className="finance-pill">???? ????: {topPickupPoint(selectedMonth.pickupTotals)}</span>
+                  <span className="finance-pill">أعلى نقطة: {topPickupPoint(selectedMonth.pickupTotals)}</span>
                 </div>
 
                 <div className="finance-kpi-grid">
                   <div className="finance-kpi">
-                    <div className="label">?? ??????</div>
+                    <div className="label">تم تحصيله</div>
                     <div className="value">{formatILS(selectedMonth.collected)}</div>
                   </div>
                   <div className="finance-kpi">
-                    <div className="label">????? ???????</div>
+                    <div className="label">متبقي للتحصيل</div>
                     <div className="value">{formatILS(Math.max(0, selectedMonth.expected - selectedMonth.collected))}</div>
                   </div>
                   <div className="finance-kpi">
-                    <div className="label">?????? ?????</div>
+                    <div className="label">إجمالي المطلوب</div>
                     <div className="value">{formatILS(selectedMonth.expected)}</div>
                   </div>
                 </div>
 
                 <div className="finance-kpi-grid compact">
                   <div className="finance-kpi">
-                    <div className="label">???? ?????</div>
+                    <div className="label">صافي المحصل</div>
                     <div className={`value ${selectedMonth.collected - selectedMonth.spent < 0 ? "neg" : ""}`}>
                       {formatILS(selectedMonth.collected - selectedMonth.spent)}
                     </div>
                   </div>
                   <div className="finance-kpi">
-                    <div className="label">???? ?????</div>
+                    <div className="label">صافي المتوقع</div>
                     <div className={`value ${selectedMonth.expected - selectedMonth.spent < 0 ? "neg" : ""}`}>
                       {formatILS(selectedMonth.expected - selectedMonth.spent)}
                     </div>
                   </div>
                   <div className="finance-kpi">
-                    <div className="label">???????</div>
+                    <div className="label">المصروف</div>
                     <div className="value">{formatILS(selectedMonth.spent)}</div>
                   </div>
                 </div>
