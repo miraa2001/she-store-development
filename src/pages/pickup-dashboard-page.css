@@ -552,6 +552,17 @@
     padding: 10px;
   }
 
+  .pickup-panel-content,
+  .pickup-panel-scroll-shell {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .pickup-panel-scroll-shell {
+    overflow-x: hidden;
+  }
+
   .pickup-command-header {
     padding: 10px;
     border-radius: 12px 12px 0 0;

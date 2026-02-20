@@ -214,17 +214,21 @@
 
 @media (max-width: 767px) {
   .pickup-embedded-container {
+    width: 100%;
+    max-width: 100%;
     padding: 10px 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: 8px;
   }
 
   .pickup-embedded-container > * {
-    width: min(95vw, 100%);
-    max-width: 95vw;
-    margin-inline: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    min-width: 0;
+    box-sizing: border-box;
   }
 
   .pickup-section-header {

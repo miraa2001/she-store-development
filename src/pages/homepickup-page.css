@@ -199,6 +199,7 @@
   grid-template-columns: 330px 1fr;
   gap: 16px;
   align-items: start;
+  min-width: 0;
 }
 
 .homepickup-grid--single {
@@ -216,6 +217,7 @@
   border-radius: 24px 24px 12px 24px;
   padding: 12px;
   box-shadow: 0 10px 24px rgba(109, 63, 107, 0.08);
+  min-width: 0;
 }
 
 .homepickup-list-card {
@@ -313,6 +315,7 @@
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(8px);
   box-shadow: 0 8px 18px rgba(109, 63, 107, 0.08);
+  min-width: 0;
 }
 
 .homepickup-table {
@@ -807,21 +810,30 @@
 
 @media (max-width: 767px) {
   .homepickup-wrap {
-    padding: 10px;
-  }
-
-  .homepickup-wrap > .homepickup-search-row,
-  .homepickup-wrap > .homepickup-search-results,
-  .homepickup-wrap > .homepickup-grid {
     width: min(95vw, 100%);
     max-width: 95vw;
     margin-inline: auto;
+    padding: 10px 0;
+  }
+
+  .homepickup-wrap > * {
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  .homepickup-page.embedded .homepickup-wrap {
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 0;
   }
 
   .homepickup-page.embedded .homepickup-wrap > * {
-    width: min(95vw, 100%);
-    max-width: 95vw;
-    margin-inline: auto;
+    width: 100%;
+    max-width: 100%;
+    margin-inline: 0;
   }
 
   .homepickup-search-row {
@@ -848,6 +860,7 @@
   .homepickup-card {
     width: 100%;
     max-width: 100%;
+    min-width: 0;
   }
 
   .homepickup-table-wrap {
