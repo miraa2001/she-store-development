@@ -49,6 +49,7 @@ function buildOrderGroups(orderList) {
 export default function HomePickupPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("table");
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [purchases, setPurchases] = useState([]);
@@ -89,6 +90,15 @@ export default function HomePickupPage({ embedded = false }) {
       visiblePurchases
         .filter((purchase) => purchase.picked_up)
         .reduce((sum, purchase) => sum + parsePrice(purchase.paid_price ?? purchase.price), 0),
+    [visiblePurchases]
+  );
+  const amountToCollect = useMemo(() => pickedTotal, [pickedTotal]);
+  const kanbanNotPicked = useMemo(
+    () => visiblePurchases.filter((purchase) => !purchase.picked_up),
+    [visiblePurchases]
+  );
+  const kanbanPicked = useMemo(
+    () => visiblePurchases.filter((purchase) => purchase.picked_up),
     [visiblePurchases]
   );
 
@@ -370,6 +380,87 @@ export default function HomePickupPage({ embedded = false }) {
     });
   }
 
+  function renderKanbanPurchaseCard(purchase) {
+    const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
+    const isEditing = String(paidEditor.id) === String(purchase.id);
+    return (
+      <article key={purchase.id} className={`homepickup-kanban-card ${isHighlight ? "is-highlight" : ""}`}>
+        <header className="homepickup-kanban-card-head">
+          <strong>{purchase.customer_name || ""}</strong>
+          {isRahaf ? (
+            isEditing ? (
+              <div className="homepickup-edit-actions pickup-edit-actions">
+                <button
+                  type="button"
+                  className="homepickup-btn mini"
+                  onClick={savePaidPrice}
+                  disabled={paidEditor.saving}
+                >
+                  ✓
+                </button>
+                <button
+                  type="button"
+                  className="homepickup-btn mini"
+                  onClick={cancelEditPaid}
+                  disabled={paidEditor.saving}
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="homepickup-btn mini" onClick={() => startEditPaid(purchase)}>
+                ✏️
+              </button>
+            )
+          ) : null}
+        </header>
+
+        <div className="homepickup-kanban-meta">
+          <span>السعر: {formatILS(parsePrice(purchase.price))} ₪</span>
+          {isRahaf ? (
+            isEditing ? (
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={paidEditor.value}
+                onChange={(event) => setPaidEditor((prev) => ({ ...prev, value: event.target.value }))}
+                className="homepickup-paid-input pickup-input mini"
+              />
+            ) : (
+              <span>المدفوع: {purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === "" ? "—" : `${formatILS(parsePrice(purchase.paid_price))} ₪`}</span>
+            )
+          ) : null}
+        </div>
+
+        {purchase.images?.length ? (
+          <div className="homepickup-thumbs homepickup-thumbs-kanban">
+            {purchase.images.map((url, index) => (
+              <img
+                key={`${purchase.id}-kanban-img-${index}`}
+                src={url}
+                alt="صورة"
+                onClick={() => openLightbox(purchase.images, index, purchase.customer_name || "")}
+              />
+            ))}
+          </div>
+        ) : null}
+
+        <footer className="homepickup-kanban-actions">
+          <div className="homepickup-pick-row pickup-checkbox-wrap">
+            <PickupAnimatedCheckbox
+              checked={!!purchase.picked_up}
+              onChange={(event) => togglePicked(purchase.id, event.target.checked)}
+              ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
+            />
+            <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
+          </div>
+          <small>{formatDateTime(purchase.picked_up_at)}</small>
+        </footer>
+      </article>
+    );
+  }
+
   if (profile.loading) {
     return (
       <div className="homepickup-page homepickup-state" dir="rtl">
@@ -587,13 +678,35 @@ export default function HomePickupPage({ embedded = false }) {
               </div>
             ) : (
               <>
+                <div className="homepickup-view-controls">
+                  <div className="homepickup-view-toggle">
+                    <button
+                      type="button"
+                      className={`homepickup-view-btn ${viewMode === "kanban" ? "active" : ""}`}
+                      onClick={() => setViewMode("kanban")}
+                    >
+                      Kanban
+                    </button>
+                    <button
+                      type="button"
+                      className={`homepickup-view-btn ${viewMode === "table" ? "active" : ""}`}
+                      onClick={() => setViewMode("table")}
+                    >
+                      Table
+                    </button>
+                  </div>
+                  <div className="homepickup-amount-display">
+                    <span className="homepickup-amount-label">Amount to collect</span>
+                    <strong className="homepickup-amount-value">{formatILS(amountToCollect)} ₪</strong>
+                  </div>
+                </div>
+
                 <div className="homepickup-row pickup-main-header">
                   <div>
                     <b>{selectedOrder.orderName}</b>
                   </div>
                   <div className="homepickup-row pickup-main-actions">
-                    <span className="homepickup-pill">عدد المشتريات: {visiblePurchases.length}</span>
-                    <span className="homepickup-pill">مجموع أسعار المستلم: {formatILS(pickedTotal)} ₪</span>
+                    <span className="homepickup-pill">Items: {visiblePurchases.length}</span>
                     {isRahaf ? (
                       <button
                         type="button"
@@ -601,7 +714,7 @@ export default function HomePickupPage({ embedded = false }) {
                         onClick={collectHomeMoney}
                         disabled={collecting}
                       >
-                        {collecting ? "جاري التحصيل..." : "تم استلام تحصيل المستلمين"}
+                        {collecting ? "Collecting..." : "Confirm collection"}
                       </button>
                     ) : null}
                   </div>
@@ -609,135 +722,167 @@ export default function HomePickupPage({ embedded = false }) {
 
                 {loadingPurchases ? (
                   <div className="homepickup-spacer">
-                    <SessionLoader label="جاري تحميل المشتريات..." />
+                    <SessionLoader label="Loading purchases..." />
                   </div>
                 ) : null}
 
                 {!loadingPurchases ? (
-                  <div className="homepickup-table-wrap pickup-table-wrap">
-                    <table className="homepickup-table pickup-table">
-                      <thead>
-                        <tr>
-                          <th>الزبون</th>
-                          <th>السعر</th>
-                          {isRahaf ? <th>المدفوع</th> : null}
-                          {isRahaf ? <th className="homepickup-edit-col" /> : null}
-                          <th>
-                            <span className="homepickup-th-label">
-                              <img src={imagesHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
-                              <span>صور</span>
-                            </span>
-                          </th>
-                          <th>تم الاستلام</th>
-                          <th>وقت الاستلام</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {visiblePurchases.length ? (
-                          visiblePurchases.map((purchase) => {
-                            const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
-                            const isEditing = String(paidEditor.id) === String(purchase.id);
-                            return (
-                              <tr key={purchase.id}>
-                                <td>
-                                  {isHighlight ? <div className="homepickup-highlight">✅ هذا هو البحث</div> : null}
-                                  {purchase.customer_name || ""}
-                                </td>
-                                <td>{purchase.paid_price ?? purchase.price ?? ""}</td>
+                  viewMode === "kanban" ? (
+                    <div className="homepickup-kanban-grid">
+                      <section className="homepickup-kanban-column">
+                        <div className="homepickup-kanban-header">
+                          <h3>Not picked up</h3>
+                          <span>{kanbanNotPicked.length}</span>
+                        </div>
+                        <div className="homepickup-kanban-list">
+                          {kanbanNotPicked.length ? (
+                            kanbanNotPicked.map((purchase) => renderKanbanPurchaseCard(purchase))
+                          ) : (
+                            <div className="homepickup-muted">No purchases</div>
+                          )}
+                        </div>
+                      </section>
 
-                                {isRahaf ? (
-                                  <>
-                                    <td>
-                                      {isEditing ? (
-                                        <input
-                                          type="number"
-                                          min="0"
-                                          step="0.01"
-                                          value={paidEditor.value}
-                                          onChange={(event) =>
-                                            setPaidEditor((prev) => ({ ...prev, value: event.target.value }))
-                                          }
-                                          className="homepickup-paid-input pickup-input mini"
-                                        />
-                                      ) : (
-                                        purchase.paid_price ?? "—"
-                                      )}
-                                    </td>
-                                    <td className="homepickup-edit-col">
-                                      {isEditing ? (
-                                        <div className="homepickup-edit-actions pickup-edit-actions">
-                                          <button
-                                            type="button"
-                                            className="homepickup-btn mini"
-                                            onClick={savePaidPrice}
-                                            disabled={paidEditor.saving}
-                                          >
-                                            ✅
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="homepickup-btn mini"
-                                            onClick={cancelEditPaid}
-                                            disabled={paidEditor.saving}
-                                          >
-                                            ✖
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        <button
-                                          type="button"
-                                          className="homepickup-btn mini"
-                                          onClick={() => startEditPaid(purchase)}
-                                        >
-                                          ✏️
-                                        </button>
-                                      )}
-                                    </td>
-                                  </>
-                                ) : null}
-
-                                <td>
-                                  {purchase.images?.length ? (
-                                    <div className="homepickup-thumbs">
-                                      {purchase.images.map((url, index) => (
-                                        <img
-                                          key={`${purchase.id}-img-${index}`}
-                                          src={url}
-                                          alt="صورة"
-                                          onClick={() => openLightbox(purchase.images, index, purchase.customer_name || "")}
-                                        />
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    "—"
-                                  )}
-                                </td>
-
-                                <td>
-                                  <div className="homepickup-pick-row pickup-checkbox-wrap">
-                                    <PickupAnimatedCheckbox
-                                      checked={!!purchase.picked_up}
-                                      onChange={(event) => togglePicked(purchase.id, event.target.checked)}
-                                      ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
-                                    />
-                                    <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
-                                  </div>
-                                </td>
-
-                                <td>{formatDateTime(purchase.picked_up_at)}</td>
-                              </tr>
-                            );
-                          })
-                        ) : (
+                      <section className="homepickup-kanban-column homepickup-kanban-column-picked">
+                        <div className="homepickup-kanban-header">
+                          <h3>Picked up</h3>
+                          <span>{kanbanPicked.length}</span>
+                        </div>
+                        <div className="homepickup-kanban-list">
+                          {kanbanPicked.length ? (
+                            kanbanPicked.map((purchase) => renderKanbanPurchaseCard(purchase))
+                          ) : (
+                            <div className="homepickup-muted">No purchases</div>
+                          )}
+                        </div>
+                      </section>
+                    </div>
+                  ) : (
+                    <div className="homepickup-table-wrap pickup-table-wrap">
+                      <table className="homepickup-table pickup-table">
+                        <thead>
                           <tr>
-                            <td colSpan={isRahaf ? 7 : 5} className="homepickup-muted">
-                              لا يوجد مشتريات
-                            </td>
+                            <th>Customer</th>
+                            <th>Price</th>
+                            {isRahaf ? <th>Paid</th> : null}
+                            {isRahaf ? <th className="homepickup-edit-col" /> : null}
+                            <th>
+                              <span className="homepickup-th-label">
+                                <img src={imagesHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                <span>Images</span>
+                              </span>
+                            </th>
+                            <th>Picked up</th>
+                            <th>Pickup time</th>
                           </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {visiblePurchases.length ? (
+                            visiblePurchases.map((purchase) => {
+                              const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
+                              const isEditing = String(paidEditor.id) === String(purchase.id);
+                              return (
+                                <tr key={purchase.id}>
+                                  <td>
+                                    {isHighlight ? <div className="homepickup-highlight">✅ Search match</div> : null}
+                                    {purchase.customer_name || ""}
+                                  </td>
+                                  <td>{purchase.paid_price ?? purchase.price ?? ""}</td>
+
+                                  {isRahaf ? (
+                                    <>
+                                      <td>
+                                        {isEditing ? (
+                                          <input
+                                            type="number"
+                                            min="0"
+                                            step="0.01"
+                                            value={paidEditor.value}
+                                            onChange={(event) =>
+                                              setPaidEditor((prev) => ({ ...prev, value: event.target.value }))
+                                            }
+                                            className="homepickup-paid-input pickup-input mini"
+                                          />
+                                        ) : (
+                                          purchase.paid_price ?? "—"
+                                        )}
+                                      </td>
+                                      <td className="homepickup-edit-col">
+                                        {isEditing ? (
+                                          <div className="homepickup-edit-actions pickup-edit-actions">
+                                            <button
+                                              type="button"
+                                              className="homepickup-btn mini"
+                                              onClick={savePaidPrice}
+                                              disabled={paidEditor.saving}
+                                            >
+                                              ?
+                                            </button>
+                                            <button
+                                              type="button"
+                                              className="homepickup-btn mini"
+                                              onClick={cancelEditPaid}
+                                              disabled={paidEditor.saving}
+                                            >
+                                              ?
+                                            </button>
+                                          </div>
+                                        ) : (
+                                          <button
+                                            type="button"
+                                            className="homepickup-btn mini"
+                                            onClick={() => startEditPaid(purchase)}
+                                          >
+                                            ✏️
+                                          </button>
+                                        )}
+                                      </td>
+                                    </>
+                                  ) : null}
+
+                                  <td>
+                                    {purchase.images?.length ? (
+                                      <div className="homepickup-thumbs">
+                                        {purchase.images.map((url, index) => (
+                                          <img
+                                            key={`${purchase.id}-img-${index}`}
+                                            src={url}
+                                            alt="image"
+                                            onClick={() => openLightbox(purchase.images, index, purchase.customer_name || "")}
+                                          />
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      "?"
+                                    )}
+                                  </td>
+
+                                  <td>
+                                    <div className="homepickup-pick-row pickup-checkbox-wrap">
+                                      <PickupAnimatedCheckbox
+                                        checked={!!purchase.picked_up}
+                                        onChange={(event) => togglePicked(purchase.id, event.target.checked)}
+                                        ariaLabel={purchase.picked_up ? "Picked up" : "Not picked"}
+                                      />
+                                      <span>{purchase.picked_up ? "Picked up" : "Not picked"}</span>
+                                    </div>
+                                  </td>
+
+                                  <td>{formatDateTime(purchase.picked_up_at)}</td>
+                                </tr>
+                              );
+                            })
+                          ) : (
+                            <tr>
+                              <td colSpan={isRahaf ? 7 : 5} className="homepickup-muted">
+                                No purchases
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )
                 ) : null}
               </>
             )}

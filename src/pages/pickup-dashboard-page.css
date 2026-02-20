@@ -5,7 +5,7 @@
 
 .pickup-page {
   min-height: 100dvh;
-  background: #f6f8f7;
+  background: linear-gradient(135deg, #f6f2f8 0%, #ede5f1 40%, #e7dfeb 100%);
   color: #111827;
   position: relative;
   
@@ -42,9 +42,10 @@
   display: flex;
   flex-direction: column;
   gap: var(--pd-space-2);
-  border-bottom: 1px solid #e7dfea;
-  background: linear-gradient(to bottom, #ffffff, #fff9fb);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  border-bottom: 1px solid rgba(109, 63, 107, 0.2);
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(109, 63, 107, 0.1);
   padding: 10px 14px;
   border-radius: var(--pd-radius-3) var(--pd-radius-3) 0 0;
   margin-bottom: var(--pd-space-2);
@@ -219,10 +220,11 @@
    =================================== */
 
 .pickup-tabs-container {
-  border: 1px solid var(--pd-border);
+  border: 1px solid rgba(109, 63, 107, 0.18);
   border-radius: var(--pd-radius-3);
-  background: #fff;
-  box-shadow: var(--pd-shadow-1);
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 24px rgba(109, 63, 107, 0.1);
   margin-bottom: var(--pd-space-2);
 }
 
@@ -231,7 +233,7 @@
   width: 100%;
   gap: var(--pd-space-1);
   padding: 7px;
-  background: #fcfdfd;
+  background: rgba(255, 255, 255, 0.6);
   border-radius: var(--pd-radius-3) var(--pd-radius-3) 0 0;
   overflow-x: auto;
   overflow-y: hidden;
@@ -281,9 +283,9 @@
 }
 
 .pickup-tab-btn.active {
-  background: #f2ebf4;
+  background: linear-gradient(135deg, rgba(242, 235, 244, 0.9) 0%, rgba(255, 246, 250, 0.8) 100%);
   color: var(--pd-primary);
-  box-shadow: inset 0 0 0 1px #b9d5cc;
+  box-shadow: 0 4px 12px rgba(109, 63, 107, 0.16);
 }
 
 .pickup-tab-btn.active::after {
