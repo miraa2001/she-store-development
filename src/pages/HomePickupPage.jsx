@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { formatDateTime } from "../lib/dateFormat";
+import { formatDMY, formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { usePurchaseCustomerSearch } from "../hooks/usePurchaseCustomerSearch";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
@@ -10,10 +10,40 @@ import { PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import AppNavIcon from "../components/common/AppNavIcon";
+import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import "./pickup-common.css";
 import "./homepickup-page.css";
 
 const BUCKET = "purchase-images";
+
+function getOrderDateKey(order) {
+  return formatDMY(order?.createdAt);
+}
+
+function buildOrderGroups(orderList) {
+  const groups = [];
+  const map = new Map();
+
+  orderList.forEach((order) => {
+    const dateKey = getOrderDateKey(order) || "غير محدد";
+    if (!map.has(dateKey)) {
+      const group = {
+        id: `group-${dateKey}`,
+        dateKey,
+        label: dateKey,
+        orders: []
+      };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orders.push(order);
+  });
+
+  return groups;
+}
+
 export default function HomePickupPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +54,7 @@ export default function HomePickupPage({ embedded = false }) {
   const [loadingPurchases, setLoadingPurchases] = useState(false);
   const [error, setError] = useState("");
   const [collecting, setCollecting] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
@@ -31,10 +62,14 @@ export default function HomePickupPage({ embedded = false }) {
   const location = useLocation();
   const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
   const highlightTimeoutRef = useRef(null);
+  const homeSearchQueryBuilder = useCallback(
+    (request) => request.eq("pickup_point", PICKUP_HOME),
+    []
+  );
   const { searchResults, searchLoading, clearSearchResults } = usePurchaseCustomerSearch({
     search,
     orders,
-    queryBuilder: (request) => request.eq("pickup_point", PICKUP_HOME)
+    queryBuilder: homeSearchQueryBuilder
   });
 
   const isRahaf = profile.role === "rahaf";
@@ -44,6 +79,7 @@ export default function HomePickupPage({ embedded = false }) {
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orders, selectedOrderId]
   );
+  const groupedOrders = useMemo(() => buildOrderGroups(orders), [orders]);
 
   const visiblePurchases = useMemo(() => purchases.filter((purchase) => !purchase.collected), [purchases]);
   const pickedTotal = useMemo(
@@ -58,6 +94,7 @@ export default function HomePickupPage({ embedded = false }) {
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setSidebarOpen(false);
+        setOrdersMenuOpen(false);
         setLightbox((prev) => ({ ...prev, open: false }));
       }
       if (!lightbox.open || !lightbox.images.length) return;
@@ -84,6 +121,15 @@ export default function HomePickupPage({ embedded = false }) {
       if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!ordersMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [ordersMenuOpen]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -384,7 +430,8 @@ export default function HomePickupPage({ embedded = false }) {
                   className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  {item.label}
+                  <AppNavIcon name={item.icon} className="icon" />
+                  <span>{item.label}</span>
                 </a>
               ))}
               <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
@@ -394,7 +441,7 @@ export default function HomePickupPage({ embedded = false }) {
           </aside>
         </>
       ) : null}
-      <div className="homepickup-wrap">
+      <div className={`homepickup-wrap ${embedded ? "pickup-embedded-container" : ""}`}>
         {!embedded ? (
           <div className="homepickup-topbar">
             <div className="topbar-brand-with-logo">
@@ -410,11 +457,21 @@ export default function HomePickupPage({ embedded = false }) {
           </div>
         ) : null}
 
-        <div className="homepickup-search-row">
+        <div className="homepickup-search-row pickup-section-header">
+          <button
+            type="button"
+            className="pickup-orders-menu-trigger"
+            onClick={() => setOrdersMenuOpen(true)}
+            aria-label="فتح قائمة الطلبات"
+          >
+            <AppNavIcon name="package" className="icon" />
+            <span>الطلبات</span>
+            <b>{orders.length}</b>
+          </button>
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="homepickup-search-box"
+            className="homepickup-search-box pickup-search-input"
             placeholder="بحث باسم الزبون..."
           />
           {search.trim().length >= 2 ? (
@@ -437,48 +494,82 @@ export default function HomePickupPage({ embedded = false }) {
           </div>
         ) : null}
 
-        <div className="homepickup-grid">
-          <aside className="homepickup-card homepickup-list-card">
-            <div className="homepickup-row">
-              <b>الطلبيات</b>
-              <span className="homepickup-pill">{orders.length}</span>
+        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
+          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="pickup-orders-menu-head">
+              <div className="pickup-orders-menu-title">
+                <AppNavIcon name="package" className="icon" />
+                <strong>الطلبات</strong>
+                <b>{orders.length}</b>
+              </div>
+              <button
+                type="button"
+                className="pickup-orders-menu-close"
+                onClick={() => setOrdersMenuOpen(false)}
+                aria-label="إغلاق قائمة الطلبات"
+              >
+                ✕
+              </button>
             </div>
 
-            {loadingOrders ? <div className="homepickup-muted homepickup-spacer">جاري تحميل البيانات...</div> : null}
-            {error ? <div className="homepickup-error homepickup-spacer">{error}</div> : null}
-
-            {!loadingOrders && !error && !orders.length ? (
-              <div className="homepickup-muted homepickup-spacer">
-                لا يوجد بيانات
-                <div className="homepickup-refresh-row">
-                  <button className="homepickup-btn" type="button" onClick={loadOrders}>
-                    تحديث
-                  </button>
+            <div className="pickup-orders-menu-list">
+              {loadingOrders ? (
+                <div className="homepickup-spacer">
+                  <SessionLoader label="جاري تحميل البيانات..." />
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+              {!loadingOrders && error ? <div className="homepickup-error homepickup-spacer">{error}</div> : null}
 
-            {!loadingOrders && !error && orders.length ? (
-              <div className="homepickup-orders-list">
-                {orders.map((order) => {
-                  const active = String(selectedOrderId) === String(order.id);
-                  return (
-                    <button
-                      key={order.id}
-                      type="button"
-                      className={`homepickup-order-item ${active ? "active" : ""}`}
-                      onClick={() => setSelectedOrderId(order.id)}
-                    >
-                      <span>{order.orderName}</span>
-                      <span className="homepickup-pill">فتح</span>
+              {!loadingOrders && !error && !groupedOrders.length ? (
+                <div className="homepickup-muted homepickup-spacer">
+                  لا يوجد بيانات
+                  <div className="homepickup-refresh-row">
+                    <button className="homepickup-btn" type="button" onClick={loadOrders}>
+                      تحديث
                     </button>
-                  );
-                })}
-              </div>
-            ) : null}
-          </aside>
+                  </div>
+                </div>
+              ) : null}
 
-          <main className="homepickup-card">
+              {!loadingOrders && !error
+                ? groupedOrders.map((group) => (
+                    <section key={group.id} className="group-block">
+                      <div className="month-chip">
+                        <AppNavIcon name="calendar" className="icon" />
+                        <span>{group.label}</span>
+                        <b>({group.orders.length})</b>
+                      </div>
+                      <div className="group-orders">
+                        {group.orders.map((order) => {
+                          const active = String(selectedOrderId) === String(order.id);
+                          return (
+                            <button
+                              key={order.id}
+                              type="button"
+                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                              onClick={() => {
+                                setSelectedOrderId(order.id);
+                                setOrdersMenuOpen(false);
+                              }}
+                            >
+                              <div className="order-main">
+                                <strong>{order.orderName || "طلبية"}</strong>
+                                <span>{getOrderDateKey(order) || "—"}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                : null}
+            </div>
+          </aside>
+        </div>
+
+        <div className="homepickup-grid homepickup-grid--single pickup-two-col-layout">
+
+          <main className="homepickup-card pickup-main-pane">
             {!selectedOrder ? (
               <div className="homepickup-muted homepickup-spacer">
                 لا يوجد بيانات
@@ -490,11 +581,11 @@ export default function HomePickupPage({ embedded = false }) {
               </div>
             ) : (
               <>
-                <div className="homepickup-row">
+                <div className="homepickup-row pickup-main-header">
                   <div>
                     <b>{selectedOrder.orderName}</b>
                   </div>
-                  <div className="homepickup-row">
+                  <div className="homepickup-row pickup-main-actions">
                     <span className="homepickup-pill">عدد المشتريات: {visiblePurchases.length}</span>
                     <span className="homepickup-pill">مجموع أسعار المستلم: {formatILS(pickedTotal)} ₪</span>
                     {isRahaf ? (
@@ -510,11 +601,15 @@ export default function HomePickupPage({ embedded = false }) {
                   </div>
                 </div>
 
-                {loadingPurchases ? <div className="homepickup-muted homepickup-spacer">جاري تحميل المشتريات...</div> : null}
+                {loadingPurchases ? (
+                  <div className="homepickup-spacer">
+                    <SessionLoader label="جاري تحميل المشتريات..." />
+                  </div>
+                ) : null}
 
                 {!loadingPurchases ? (
-                  <div className="homepickup-table-wrap">
-                    <table className="homepickup-table">
+                  <div className="homepickup-table-wrap pickup-table-wrap">
+                    <table className="homepickup-table pickup-table">
                       <thead>
                         <tr>
                           <th>الزبون</th>
@@ -551,7 +646,7 @@ export default function HomePickupPage({ embedded = false }) {
                                           onChange={(event) =>
                                             setPaidEditor((prev) => ({ ...prev, value: event.target.value }))
                                           }
-                                          className="homepickup-paid-input"
+                                          className="homepickup-paid-input pickup-input mini"
                                         />
                                       ) : (
                                         purchase.paid_price ?? "—"
@@ -559,7 +654,7 @@ export default function HomePickupPage({ embedded = false }) {
                                     </td>
                                     <td className="homepickup-edit-col">
                                       {isEditing ? (
-                                        <div className="homepickup-edit-actions">
+                                        <div className="homepickup-edit-actions pickup-edit-actions">
                                           <button
                                             type="button"
                                             className="homepickup-btn mini"
@@ -608,15 +703,14 @@ export default function HomePickupPage({ embedded = false }) {
                                 </td>
 
                                 <td>
-                                  <label className="homepickup-pick-row">
-                                    <input
-                                      className="homepickup-check"
-                                      type="checkbox"
+                                  <div className="homepickup-pick-row pickup-checkbox-wrap">
+                                    <PickupAnimatedCheckbox
                                       checked={!!purchase.picked_up}
                                       onChange={(event) => togglePicked(purchase.id, event.target.checked)}
+                                      ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
                                     />
                                     <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
-                                  </label>
+                                  </div>
                                 </td>
 
                                 <td>{formatDateTime(purchase.picked_up_at)}</td>

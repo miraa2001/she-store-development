@@ -11,6 +11,7 @@ import {
   buildPickupInquiryMessage,
   resolvePurchaseWhatsappTarget
 } from "../../lib/whatsapp";
+import SessionLoader from "../common/SessionLoader";
 
 const CAN_EDIT_BAG_ROLES = new Set(["rahaf", "reem", "rawand"]);
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
@@ -278,7 +279,9 @@ export default function ViewTab({ role, onOpenLightbox, onToast }) {
       {searchText.trim().length >= 2 ? (
         <div className="view-search-results">
           {searching ? (
-            <div className="workspace-empty">جاري البحث...</div>
+            <div className="workspace-empty workspace-loader">
+              <SessionLoader label="جاري البحث..." />
+            </div>
           ) : searchResults.length ? (
             searchResults.map((result) => {
               const order = orders.find((item) => String(item.id) === String(result.order_id));
@@ -308,7 +311,11 @@ export default function ViewTab({ role, onOpenLightbox, onToast }) {
             <span className="status-chip completed">{orders.length}</span>
           </div>
 
-          {ordersLoading ? <div className="workspace-empty">جاري تحميل الطلبيات...</div> : null}
+          {ordersLoading ? (
+            <div className="workspace-empty workspace-loader">
+              <SessionLoader label="جاري تحميل الطلبيات..." />
+            </div>
+          ) : null}
           {ordersError ? <div className="workspace-empty workspace-error">{ordersError}</div> : null}
           {!ordersLoading && !ordersError && !orders.length ? (
             <div className="workspace-empty">لا يوجد طلبيات واصلة.</div>
@@ -365,7 +372,11 @@ export default function ViewTab({ role, onOpenLightbox, onToast }) {
                 </div>
               </div>
 
-              {purchasesLoading ? <div className="workspace-empty">جاري تحميل المشتريات...</div> : null}
+              {purchasesLoading ? (
+                <div className="workspace-empty workspace-loader">
+                  <SessionLoader label="جاري تحميل المشتريات..." />
+                </div>
+              ) : null}
               {purchasesError ? <div className="workspace-empty workspace-error">{purchasesError}</div> : null}
 
               {!purchasesLoading && !purchasesError && !purchases.length ? (

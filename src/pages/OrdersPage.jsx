@@ -64,17 +64,6 @@ import ordersMenuIcon from "../assets/icons8-orders-96.png";
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
 
-function paymentState(purchase) {
-  if (purchase?.collected) return { key: "completed", label: "مكتمل" };
-
-  const priceNum = parsePrice(purchase.price);
-  const paidNum = parsePrice(purchase.paid_price || 0);
-
-  if (priceNum > 0 && paidNum >= priceNum) return { key: "completed", label: "مكتمل" };
-  if (paidNum <= 0) return { key: "issue", label: "غير مدفوع" };
-  return { key: "pending", label: "قيد التحصيل" };
-}
-
 function createEmptyForm(orderId, customers) {
   return {
     purchaseId: "",
@@ -1584,7 +1573,9 @@ export default function OrdersPage() {
       {String(search || "").trim() ? (
         <div className="orders-header-search-results">
           {headerSearchLoading ? (
-            <div className="orders-search-hint">جاري البحث عن المشتريات...</div>
+            <div className="orders-search-hint workspace-loader">
+              <SessionLoader label="جاري البحث عن المشتريات..." />
+            </div>
           ) : headerSearchResults.length ? (
             <div className="orders-search-list">
               {headerSearchResults.map((row) => (
@@ -1665,7 +1656,6 @@ export default function OrdersPage() {
                 purchasesLoading={purchasesLoading}
                 purchasesError={purchasesError}
                 filteredPurchases={filteredPurchases}
-                paymentState={paymentState}
                 menuPurchaseId={menuPurchaseId}
                 onTogglePurchaseMenu={(purchaseId) =>
                   setMenuPurchaseId((prev) => (String(prev) === String(purchaseId) ? "" : purchaseId))

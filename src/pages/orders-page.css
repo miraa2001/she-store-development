@@ -2992,7 +2992,7 @@
   border-radius: 14px;
   background: #f8f9fa;
   color: #111827;
-  padding: 0 46px 0 36px;
+  padding: 0 72px 0 36px;
   font-family: inherit;
   font-size: 14px;
   line-height: 1.5;
@@ -3046,12 +3046,13 @@
 
 .search-pill-count {
   position: absolute;
-  top: -5px;
-  right: -5px;
-  min-width: 18px;
-  height: 18px;
+  top: 50%;
+  right: 40px;
+  transform: translateY(-50%);
+  min-width: 20px;
+  height: 20px;
   border-radius: 999px;
-  padding: 0 5px;
+  padding: 0 6px;
   background: #6D3F6B;
   color: #fff;
   display: inline-flex;
@@ -3252,6 +3253,7 @@
   .search-pill-input {
     height: 40px;
     font-size: 13px;
+    padding-right: 70px;
   }
 }
 

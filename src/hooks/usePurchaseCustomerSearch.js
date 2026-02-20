@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { sb } from "../lib/supabaseClient";
 
 const MIN_SEARCH_LENGTH = 2;
@@ -12,6 +12,18 @@ export function usePurchaseCustomerSearch({
 }) {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const requestSeqRef = useRef(0);
+  const lastFetchKeyRef = useRef("");
+  const queryBuilderRef = useRef(queryBuilder);
+  const postFilterRef = useRef(postFilter);
+
+  useEffect(() => {
+    queryBuilderRef.current = queryBuilder;
+  }, [queryBuilder]);
+
+  useEffect(() => {
+    postFilterRef.current = postFilter;
+  }, [postFilter]);
 
   const orderNameById = useMemo(() => {
     const map = new Map();
@@ -24,6 +36,8 @@ export function usePurchaseCustomerSearch({
   useEffect(() => {
     const query = String(search || "").trim();
     if (query.length < MIN_SEARCH_LENGTH) {
+      requestSeqRef.current += 1;
+      lastFetchKeyRef.current = "";
       setSearchResults([]);
       setSearchLoading(false);
       return;
@@ -31,11 +45,21 @@ export function usePurchaseCustomerSearch({
 
     const orderIds = (orders || []).map((order) => order.id);
     if (!orderIds.length) {
+      requestSeqRef.current += 1;
+      lastFetchKeyRef.current = "";
       setSearchResults([]);
       setSearchLoading(false);
       return;
     }
 
+    const orderIdsKey = orderIds.map((id) => String(id)).sort().join(",");
+    const fetchKey = `${query}__${orderIdsKey}`;
+    if (lastFetchKeyRef.current === fetchKey) {
+      return;
+    }
+    lastFetchKeyRef.current = fetchKey;
+
+    const requestSeq = ++requestSeqRef.current;
     const timer = window.setTimeout(async () => {
       setSearchLoading(true);
       try {
@@ -48,17 +72,19 @@ export function usePurchaseCustomerSearch({
           .order("created_at", { ascending: false })
           .limit(50);
 
-        if (typeof queryBuilder === "function") {
-          request = queryBuilder(request, { query, orderIds }) || request;
+        if (typeof queryBuilderRef.current === "function") {
+          request = queryBuilderRef.current(request, { query, orderIds }) || request;
         }
 
         const { data, error } = await request;
         if (error) throw error;
+        if (requestSeqRef.current !== requestSeq) return;
 
         let list = data || [];
-        if (typeof postFilter === "function") {
-          list = list.filter((item) => postFilter(item, { query, orderIds }));
+        if (typeof postFilterRef.current === "function") {
+          list = list.filter((item) => postFilterRef.current(item, { query, orderIds }));
         }
+        if (requestSeqRef.current !== requestSeq) return;
 
         setSearchResults(
           list.map((item) => ({
@@ -68,17 +94,20 @@ export function usePurchaseCustomerSearch({
         );
       } catch (error) {
         console.error(error);
-        setSearchResults([]);
+        if (requestSeqRef.current === requestSeq) {
+          setSearchResults([]);
+        }
       } finally {
-        setSearchLoading(false);
+        if (requestSeqRef.current === requestSeq) {
+          setSearchLoading(false);
+        }
       }
     }, debounceMs);
 
     return () => window.clearTimeout(timer);
-  }, [debounceMs, orderNameById, orders, postFilter, queryBuilder, search]);
+  }, [debounceMs, orderNameById, orders, search]);
 
   const clearSearchResults = () => setSearchResults([]);
 
   return { searchResults, searchLoading, clearSearchResults };
 }
-

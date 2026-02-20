@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import SessionLoader from "../common/SessionLoader";
 import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
 import editIcon from "../../assets/icons8-edit-96.png";
 import deleteIcon from "../../assets/icons8-delete-96.png";
@@ -65,7 +66,11 @@ export default function OrdersBottomSheet({
         </div>
 
         <div className="orders-sheet-list">
-          {ordersLoading ? <div className="orders-horizontal-empty">جاري تحميل الطلبات...</div> : null}
+          {ordersLoading ? (
+            <div className="orders-horizontal-empty workspace-loader">
+              <SessionLoader label="جاري تحميل الطلبات..." />
+            </div>
+          ) : null}
 
           {!ordersLoading && ordersError ? <div className="orders-horizontal-empty orders-horizontal-error">{ordersError}</div> : null}
 

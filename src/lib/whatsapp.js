@@ -2,6 +2,15 @@ import { sb } from "./supabaseClient";
 import { formatILS } from "./orders";
 import { PICKUP_HOME, PICKUP_POINT } from "./pickup";
 
+const EMOJI = {
+  sparkleHeart: "\u{1F496}",
+  package: "\u{1F4E6}",
+  pin: "\u{1F4CD}",
+  alarm: "\u23F0",
+  kiss: "\u{1F48C}",
+  heart: "\u2764\uFE0F"
+};
+
 function normalizePhone(value) {
   const converted = String(value || "")
     .replace(/[٠-٩]/g, (d) => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)))
@@ -33,15 +42,15 @@ export function isValidWhatsappPhone(value) {
 export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) {
   const priceText = formatILS(price);
   const name = String(customerName || "").trim();
-  const greeting = name ? `مرحبا ${name}💖` : "مرحبا حبيبتي💖";
+  const greeting = name ? `مرحبا ${name}${EMOJI.sparkleHeart}` : `مرحبا حبيبتي${EMOJI.sparkleHeart}`;
 
   if (pickupPoint === PICKUP_POINT) {
     return [
       greeting,
       "طلبك جاهز بنقطة الاستلام",
-      "📍كافيه la aura سوق الذهب",
-      "⏰ بفتحوا من ال٨ صباحاً لل١٠ مساءً",
-      `📦 حسابك: ${priceText} شيكل`
+      `${EMOJI.pin}كافيه la aura سوق الذهب`,
+      `${EMOJI.alarm} بفتحو من ال٨ صباحًا لل١٠ مساءً`,
+      `${EMOJI.package} حسابك: ${priceText} شيكل`
     ].join("\n");
   }
 
@@ -49,26 +58,26 @@ export function buildArrivalNotifyMessage({ pickupPoint, price, customerName }) 
     return [
       greeting,
       "طلبك جاهز عندي بالبيت",
-      "خبريني قبل بوقت وينتا رح تستلمي💌",
-      `📦حسابك: ${priceText} شيكل`
+      `خبريني قبل بوقت وينتا رح تستلمي${EMOJI.kiss}`,
+      `${EMOJI.package} حسابك: ${priceText} شيكل`
     ].join("\n");
   }
 
   return [
     greeting,
     `طلبك جاهز للاستلام (${pickupPoint || "—"})`,
-    `📦 حسابك: ${priceText} شيكل`
+    `${EMOJI.package} حسابك: ${priceText} شيكل`
   ].join("\n");
 }
 
 export function buildPickupInquiryMessage() {
   return [
-    "مرحبا حبيبتي طلبك وصل 📦",
+    `مرحبا حبيبتي طلبك وصل ${EMOJI.package}`,
     "بتحبي تستلمي من:",
-    "📍بيتي بالحي الجنوبي",
+    `${EMOJI.pin}بيتي بالحي الجنوبي`,
     "أو",
-    "📍نقطة الاستلام كافيه la aura سوق الذهب ؟",
-    "خبريني لو سمحتي🤍"
+    `${EMOJI.pin}نقطة الاستلام كافيه la aura سوق الذهب ؟`,
+    `خبريني لو سمحتي${EMOJI.heart}`
   ].join("\n");
 }
 

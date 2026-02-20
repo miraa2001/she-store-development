@@ -289,7 +289,11 @@ export default function ArchivePage() {
             </div>
             {cleanupMsg ? <div className="archive-cleanup-msg">{cleanupMsg}</div> : null}
 
-            {loading ? <div className="archive-muted archive-spacer">جاري تحميل البيانات...</div> : null}
+            {loading ? (
+              <div className="archive-spacer">
+                <SessionLoader label="جاري تحميل البيانات..." />
+              </div>
+            ) : null}
             {error ? <div className="archive-error archive-spacer">{error}</div> : null}
 
             {!loading && !error && !orders.length ? (

@@ -137,6 +137,19 @@
   align-items: start;
 }
 
+.collections-grid--single {
+  grid-template-columns: 1fr;
+}
+
+.collections-orders-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
 .collections-page.embedded .collections-grid {
   grid-template-columns: 1fr;
 }
@@ -332,6 +345,11 @@
 
   .collections-grid {
     grid-template-columns: 1fr;
+  }
+
+  .collections-orders-menu-row .pickup-orders-menu-trigger {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .collections-list-card {

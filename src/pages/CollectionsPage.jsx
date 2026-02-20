@@ -1,20 +1,50 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { formatDMY } from "../lib/dateFormat";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { isAuraPickup, PICKUP_HOME } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
+import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import "./pickup-common.css";
 import "./collections-page.css";
+
+function getOrderDateKey(order) {
+  return formatDMY(order?.createdAt);
+}
+
+function buildOrderGroups(orderList) {
+  const groups = [];
+  const map = new Map();
+
+  orderList.forEach((order) => {
+    const dateKey = getOrderDateKey(order) || "غير محدد";
+    if (!map.has(dateKey)) {
+      const group = {
+        id: `group-${dateKey}`,
+        dateKey,
+        label: dateKey,
+        orders: []
+      };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orders.push(order);
+  });
+
+  return groups;
+}
 
 export default function CollectionsPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState("");
@@ -27,6 +57,7 @@ export default function CollectionsPage({ embedded = false }) {
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orders, selectedOrderId]
   );
+  const groupedOrders = useMemo(() => buildOrderGroups(orders), [orders]);
 
   const overallCollected = useMemo(
     () => orders.reduce((sum, order) => sum + order.collectedTotal, 0),
@@ -47,11 +78,23 @@ export default function CollectionsPage({ embedded = false }) {
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (event.key === "Escape") setSidebarOpen(false);
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+        setOrdersMenuOpen(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!ordersMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [ordersMenuOpen]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -215,7 +258,8 @@ export default function CollectionsPage({ embedded = false }) {
                   className={`app-sidebar-link ${isNavHrefActive(item.href, location) ? "active" : ""}`}
                   onClick={() => setSidebarOpen(false)}
                 >
-                  {item.label}
+                  <AppNavIcon name={item.icon} className="icon" />
+                  <span>{item.label}</span>
                 </a>
               ))}
               <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
@@ -241,49 +285,98 @@ export default function CollectionsPage({ embedded = false }) {
           </div>
         ) : null}
 
-        <div className="collections-grid">
-          <aside className="collections-card collections-list-card">
-            <div className="collections-row">
-              <b>الطلبيات</b>
-              <div className="collections-orders-meta">
-                <span className="collections-pill">{orders.length}</span>
-                <span className="collections-pill">إجمالي التحصيل: {formatILS(overallCollected)} ₪</span>
+        <div className="collections-orders-menu-row">
+          <button
+            type="button"
+            className="pickup-orders-menu-trigger"
+            onClick={() => setOrdersMenuOpen(true)}
+            aria-label="فتح قائمة الطلبات"
+          >
+            <AppNavIcon name="package" className="icon" />
+            <span>الطلبات</span>
+            <b>{orders.length}</b>
+          </button>
+          <span className="collections-pill">إجمالي التحصيل: {formatILS(overallCollected)} ₪</span>
+        </div>
+
+        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
+          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+            <div className="pickup-orders-menu-head">
+              <div className="pickup-orders-menu-title">
+                <AppNavIcon name="package" className="icon" />
+                <strong>الطلبات</strong>
+                <b>{orders.length}</b>
               </div>
+              <button
+                type="button"
+                className="pickup-orders-menu-close"
+                onClick={() => setOrdersMenuOpen(false)}
+                aria-label="إغلاق قائمة الطلبات"
+              >
+                ✕
+              </button>
             </div>
 
-            {loadingOrders ? <div className="collections-muted collections-spacer">جاري تحميل البيانات...</div> : null}
-            {error ? <div className="collections-error collections-spacer">{error}</div> : null}
-
-            {!loadingOrders && !error && !orders.length ? (
-              <div className="collections-muted collections-spacer">
-                لا يوجد بيانات
-                <div className="collections-refresh-row">
-                  <button className="collections-btn" type="button" onClick={loadOrders}>
-                    تحديث
-                  </button>
+            <div className="pickup-orders-menu-list">
+              {loadingOrders ? (
+                <div className="collections-spacer">
+                  <SessionLoader label="جاري تحميل البيانات..." />
                 </div>
-              </div>
-            ) : null}
+              ) : null}
+              {!loadingOrders && error ? <div className="collections-error collections-spacer">{error}</div> : null}
 
-            {!loadingOrders && !error && orders.length ? (
-              <div className="collections-orders-list">
-                {orders.map((order) => {
-                  const active = String(selectedOrderId) === String(order.id);
-                  return (
-                    <button
-                      key={order.id}
-                      type="button"
-                      className={`collections-order-item ${active ? "active" : ""}`}
-                      onClick={() => setSelectedOrderId(order.id)}
-                    >
-                      <span>{order.orderName}</span>
-                      <span className="collections-pill">فتح</span>
+              {!loadingOrders && !error && !groupedOrders.length ? (
+                <div className="collections-muted collections-spacer">
+                  لا يوجد بيانات
+                  <div className="collections-refresh-row">
+                    <button className="collections-btn" type="button" onClick={loadOrders}>
+                      تحديث
                     </button>
-                  );
-                })}
-              </div>
-            ) : null}
+                  </div>
+                </div>
+              ) : null}
+
+              {!loadingOrders && !error
+                ? groupedOrders.map((group) => (
+                    <section key={group.id} className="group-block">
+                      <div className="month-chip">
+                        <AppNavIcon name="calendar" className="icon" />
+                        <span>{group.label}</span>
+                        <b>({group.orders.length})</b>
+                      </div>
+
+                      <div className="group-orders">
+                        {group.orders.map((order) => {
+                          const active = String(selectedOrderId) === String(order.id);
+                          return (
+                            <button
+                              key={order.id}
+                              type="button"
+                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                              onClick={() => {
+                                setSelectedOrderId(order.id);
+                                setOrdersMenuOpen(false);
+                              }}
+                            >
+                              <div className="order-main">
+                                <strong>{order.orderName || "طلبية"}</strong>
+                                <span>{getOrderDateKey(order) || "—"}</span>
+                              </div>
+                              <div className="order-meta">
+                                <b>{formatILS(order.collectedTotal)} ₪</b>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  ))
+                : null}
+            </div>
           </aside>
+        </div>
+
+        <div className="collections-grid collections-grid--single">
 
           <main className="collections-card">
             {!selectedOrder ? (
@@ -310,7 +403,11 @@ export default function CollectionsPage({ embedded = false }) {
                   </div>
                 </div>
 
-                {loadingDetails ? <div className="collections-muted collections-spacer">جاري تحميل تفاصيل التحصيل...</div> : null}
+                {loadingDetails ? (
+                  <div className="collections-spacer">
+                    <SessionLoader label="جاري تحميل تفاصيل التحصيل..." />
+                  </div>
+                ) : null}
 
                 {!loadingDetails ? (
                   <>

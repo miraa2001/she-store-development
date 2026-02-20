@@ -337,6 +337,18 @@ a {
   cursor: pointer !important;
 }
 
+.app-sidebar-link .icon {
+  width: 18px !important;
+  height: 18px !important;
+  flex: 0 0 auto !important;
+  color: currentColor !important;
+  opacity: 0.9;
+}
+
+.app-sidebar-link img.icon {
+  object-fit: contain !important;
+}
+
 .app-sidebar-link:hover {
   background: #f8f4fa !important;
   border-color: #ded4e4 !important;
@@ -350,14 +362,14 @@ a {
 }
 
 .app-sidebar-link.app-sidebar-danger {
-  color: #b42318 !important;
-  background: #fff6f6 !important;
-  border-color: rgba(180, 35, 24, 0.25) !important;
+  color: #5f3561 !important;
+  background: #f3edf6 !important;
+  border-color: #d9c8df !important;
 }
 
 .app-sidebar-link.app-sidebar-danger:hover {
-  background: #fff0f0 !important;
-  border-color: rgba(180, 35, 24, 0.38) !important;
+  background: #ede2f2 !important;
+  border-color: #ccb5d5 !important;
 }
 
 .app-sidebar-close {

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
 import editIcon from "../../assets/icons8-edit-96.png";
 import deleteIcon from "../../assets/icons8-delete-96.png";
+import SessionLoader from "../common/SessionLoader";
 
 export default function CustomersTab({
   customerSearch,
@@ -135,7 +136,11 @@ export default function CustomersTab({
         ) : null}
 
         <div className="customer-list-card">
-          {customersLoading ? <div className="workspace-empty">جاري تحميل العملاء...</div> : null}
+          {customersLoading ? (
+            <div className="workspace-empty workspace-loader">
+              <SessionLoader label="جاري تحميل العملاء..." />
+            </div>
+          ) : null}
           {customersError ? <div className="workspace-empty workspace-error">{customersError}</div> : null}
 
           {!customersLoading && !customersError && !filteredCustomers.length ? (

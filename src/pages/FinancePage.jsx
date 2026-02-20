@@ -299,7 +299,11 @@ export default function FinancePage({ embedded = false }) {
         ) : null}
         <div className="finance-tabs"><button type="button" className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>احصاء الطلبات</button><button type="button" className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`} onClick={() => setActiveTab("months")}>احصاء شهري</button></div>
         {error ? <div className="finance-error">{error}</div> : null}
-        {loading ? <div className="finance-loading">جاري تحميل البيانات...</div> : null}
+        {loading ? (
+          <div className="finance-loading">
+            <SessionLoader label="جاري تحميل البيانات..." />
+          </div>
+        ) : null}
         {!loading && activeTab === "orders" ? (
           <div className="finance-grid">
             <aside className="finance-card finance-list-card">

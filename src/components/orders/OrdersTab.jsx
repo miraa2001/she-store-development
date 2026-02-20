@@ -33,7 +33,6 @@ export default function OrdersTab({
   purchasesLoading,
   purchasesError,
   filteredPurchases,
-  paymentState,
   menuPurchaseId,
   onTogglePurchaseMenu,
   onEditPurchase,
@@ -152,16 +151,12 @@ export default function OrdersTab({
       {!purchasesLoading && !purchasesError && filteredPurchases.length && !hidePurchaseGrid ? (
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
-            const state = paymentState(purchase);
             const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
             const imageList = Array.isArray(purchase.images)
               ? purchase.images.filter((img) => img?.url)
               : [];
             const totalImages = imageList.length;
             const currentSlide = normalizeSlideIndex(cardSlideIndexes[purchase.id] || 0, totalImages);
-
-            const showStatusChip = state.key !== "completed";
-            const statusChipNode = showStatusChip ? <span className={`status-chip ${state.key}`}>{state.label}</span> : null;
             const menuNode = isRahaf && editMode ? (
               <div className="purchase-menu-wrap" data-menu-root>
                 <button
@@ -270,11 +265,6 @@ export default function OrdersTab({
                         <div className="purchaseVPlaceholder">لا توجد صور</div>
                       )}
 
-                      {statusChipNode ? (
-                        <div className="purchaseVOverlay">
-                          <div className="purchase-head-actions">{statusChipNode}</div>
-                        </div>
-                      ) : null}
                     </div>
 
                     <div className="purchaseVBody" dir="rtl">
@@ -374,10 +364,9 @@ export default function OrdersTab({
                     ) : null}
                   </div>
 
-                  {statusChipNode || menuNode ? (
+                  {menuNode ? (
                     <div className="purchase-mobile-actions">
                       <div className="purchase-head-actions">
-                        {statusChipNode}
                         {menuNode}
                       </div>
                     </div>

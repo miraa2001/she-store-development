@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import SheStoreLogo from "../common/SheStoreLogo";
+import SessionLoader from "../common/SessionLoader";
 import actionsMenuIcon from "../../assets/icons8-menu-vertical-32.png";
 import editIcon from "../../assets/icons8-edit-96.png";
 import deleteIcon from "../../assets/icons8-delete-96.png";
@@ -73,7 +74,11 @@ export default function OrdersDrawer({
         </div>
 
         <div className="orders-drawer-list">
-          {ordersLoading ? <div className="workspace-empty">جاري تحميل الطلبات...</div> : null}
+          {ordersLoading ? (
+            <div className="workspace-empty workspace-loader">
+              <SessionLoader label="جاري تحميل الطلبات..." />
+            </div>
+          ) : null}
 
           {!ordersLoading && ordersError ? <div className="workspace-empty workspace-error">{ordersError}</div> : null}
 
