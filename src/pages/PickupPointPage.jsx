@@ -171,6 +171,11 @@ export default function PickupPointPage({ embedded = false }) {
   }, [ordersMenuOpen]);
 
   useEffect(() => {
+    setSidebarOpen(false);
+    setOrdersMenuOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
+  useEffect(() => {
     setSelectedItemId((prev) => {
       if (isLaaura) {
         if (prev && mergedDateOrders.some((item) => String(item.id) === String(prev))) return prev;

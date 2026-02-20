@@ -132,6 +132,11 @@ export default function HomePickupPage({ embedded = false }) {
     };
   }, [ordersMenuOpen]);
 
+  useEffect(() => {
+    setSidebarOpen(false);
+    setOrdersMenuOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
     setError("");

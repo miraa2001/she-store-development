@@ -180,6 +180,11 @@ export default function FinancePage({ embedded = false }) {
   }, [ordersMenuOpen]);
 
   useEffect(() => {
+    setSidebarOpen(false);
+    setOrdersMenuOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
+  useEffect(() => {
     if (profile.loading || !profile.authenticated || profile.role !== "rahaf") return;
     loadData();
   }, [loadData, profile.authenticated, profile.loading, profile.role]);

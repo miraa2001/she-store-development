@@ -7,7 +7,6 @@
   min-height: 100dvh;
   background: #f6f8f7;
   color: #111827;
-  overflow-x: hidden;
   position: relative;
   
   /* Design tokens matching orders-page */
@@ -33,7 +32,6 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--pd-space-3);
-  overflow-x: hidden;
 }
 
 /* ===================================
@@ -230,11 +228,13 @@
 
 .pickup-tabs {
   display: flex;
+  width: 100%;
   gap: var(--pd-space-1);
   padding: 7px;
   background: #fcfdfd;
   border-radius: var(--pd-radius-3) var(--pd-radius-3) 0 0;
   overflow-x: auto;
+  overflow-y: hidden;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
@@ -484,10 +484,6 @@
 @media (max-width: 900px) {
   .pickup-wrap {
     padding: var(--pd-space-2);
-  }
-
-  .pickup-tabs-container {
-    overflow: hidden;
   }
 
   .pickup-tabs {
