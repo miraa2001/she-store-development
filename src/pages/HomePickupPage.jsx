@@ -15,6 +15,10 @@ import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import imagesHeaderIcon from "../assets/icons/pickup/images.png";
+import customerHeaderIcon from "../assets/icons/pickup/customer.png";
+import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
+import pickedHeaderIcon from "../assets/icons/pickup/picked-up.png";
+import pickupTimeHeaderIcon from "../assets/icons/pickup/pickup-time.png";
 import "./pickup-common.css";
 import "./homepickup-page.css";
 
@@ -50,6 +54,9 @@ export default function HomePickupPage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [viewMode, setViewMode] = useState("table");
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === "undefined" ? true : window.matchMedia("(min-width: 1024px)").matches
+  );
   const [orders, setOrders] = useState([]);
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [purchases, setPurchases] = useState([]);
@@ -101,6 +108,7 @@ export default function HomePickupPage({ embedded = false }) {
     () => visiblePurchases.filter((purchase) => purchase.picked_up),
     [visiblePurchases]
   );
+  const activeViewMode = isDesktop ? viewMode : "table";
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -127,6 +135,27 @@ export default function HomePickupPage({ embedded = false }) {
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [lightbox.images.length, lightbox.open]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const onChange = (event) => setIsDesktop(event.matches);
+    setIsDesktop(media.matches);
+
+    if (typeof media.addEventListener === "function") {
+      media.addEventListener("change", onChange);
+      return () => media.removeEventListener("change", onChange);
+    }
+
+    media.addListener(onChange);
+    return () => media.removeListener(onChange);
+  }, []);
+
+  useEffect(() => {
+    if (!isDesktop) {
+      setViewMode("table");
+    }
+  }, [isDesktop]);
 
   useEffect(() => {
     return () => {
@@ -448,13 +477,13 @@ export default function HomePickupPage({ embedded = false }) {
 
         <footer className="homepickup-kanban-actions">
           <div className="homepickup-pick-row pickup-checkbox-wrap">
-            <PickupAnimatedCheckbox
-              checked={!!purchase.picked_up}
-              onChange={(event) => togglePicked(purchase.id, event.target.checked)}
-              ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
-            />
-            <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
-          </div>
+              <PickupAnimatedCheckbox
+                checked={!!purchase.picked_up}
+                onChange={(event) => togglePicked(purchase.id, event.target.checked)}
+                ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
+              />
+              <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
+            </div>
           <small>{formatDateTime(purchase.picked_up_at)}</small>
         </footer>
       </article>
@@ -591,79 +620,6 @@ export default function HomePickupPage({ embedded = false }) {
           </div>
         ) : null}
 
-        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
-          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="pickup-orders-menu-head">
-              <div className="pickup-orders-menu-title">
-                <AppNavIcon name="package" className="icon" />
-                <strong>الطلبات</strong>
-                <b>{orders.length}</b>
-              </div>
-              <button
-                type="button"
-                className="pickup-orders-menu-close"
-                onClick={() => setOrdersMenuOpen(false)}
-                aria-label="إغلاق قائمة الطلبات"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="pickup-orders-menu-list">
-              {loadingOrders ? (
-                <div className="homepickup-spacer">
-                  <SessionLoader label="جاري تحميل البيانات..." />
-                </div>
-              ) : null}
-              {!loadingOrders && error ? <div className="homepickup-error homepickup-spacer">{error}</div> : null}
-
-              {!loadingOrders && !error && !groupedOrders.length ? (
-                <div className="homepickup-muted homepickup-spacer">
-                  لا يوجد بيانات
-                  <div className="homepickup-refresh-row">
-                    <button className="homepickup-btn" type="button" onClick={loadOrders}>
-                      تحديث
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {!loadingOrders && !error
-                ? groupedOrders.map((group) => (
-                    <section key={group.id} className="group-block">
-                      <div className="month-chip">
-                        <AppNavIcon name="calendar" className="icon" />
-                        <span>{group.label}</span>
-                        <b>({group.orders.length})</b>
-                      </div>
-                      <div className="group-orders">
-                        {group.orders.map((order) => {
-                          const active = String(selectedOrderId) === String(order.id);
-                          return (
-                            <button
-                              key={order.id}
-                              type="button"
-                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                              onClick={() => {
-                                setSelectedOrderId(order.id);
-                                setOrdersMenuOpen(false);
-                              }}
-                            >
-                              <div className="order-main">
-                                <strong>{order.orderName || "طلبية"}</strong>
-                                <span>{getOrderDateKey(order) || "—"}</span>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))
-                : null}
-            </div>
-          </aside>
-        </div>
-
         <div className="homepickup-grid homepickup-grid--single pickup-two-col-layout">
 
           <main className="homepickup-card pickup-main-pane">
@@ -679,24 +635,26 @@ export default function HomePickupPage({ embedded = false }) {
             ) : (
               <>
                 <div className="homepickup-view-controls">
-                  <div className="homepickup-view-toggle">
-                    <button
-                      type="button"
-                      className={`homepickup-view-btn ${viewMode === "kanban" ? "active" : ""}`}
-                      onClick={() => setViewMode("kanban")}
-                    >
-                      Kanban
-                    </button>
-                    <button
-                      type="button"
-                      className={`homepickup-view-btn ${viewMode === "table" ? "active" : ""}`}
-                      onClick={() => setViewMode("table")}
-                    >
-                      Table
-                    </button>
-                  </div>
+                  {isDesktop ? (
+                    <div className="homepickup-view-toggle">
+                      <button
+                        type="button"
+                        className={`homepickup-view-btn ${viewMode === "kanban" ? "active" : ""}`}
+                        onClick={() => setViewMode("kanban")}
+                      >
+                        كانبان
+                      </button>
+                      <button
+                        type="button"
+                        className={`homepickup-view-btn ${viewMode === "table" ? "active" : ""}`}
+                        onClick={() => setViewMode("table")}
+                      >
+                        جدول
+                      </button>
+                    </div>
+                  ) : null}
                   <div className="homepickup-amount-display">
-                    <span className="homepickup-amount-label">Amount to collect</span>
+                    <span className="homepickup-amount-label">إجمالي المبلغ للتحصيل</span>
                     <strong className="homepickup-amount-value">{formatILS(amountToCollect)} ₪</strong>
                   </div>
                 </div>
@@ -706,7 +664,7 @@ export default function HomePickupPage({ embedded = false }) {
                     <b>{selectedOrder.orderName}</b>
                   </div>
                   <div className="homepickup-row pickup-main-actions">
-                    <span className="homepickup-pill">Items: {visiblePurchases.length}</span>
+                    <span className="homepickup-pill">عدد المشتريات: {visiblePurchases.length}</span>
                     {isRahaf ? (
                       <button
                         type="button"
@@ -714,7 +672,7 @@ export default function HomePickupPage({ embedded = false }) {
                         onClick={collectHomeMoney}
                         disabled={collecting}
                       >
-                        {collecting ? "Collecting..." : "Confirm collection"}
+                        {collecting ? "جارٍ التحصيل..." : "تم استلام تحصيل الكل"}
                       </button>
                     ) : null}
                   </div>
@@ -722,37 +680,37 @@ export default function HomePickupPage({ embedded = false }) {
 
                 {loadingPurchases ? (
                   <div className="homepickup-spacer">
-                    <SessionLoader label="Loading purchases..." />
+                    <SessionLoader label="جاري تحميل المشتريات..." />
                   </div>
                 ) : null}
 
                 {!loadingPurchases ? (
-                  viewMode === "kanban" ? (
+                  activeViewMode === "kanban" ? (
                     <div className="homepickup-kanban-grid">
                       <section className="homepickup-kanban-column">
                         <div className="homepickup-kanban-header">
-                          <h3>Not picked up</h3>
+                          <h3>غير مستلمة</h3>
                           <span>{kanbanNotPicked.length}</span>
                         </div>
                         <div className="homepickup-kanban-list">
                           {kanbanNotPicked.length ? (
                             kanbanNotPicked.map((purchase) => renderKanbanPurchaseCard(purchase))
                           ) : (
-                            <div className="homepickup-muted">No purchases</div>
+                            <div className="homepickup-muted">لا توجد مشتريات</div>
                           )}
                         </div>
                       </section>
 
                       <section className="homepickup-kanban-column homepickup-kanban-column-picked">
                         <div className="homepickup-kanban-header">
-                          <h3>Picked up</h3>
+                          <h3>تم الاستلام</h3>
                           <span>{kanbanPicked.length}</span>
                         </div>
                         <div className="homepickup-kanban-list">
                           {kanbanPicked.length ? (
                             kanbanPicked.map((purchase) => renderKanbanPurchaseCard(purchase))
                           ) : (
-                            <div className="homepickup-muted">No purchases</div>
+                            <div className="homepickup-muted">لا توجد مشتريات</div>
                           )}
                         </div>
                       </section>
@@ -762,18 +720,45 @@ export default function HomePickupPage({ embedded = false }) {
                       <table className="homepickup-table pickup-table">
                         <thead>
                           <tr>
-                            <th>Customer</th>
-                            <th>Price</th>
-                            {isRahaf ? <th>Paid</th> : null}
+                            <th>
+                              <span className="homepickup-th-label">
+                                <img src={customerHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                <span>الزبون</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="homepickup-th-label">
+                                <img src={priceHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                <span>السعر</span>
+                              </span>
+                            </th>
+                            {isRahaf ? (
+                              <th>
+                                <span className="homepickup-th-label">
+                                  <img src={priceHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                  <span>المدفوع</span>
+                                </span>
+                              </th>
+                            ) : null}
                             {isRahaf ? <th className="homepickup-edit-col" /> : null}
                             <th>
                               <span className="homepickup-th-label">
                                 <img src={imagesHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
-                                <span>Images</span>
+                                <span>الصور</span>
                               </span>
                             </th>
-                            <th>Picked up</th>
-                            <th>Pickup time</th>
+                            <th>
+                              <span className="homepickup-th-label">
+                                <img src={pickedHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                <span>تم الاستلام</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="homepickup-th-label">
+                                <img src={pickupTimeHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                <span>وقت الاستلام</span>
+                              </span>
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -784,7 +769,7 @@ export default function HomePickupPage({ embedded = false }) {
                               return (
                                 <tr key={purchase.id}>
                                   <td>
-                                    {isHighlight ? <div className="homepickup-highlight">✅ Search match</div> : null}
+                                    {isHighlight ? <div className="homepickup-highlight">✅ نتيجة البحث</div> : null}
                                     {purchase.customer_name || ""}
                                   </td>
                                   <td>{purchase.paid_price ?? purchase.price ?? ""}</td>
@@ -816,7 +801,7 @@ export default function HomePickupPage({ embedded = false }) {
                                               onClick={savePaidPrice}
                                               disabled={paidEditor.saving}
                                             >
-                                              ?
+                                              حفظ
                                             </button>
                                             <button
                                               type="button"
@@ -824,7 +809,7 @@ export default function HomePickupPage({ embedded = false }) {
                                               onClick={cancelEditPaid}
                                               disabled={paidEditor.saving}
                                             >
-                                              ?
+                                              إلغاء
                                             </button>
                                           </div>
                                         ) : (
@@ -847,13 +832,13 @@ export default function HomePickupPage({ embedded = false }) {
                                           <img
                                             key={`${purchase.id}-img-${index}`}
                                             src={url}
-                                            alt="image"
+                                            alt="صورة"
                                             onClick={() => openLightbox(purchase.images, index, purchase.customer_name || "")}
                                           />
                                         ))}
                                       </div>
                                     ) : (
-                                      "?"
+                                      "—"
                                     )}
                                   </td>
 
@@ -862,9 +847,9 @@ export default function HomePickupPage({ embedded = false }) {
                                       <PickupAnimatedCheckbox
                                         checked={!!purchase.picked_up}
                                         onChange={(event) => togglePicked(purchase.id, event.target.checked)}
-                                        ariaLabel={purchase.picked_up ? "Picked up" : "Not picked"}
+                                        ariaLabel={purchase.picked_up ? "تم الاستلام" : "غير مستلم"}
                                       />
-                                      <span>{purchase.picked_up ? "Picked up" : "Not picked"}</span>
+                                      <span>{purchase.picked_up ? "تم الاستلام" : "غير مستلم"}</span>
                                     </div>
                                   </td>
 
@@ -875,7 +860,7 @@ export default function HomePickupPage({ embedded = false }) {
                           ) : (
                             <tr>
                               <td colSpan={isRahaf ? 7 : 5} className="homepickup-muted">
-                                No purchases
+                                لا توجد مشتريات
                               </td>
                             </tr>
                           )}
@@ -888,6 +873,79 @@ export default function HomePickupPage({ embedded = false }) {
             )}
           </main>
         </div>
+      </div>
+
+      <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
+        <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+          <div className="pickup-orders-menu-head">
+            <div className="pickup-orders-menu-title">
+              <AppNavIcon name="package" className="icon" />
+              <strong>الطلبات</strong>
+              <b>{orders.length}</b>
+            </div>
+            <button
+              type="button"
+              className="pickup-orders-menu-close"
+              onClick={() => setOrdersMenuOpen(false)}
+              aria-label="إغلاق قائمة الطلبات"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="pickup-orders-menu-list">
+            {loadingOrders ? (
+              <div className="homepickup-spacer">
+                <SessionLoader label="جاري تحميل البيانات..." />
+              </div>
+            ) : null}
+            {!loadingOrders && error ? <div className="homepickup-error homepickup-spacer">{error}</div> : null}
+
+            {!loadingOrders && !error && !groupedOrders.length ? (
+              <div className="homepickup-muted homepickup-spacer">
+                لا يوجد بيانات
+                <div className="homepickup-refresh-row">
+                  <button className="homepickup-btn" type="button" onClick={loadOrders}>
+                    تحديث
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            {!loadingOrders && !error
+              ? groupedOrders.map((group) => (
+                  <section key={group.id} className="group-block">
+                    <div className="month-chip">
+                      <AppNavIcon name="calendar" className="icon" />
+                      <span>{group.label}</span>
+                      <b>({group.orders.length})</b>
+                    </div>
+                    <div className="group-orders">
+                      {group.orders.map((order) => {
+                        const active = String(selectedOrderId) === String(order.id);
+                        return (
+                          <button
+                            key={order.id}
+                            type="button"
+                            className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                            onClick={() => {
+                              setSelectedOrderId(order.id);
+                              setOrdersMenuOpen(false);
+                            }}
+                          >
+                            <div className="order-main">
+                              <strong>{order.orderName || "طلبية"}</strong>
+                              <span>{getOrderDateKey(order) || "—"}</span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                ))
+              : null}
+          </div>
+        </aside>
       </div>
 
       {lightbox.open ? (
