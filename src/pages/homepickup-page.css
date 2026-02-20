@@ -591,6 +591,48 @@
   }
 }
 
+@media (max-width: 767px) {
+  .homepickup-wrap {
+    padding: 10px;
+  }
+
+  .homepickup-search-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .homepickup-search-row .pickup-orders-menu-trigger,
+  .homepickup-search-box,
+  .homepickup-pill {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .homepickup-card {
+    border-radius: 16px;
+  }
+
+  .homepickup-row.pickup-main-header,
+  .homepickup-row.pickup-main-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .homepickup-row.pickup-main-header > *,
+  .homepickup-row.pickup-main-actions > * {
+    width: 100%;
+  }
+
+  .homepickup-row.pickup-main-actions > .homepickup-pill,
+  .homepickup-row.pickup-main-actions > .homepickup-btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 700px) {
   .homepickup-check {
     --size: 36px;

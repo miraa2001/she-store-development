@@ -537,6 +537,53 @@
   }
 }
 
+@media (max-width: 767px) {
+  .pickup-wrap {
+    padding: 10px;
+  }
+
+  .pickup-command-header {
+    padding: 10px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .pickup-command-main {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .pickup-role-chip {
+    min-height: 32px;
+  }
+
+  .pickup-tabs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+    gap: 6px;
+    overflow: visible;
+    padding: 6px;
+  }
+
+  .pickup-tab-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .pickup-tab-btn span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .pickup-tab-btn.active::after {
+    right: 6px;
+    top: 6px;
+    bottom: 6px;
+  }
+}
+
 /* ===================================
    Utility Classes
    =================================== */

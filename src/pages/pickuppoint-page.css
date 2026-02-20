@@ -546,6 +546,60 @@
   }
 }
 
+@media (max-width: 767px) {
+  .pickuppoint-wrap {
+    padding: 10px;
+  }
+
+  .pickuppoint-search-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .pickuppoint-search-row .pickup-orders-menu-trigger,
+  .pickuppoint-search-box,
+  .pickuppoint-pill,
+  .pickuppoint-pill--results {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .pickuppoint-pill--results {
+    min-width: 0;
+    min-height: 40px;
+    justify-content: center;
+  }
+
+  .pickuppoint-global-summary,
+  .pickuppoint-card {
+    border-radius: 16px;
+  }
+
+  .pickuppoint-global-summary .pickuppoint-row,
+  .pickuppoint-card > .pickuppoint-row,
+  .pickuppoint-row.pickup-main-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .pickuppoint-global-summary .pickuppoint-row > *,
+  .pickuppoint-card > .pickuppoint-row > *,
+  .pickuppoint-row.pickup-main-actions > * {
+    width: 100%;
+  }
+
+  .pickuppoint-global-summary .pickuppoint-pill,
+  .pickuppoint-global-summary .pickuppoint-btn,
+  .pickuppoint-row.pickup-main-actions > .pickuppoint-pill,
+  .pickuppoint-row.pickup-main-actions > .pickuppoint-btn {
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+
 @media (max-width: 700px) {
   .pickuppoint-check {
     --size: 36px;
