@@ -255,6 +255,13 @@
   position: relative;
 }
 
+.pickup-tab-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: 0 0 16px;
+}
+
 .pickup-tab-btn:hover {
   background: rgba(109, 63, 107, 0.08);
   color: #271425;

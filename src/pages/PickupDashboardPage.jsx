@@ -10,11 +10,14 @@ import PickupPointPage from "./PickupPointPage";
 import CollectionsPage from "./CollectionsPage";
 import "./pickup-dashboard-page.css";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import homePickupsIcon from "../assets/icons/pickup-dashboard/home-pickups.png";
+import laauraPickupsIcon from "../assets/icons/pickup-dashboard/laaura-pickups.png";
+import moneyCollectionsIcon from "../assets/icons/pickup-dashboard/money-collections.png";
 
 const TAB_CONFIG = {
-  home: { id: "home", label: "مستلمو البيت", icon: "🏠" },
-  aura: { id: "aura", label: "La Aura", icon: "📍" },
-  collections: { id: "collections", label: "تحصيل المبالغ", icon: "💰" }
+  home: { id: "home", label: "مستلمو البيت", icon: homePickupsIcon },
+  aura: { id: "aura", label: "La Aura", icon: laauraPickupsIcon },
+  collections: { id: "collections", label: "تحصيل المبالغ", icon: moneyCollectionsIcon }
 };
 
 export default function PickupDashboardPage() {
@@ -46,10 +49,7 @@ export default function PickupDashboardPage() {
   }
 
   function renderPanel(tabId) {
-    if (tabId === "home") {
-      if (profile.role === "rahaf") return <PickupPointPage embedded />;
-      return <HomePickupPage embedded />;
-    }
+    if (tabId === "home") return <HomePickupPage embedded />;
     if (tabId === "aura") return <PickupPointPage embedded />;
     if (tabId === "collections") return <CollectionsPage embedded />;
     return null;
@@ -185,7 +185,7 @@ export default function PickupDashboardPage() {
                   className={`pickup-tab-btn ${activeTab === tabId ? "active" : ""}`}
                   onClick={() => setActiveTab(tabId)}
                 >
-                  <span>{config.icon}</span>
+                  <img src={config.icon} alt="" className="pickup-tab-icon" aria-hidden="true" />
                   <span>{config.label}</span>
                 </button>
               );
