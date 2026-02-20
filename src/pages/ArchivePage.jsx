@@ -268,13 +268,13 @@ export default function ArchivePage() {
 
       <div className="archive-wrap">
         <div className="archive-topbar">
-          <div className="topbar-brand-with-logo">
-            <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
-            <div className="archive-brand">
-              <b>???????</b>
-              <div className="archive-muted">?????? ?? ??????? + ?????? ???? ?? ????? ??????</div>
+            <div className="topbar-brand-with-logo">
+              <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
+              <div className="archive-brand">
+                <b>الأرشيف</b>
+                <div className="archive-muted">طلبات تم تحصيلها + طلبات أقدم من الشهر الحالي</div>
+              </div>
             </div>
-          </div>
           <button type="button" className="archive-menu-btn" onClick={() => setSidebarOpen(true)}>
             ☰
           </button>
