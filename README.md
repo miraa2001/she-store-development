@@ -1,52 +1,107 @@
-# She-Store React App
+# She-Store Operations Dashboard
 
-This repository contains the React/Vite staff app for She-Store.
+Production-facing operations dashboard for managing orders, pickup workflows, collections, and finance reporting.
 
-## What Is Done
-- Core pages are native React: `#/orders`, `#/pickup-dashboard`, `#/pickuppoint`, `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/login`.
-- Orders screen is fully native (orders/view/customers tabs, add/edit/delete, undo, lightbox, WhatsApp actions, PDF export, Gemini extraction).
-- Pickup dashboard mounts native React panels (home pickup, pickup point, collections) instead of legacy iframes.
-- Shared helpers are extracted for auth profile, navigation/session, pickup semantics/notifications, date formatting, and search utilities.
-- 15-minute inactivity session timeout is enabled app-wide.
-- Legacy pages are still available under `#/legacy/:page` as fallback.
+## Overview
+This project is a React + Vite single-page application used by internal staff roles to operate the full order lifecycle:
+- Create and manage orders and purchases
+- Track pickup status across home pickup and pickup point flows
+- Monitor collected vs pending amounts
+- Export order summaries and send customer-facing WhatsApp templates
 
-## Local Run
+The app is role-aware and route-protected, with different capabilities for each staff account.
+
+## Tech Stack
+- React 18
+- Vite 5
+- React Router (hash routing for GitHub Pages)
+- Supabase (database + storage)
+- Styled CSS modules/files per page + shared design tokens
+
+## Core Product Areas
+- `#/orders` : primary order workspace (orders list, purchases, customers)
+- `#/pickup-dashboard` : pickup workbench with tabs for home, pickup point, and collections
+- `#/homepickup` : home pickup processing view
+- `#/pickuppoint` : pickup point processing view
+- `#/finance` : order-level and monthly financial breakdowns
+- `#/archive` : historical orders overview
+- `#/collections` : collection tracking view
+- `#/login` : authentication entry
+
+## Access Model
+Current role behavior is implemented in the app routing and UI controls:
+- `rahaf`: full operational access
+- `reem`, `rawand`: restricted/view-focused access
+- `laaura`: pickup point focused access
+
+## Architecture Notes
+- Data access is centralized in `src/lib/*` helpers (`orders`, `purchases`, `customers`, `pickup`, `session`, `whatsapp`).
+- Shared UI elements and patterns are in `src/components/common/*` and `src/components/orders/*`.
+- Pickup pages share styles through `src/pages/pickup-common.css` for consistent menus, lists, and states.
+- Sidebar navigation and role-based item visibility are configured in `src/lib/navigation.js`.
+
+## Notable Engineering Decisions
+- Hash-based routes to support static hosting on GitHub Pages.
+- Session inactivity timeout guard for safer shared-device usage.
+- Unified design system and icon structure under `src/assets/icons/*`.
+- Reusable orders menu pattern across pickup/finance/collections pages for consistent UX.
+
+## Local Development
 ```bash
 npm install
-# copy .env.example to .env and add your values
 npm run dev
 ```
 
-Required `.env` keys:
+Create `.env` from `.env.example` and set:
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `VITE_GEMINI_API_KEY` (optional unless Gemini extraction is used)
+- `VITE_GEMINI_API_KEY` (optional, only needed for extraction feature)
 
-## Current Routes
-- `#/` redirects to `#/login`
-- `#/migration` migration dashboard
-- `#/orders` native React orders dashboard
-- `#/pickup-dashboard` native React pickup dashboard
-- `#/finance`, `#/archive`, `#/collections`, `#/homepickup`, `#/pickuppoint` native React pages
-- `#/login` native React login
-- `#/legacy/:page` legacy iframe wrapper (`public/legacy`)
+## Build
+```bash
+npm run build
+npm run preview
+```
 
-## Validation
-- Use `MIGRATION_CHECKLIST.md` for role-based parity testing.
+## Deployment (GitHub Pages)
+Workflow file: `.github/workflows/deploy-react-pages.yml`
 
-## GitHub Pages Deploy
-Workflow: `.github/workflows/deploy-react-pages.yml`
+Requirements:
+1. Repository Pages source set to `GitHub Actions`
+2. Repository secrets configured:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_GEMINI_API_KEY`
 
-1. In repo settings, set Pages source to `GitHub Actions`.
-2. Add repository secrets:
-   - `VITE_SUPABASE_URL`
-   - `VITE_SUPABASE_ANON_KEY`
-   - `VITE_GEMINI_API_KEY`
-3. Push to `main` (or run workflow manually).
-4. Workflow builds the root Vite app and deploys `dist`.
+On push to `main`, the workflow builds and deploys `dist/`.
 
-## Go-Live
-1. Run parity QA from `MIGRATION_CHECKLIST.md` for all roles.
-2. Verify login/logout + 15-minute inactivity timeout.
-3. Verify PDF/Gemini/WhatsApp actions on production URL.
-4. Keep `#/legacy/*` only as temporary fallback until final sign-off.
+## QA / Verification
+Use `MIGRATION_CHECKLIST.md` for regression checks across roles and routes.
+
+Minimum release checks:
+- Login/logout + session timeout
+- Orders CRUD and customer flows
+- Pickup and collections updates
+- Finance calculations
+- PDF export and WhatsApp actions
+
+## Repository Structure
+```text
+src/
+  assets/
+  components/
+    common/
+    orders/
+    tabs/
+  hooks/
+  lib/
+  pages/
+public/
+  legacy/
+.github/workflows/
+```
+
+## Roadmap Candidates
+- Additional test coverage for role-specific UI states
+- Bundle size optimization via route-level code splitting
+- Stronger typed data contracts around Supabase responses
