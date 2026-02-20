@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
+import { formatDMY } from "../lib/dateFormat";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { signOutAndRedirect } from "../lib/session";
@@ -8,6 +9,11 @@ import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import placeHeaderIcon from "../assets/icons/finance/place.png";
+import countHeaderIcon from "../assets/icons/navigation/orders.png";
+import collectedHeaderIcon from "../assets/icons/pickup/picked-up.png";
+import amountHeaderIcon from "../assets/icons/pickup/price-ils.png";
+import "./pickup-common.css";
 import "./finance-page.css";
 
 function getOrderDate(order) {
@@ -19,6 +25,32 @@ function getOrderDate(order) {
   return Number.isNaN(fallback.getTime()) ? new Date() : fallback;
 }
 
+function getOrderDateKey(order) {
+  return formatDMY(order?.createdAt || order?.created_at);
+}
+
+function buildOrderGroups(orderList) {
+  const groups = [];
+  const map = new Map();
+
+  orderList.forEach((order) => {
+    const dateKey = getOrderDateKey(order) || "??? ????";
+    if (!map.has(dateKey)) {
+      const group = {
+        id: `group-${dateKey}`,
+        dateKey,
+        label: dateKey,
+        orders: []
+      };
+      map.set(dateKey, group);
+      groups.push(group);
+    }
+    map.get(dateKey).orders.push(order);
+  });
+
+  return groups;
+}
+
 function monthKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 }
@@ -28,11 +60,11 @@ function monthLabel(date) {
 }
 
 function monthNames() {
-  return ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+  return ["?????", "??????", "????", "?????", "????", "?????", "?????", "?????", "??????", "??????", "??????", "??????"];
 }
 
 function topPickupPoint(map) {
-  let top = "—";
+  let top = "?";
   let max = 0;
   map.forEach((value, key) => {
     if (value > max) {
@@ -46,6 +78,7 @@ function topPickupPoint(map) {
 export default function FinancePage({ embedded = false }) {
   const { profile } = useAuthProfile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
@@ -65,31 +98,56 @@ export default function FinancePage({ embedded = false }) {
   const loadData = useCallback(async () => {
     setLoading(true);
     setError("");
+
     try {
       const [ordersRes, purchasesRes] = await Promise.all([
-        sb.from("orders").select("id, order_name, order_date, created_at, spent_amount").order("created_at", { ascending: false }),
-        sb.from("purchases").select("order_id, price, paid_price, pickup_point, collected, picked_up")
+        sb
+          .from("orders")
+          .select("id, order_name, order_date, created_at, spent_amount")
+          .order("created_at", { ascending: false }),
+        sb
+          .from("purchases")
+          .select("order_id, price, paid_price, pickup_point, collected, picked_up")
       ]);
 
       if (ordersRes.error) throw ordersRes.error;
       if (purchasesRes.error) throw purchasesRes.error;
 
-      const orderRows = (ordersRes.data || []).map((o) => ({ ...o, spent_amount: parsePrice(o.spent_amount) }));
+      const orderRows = (ordersRes.data || []).map((order) => ({
+        ...order,
+        spent_amount: parsePrice(order.spent_amount)
+      }));
+
       const stats = new Map();
 
-      (purchasesRes.data || []).forEach((p) => {
-        if (!p.order_id) return;
-        if (!stats.has(p.order_id)) {
-          stats.set(p.order_id, { collected: 0, expected: 0, purchaseCount: 0, pickupTotals: new Map() });
+      (purchasesRes.data || []).forEach((purchase) => {
+        const orderId = purchase.order_id;
+        if (!orderId) return;
+
+        if (!stats.has(orderId)) {
+          stats.set(orderId, {
+            collected: 0,
+            expected: 0,
+            purchaseCount: 0,
+            pickupTotals: new Map(),
+            pickupCollectedTotals: new Map(),
+            pickupCounts: new Map()
+          });
         }
-        const s = stats.get(p.order_id);
-        const value = parsePrice(p.paid_price ?? p.price);
-        s.expected += value;
-        s.purchaseCount += 1;
-        if (p.collected) s.collected += value;
-        const pickup = String(p.pickup_point || "").trim();
-        if (pickup) {
-          s.pickupTotals.set(pickup, (s.pickupTotals.get(pickup) || 0) + value);
+
+        const stat = stats.get(orderId);
+        const value = parsePrice(purchase.paid_price ?? purchase.price);
+        const pickup = String(purchase.pickup_point || "").trim() || "??? ????";
+
+        stat.expected += value;
+        stat.purchaseCount += 1;
+
+        stat.pickupTotals.set(pickup, (stat.pickupTotals.get(pickup) || 0) + value);
+        stat.pickupCounts.set(pickup, (stat.pickupCounts.get(pickup) || 0) + 1);
+
+        if (purchase.collected) {
+          stat.collected += value;
+          stat.pickupCollectedTotals.set(pickup, (stat.pickupCollectedTotals.get(pickup) || 0) + value);
         }
       });
 
@@ -99,19 +157,31 @@ export default function FinancePage({ embedded = false }) {
       console.error(err);
       setOrders([]);
       setOrderStatsMap(new Map());
-      setError("تعذر تحميل بيانات المالية.");
+      setError("???? ????? ?????? ???????.");
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setSidebarOpen(false);
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+        setOrdersMenuOpen(false);
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!ordersMenuOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [ordersMenuOpen]);
 
   useEffect(() => {
     if (profile.loading || !profile.authenticated || profile.role !== "rahaf") return;
@@ -120,12 +190,19 @@ export default function FinancePage({ embedded = false }) {
 
   const orderRows = useMemo(() => {
     return orders.map((order) => {
-      const stats = orderStatsMap.get(order.id) || { collected: 0, expected: 0, purchaseCount: 0, pickupTotals: new Map() };
+      const stats = orderStatsMap.get(order.id) || {
+        collected: 0,
+        expected: 0,
+        purchaseCount: 0,
+        pickupTotals: new Map(),
+        pickupCollectedTotals: new Map(),
+        pickupCounts: new Map()
+      };
       const spent = parsePrice(order.spent_amount);
       const pending = Math.max(0, stats.expected - stats.collected);
       return {
         id: order.id,
-        name: order.order_name || "طلبية",
+        name: order.order_name || "?????",
         createdAt: order.created_at,
         orderDate: order.order_date,
         spent,
@@ -133,13 +210,17 @@ export default function FinancePage({ embedded = false }) {
         expected: stats.expected,
         pending,
         purchaseCount: stats.purchaseCount,
-        pickupTotals: stats.pickupTotals
+        pickupTotals: stats.pickupTotals,
+        pickupCollectedTotals: stats.pickupCollectedTotals,
+        pickupCounts: stats.pickupCounts
       };
     });
   }, [orderStatsMap, orders]);
 
+  const groupedOrders = useMemo(() => buildOrderGroups(orderRows), [orderRows]);
+
   const selectedOrder = useMemo(
-    () => orderRows.find((o) => String(o.id) === String(selectedOrderId)) || null,
+    () => orderRows.find((order) => String(order.id) === String(selectedOrderId)) || null,
     [orderRows, selectedOrderId]
   );
 
@@ -148,7 +229,9 @@ export default function FinancePage({ embedded = false }) {
       setSelectedOrderId("");
       return;
     }
-    setSelectedOrderId((prev) => (prev && orderRows.some((o) => String(o.id) === String(prev)) ? prev : orderRows[0].id));
+    setSelectedOrderId((prev) =>
+      prev && orderRows.some((order) => String(order.id) === String(prev)) ? prev : orderRows[0].id
+    );
   }, [orderRows]);
 
   useEffect(() => {
@@ -160,8 +243,34 @@ export default function FinancePage({ embedded = false }) {
     setSpentMessage("");
   }, [selectedOrder]);
 
+  const selectedOrderBreakdown = useMemo(() => {
+    if (!selectedOrder) return [];
+
+    const keys = new Set([
+      ...Array.from(selectedOrder.pickupTotals.keys()),
+      ...Array.from(selectedOrder.pickupCollectedTotals.keys()),
+      ...Array.from(selectedOrder.pickupCounts.keys())
+    ]);
+
+    const rows = Array.from(keys).map((pickup) => {
+      const expected = selectedOrder.pickupTotals.get(pickup) || 0;
+      const collected = selectedOrder.pickupCollectedTotals.get(pickup) || 0;
+      return {
+        pickup,
+        count: selectedOrder.pickupCounts.get(pickup) || 0,
+        collected,
+        expected,
+        pending: Math.max(0, expected - collected)
+      };
+    });
+
+    rows.sort((a, b) => b.expected - a.expected);
+    return rows;
+  }, [selectedOrder]);
+
   const monthSummary = useMemo(() => {
     const map = new Map();
+
     orderRows.forEach((order) => {
       const date = getOrderDate(order);
       const key = monthKey(date);
@@ -179,17 +288,20 @@ export default function FinancePage({ embedded = false }) {
           pickupTotals: new Map()
         });
       }
-      const item = map.get(key);
-      item.orders += 1;
-      item.purchases += order.purchaseCount;
-      item.collected += order.collected;
-      item.expected += order.expected;
-      item.spent += order.spent;
+
+      const bucket = map.get(key);
+      bucket.orders += 1;
+      bucket.purchases += order.purchaseCount;
+      bucket.collected += order.collected;
+      bucket.expected += order.expected;
+      bucket.spent += order.spent;
+
       order.pickupTotals.forEach((value, pickup) => {
-        item.pickupTotals.set(pickup, (item.pickupTotals.get(pickup) || 0) + value);
+        bucket.pickupTotals.set(pickup, (bucket.pickupTotals.get(pickup) || 0) + value);
       });
     });
-    const years = Array.from(new Set(Array.from(map.values()).map((m) => m.year))).sort((a, b) => a - b);
+
+    const years = Array.from(new Set(Array.from(map.values()).map((month) => month.year))).sort((a, b) => a - b);
     return { map, years };
   }, [orderRows]);
 
@@ -199,43 +311,67 @@ export default function FinancePage({ embedded = false }) {
       setSelectedMonthKey("");
       return;
     }
-    setSelectedYear((prev) => (prev !== null && monthSummary.years.includes(prev) ? prev : monthSummary.years[monthSummary.years.length - 1]));
+
+    setSelectedYear((prev) =>
+      prev !== null && monthSummary.years.includes(prev)
+        ? prev
+        : monthSummary.years[monthSummary.years.length - 1]
+    );
   }, [monthSummary.years]);
 
   useEffect(() => {
     if (selectedYear === null) return;
+
     const monthKeys = Array.from(monthSummary.map.values())
-      .filter((m) => m.year === selectedYear)
-      .map((m) => m.key)
+      .filter((month) => month.year === selectedYear)
+      .map((month) => month.key)
       .sort();
+
     if (!monthKeys.length) {
       setSelectedMonthKey("");
       return;
     }
+
     setSelectedMonthKey((prev) => (prev && monthKeys.includes(prev) ? prev : monthKeys[monthKeys.length - 1]));
   }, [monthSummary.map, selectedYear]);
 
-  const selectedMonth = useMemo(() => (selectedMonthKey ? monthSummary.map.get(selectedMonthKey) || null : null), [monthSummary.map, selectedMonthKey]);
+  const selectedMonth = useMemo(
+    () => (selectedMonthKey ? monthSummary.map.get(selectedMonthKey) || null : null),
+    [monthSummary.map, selectedMonthKey]
+  );
 
   async function saveSpent() {
     if (!selectedOrder || savingSpent) return;
+
     const value = spentInput.trim() === "" ? 0 : Number(spentInput);
     if (!Number.isFinite(value) || value < 0) {
-      setSpentMessage("المصروف غير صحيح.");
+      setSpentMessage("??????? ??? ????.");
       return;
     }
+
     setSavingSpent(true);
-    setSpentMessage("جاري الحفظ...");
-    const { error: updateError } = await sb.from("orders").update({ spent_amount: value }).eq("id", selectedOrder.id);
+    setSpentMessage("???? ?????...");
+
+    const { error: updateError } = await sb
+      .from("orders")
+      .update({ spent_amount: value })
+      .eq("id", selectedOrder.id);
+
     if (updateError) {
       console.error(updateError);
-      setSpentMessage("فشل الحفظ.");
+      setSpentMessage("??? ?????.");
       setSavingSpent(false);
       return;
     }
-    setOrders((prev) => prev.map((o) => (String(o.id) === String(selectedOrder.id) ? { ...o, spent_amount: value } : o)));
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        String(order.id) === String(selectedOrder.id) ? { ...order, spent_amount: value } : order
+      )
+    );
+
     setSavingSpent(false);
-    setSpentMessage("تم ✅");
+    setSpentMessage("?? ?");
     window.setTimeout(() => setSpentMessage(""), 1500);
   }
 
@@ -243,9 +379,37 @@ export default function FinancePage({ embedded = false }) {
     await signOutAndRedirect();
   }
 
-  if (profile.loading) return <div className="finance-page finance-state"><SessionLoader /></div>;
-  if (!profile.authenticated) return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد جلسة نشطة</h2><p>يلزم تسجيل الدخول أولًا.</p><a href="#/login" className="finance-link">فتح تسجيل الدخول</a></div></div>;
-  if (profile.role !== "rahaf") return <div className="finance-page finance-state"><div className="finance-note finance-note-danger"><h2>لا توجد صلاحية</h2><p>هذه الصفحة متاحة لحساب رهف فقط.</p><a href="#/orders" className="finance-link">العودة للطلبيات</a></div></div>;
+  if (profile.loading) {
+    return (
+      <div className="finance-page finance-state" dir="rtl">
+        <SessionLoader />
+      </div>
+    );
+  }
+
+  if (!profile.authenticated) {
+    return (
+      <div className="finance-page finance-state" dir="rtl">
+        <div className="finance-note finance-note-danger">
+          <h2>?? ???? ???? ????</h2>
+          <p>???? ????? ?????? ?????.</p>
+          <a href="#/login" className="finance-link">??? ????? ??????</a>
+        </div>
+      </div>
+    );
+  }
+
+  if (profile.role !== "rahaf") {
+    return (
+      <div className="finance-page finance-state" dir="rtl">
+        <div className="finance-note finance-note-danger">
+          <h2>?? ???? ??????</h2>
+          <p>??? ?????? ????? ????? ??? ???.</p>
+          <a href="#/orders" className="finance-link">?????? ???????</a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`finance-page ${embedded ? "embedded" : ""}`} dir="rtl">
@@ -255,16 +419,22 @@ export default function FinancePage({ embedded = false }) {
             className={`finance-overlay app-sidebar-overlay ${sidebarOpen ? "open" : ""}`}
             onClick={() => setSidebarOpen(false)}
           />
+
           <aside className={`finance-sidebar app-sidebar-drawer ${sidebarOpen ? "open" : ""}`}>
             <div className="finance-sidebar-head app-sidebar-head">
               <div className="app-sidebar-brand">
                 <SheStoreLogo className="app-sidebar-logo-link" imageClassName="app-sidebar-logo-img" />
-                <b>القائمة</b>
+                <b>???????</b>
               </div>
-              <button type="button" className="finance-menu-btn danger app-sidebar-close" onClick={() => setSidebarOpen(false)}>
-                ✕
+              <button
+                type="button"
+                className="finance-menu-btn danger app-sidebar-close"
+                onClick={() => setSidebarOpen(false)}
+              >
+                ?
               </button>
             </div>
+
             <div className="finance-sidebar-content app-sidebar-content">
               {sidebarLinks.map((item) => (
                 <a
@@ -277,109 +447,402 @@ export default function FinancePage({ embedded = false }) {
                   <span>{item.label}</span>
                 </a>
               ))}
+
               <button type="button" className="danger app-sidebar-link app-sidebar-danger" onClick={signOut}>
-                تسجيل خروج
+                ????? ????
               </button>
             </div>
           </aside>
         </>
       ) : null}
+
       <div className="finance-wrap">
         {!embedded ? (
           <div className="finance-topbar">
             <div className="topbar-brand-with-logo">
               <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
               <div className="finance-brand">
-                <b>المالية</b>
-                <div className="finance-muted">ملخص المصروفات والإيرادات</div>
+                <b>???????</b>
+                <div className="finance-muted">???? ????????? ??????????</div>
               </div>
             </div>
+
             <button type="button" className="finance-menu-btn" onClick={() => setSidebarOpen(true)}>
-              ☰
+              ?
             </button>
           </div>
         ) : null}
-        <div className="finance-tabs"><button type="button" className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`} onClick={() => setActiveTab("orders")}>احصاء الطلبات</button><button type="button" className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`} onClick={() => setActiveTab("months")}>احصاء شهري</button></div>
+
+        <div className="finance-tabs">
+          <button
+            type="button"
+            className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`}
+            onClick={() => setActiveTab("orders")}
+          >
+            ????? ????????
+          </button>
+          <button
+            type="button"
+            className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`}
+            onClick={() => setActiveTab("months")}
+          >
+            ????? ????
+          </button>
+        </div>
+
         {error ? <div className="finance-error">{error}</div> : null}
+
         {loading ? (
           <div className="finance-loading">
-            <SessionLoader label="جاري تحميل البيانات..." />
+            <SessionLoader label="???? ????? ????????..." />
           </div>
         ) : null}
+
         {!loading && activeTab === "orders" ? (
-          <div className="finance-grid">
-            <aside className="finance-card finance-list-card">
-              <div className="finance-row"><b>الطلبيات</b><span className="finance-pill">{orderRows.length}</span></div>
-              {!orderRows.length ? <div className="finance-empty">لا يوجد بيانات<div className="finance-refresh-row"><button type="button" className="finance-btn" onClick={loadData}>تحديث</button></div></div> : (
-                <div className="finance-order-groups">
-                  {orderRows.map((order) => (
-                    <button key={order.id} type="button" className={`finance-order-item ${String(order.id) === String(selectedOrderId) ? "active" : ""}`} onClick={() => setSelectedOrderId(order.id)}>
-                      <span>{order.name}</span><span className="finance-pill">فتح</span>
-                    </button>
-                  ))}
+          <>
+            <div className="finance-orders-menu-row">
+              <button
+                type="button"
+                className="pickup-orders-menu-trigger"
+                onClick={() => setOrdersMenuOpen(true)}
+                aria-label="??? ????? ???????"
+              >
+                <AppNavIcon name="package" className="icon" />
+                <span>????????</span>
+                <b>{orderRows.length}</b>
+              </button>
+
+              <span className="finance-pill">
+                {selectedOrder ? `????? ??????: ${selectedOrder.name}` : "?????? ?????"}
+              </span>
+            </div>
+
+            <div
+              className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`}
+              onClick={() => setOrdersMenuOpen(false)}
+            >
+              <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+                <div className="pickup-orders-menu-head">
+                  <div className="pickup-orders-menu-title">
+                    <AppNavIcon name="package" className="icon" />
+                    <strong>????????</strong>
+                    <b>{orderRows.length}</b>
+                  </div>
+                  <button
+                    type="button"
+                    className="pickup-orders-menu-close"
+                    onClick={() => setOrdersMenuOpen(false)}
+                    aria-label="????? ????? ???????"
+                  >
+                    ?
+                  </button>
                 </div>
-              )}
-            </aside>
-            <main className="finance-card">
-              {!selectedOrder ? <div className="finance-empty">اختاري طلبية من القائمة</div> : (
-                <>
-                  <div className="finance-row"><b>{selectedOrder.name}</b><span className={`finance-status ${selectedOrder.pending === 0 && selectedOrder.expected > 0 ? "success" : selectedOrder.expected === 0 ? "neutral" : "warning"}`}>{selectedOrder.expected === 0 ? "لا يوجد مشتريات" : selectedOrder.pending === 0 ? "مكتمل" : "قيد التحصيل"}</span></div>
-                  <div className="finance-kpi-grid">
-                    <div className="finance-kpi"><div className="label">تم تحصيله</div><div className="value">{formatILS(selectedOrder.collected)}</div></div>
-                    <div className="finance-kpi"><div className="label">متبقي للتحصيل</div><div className="value">{formatILS(selectedOrder.pending)}</div></div>
-                    <div className="finance-kpi"><div className="label">إجمالي متوقع</div><div className="value">{formatILS(selectedOrder.expected)}</div></div>
-                  </div>
-                  <div className="finance-kpi-grid compact">
-                    <div className="finance-kpi"><div className="label">صافي محصّل</div><div className={`value ${selectedOrder.collected - selectedOrder.spent < 0 ? "neg" : ""}`}>{formatILS(selectedOrder.collected - selectedOrder.spent)}</div></div>
-                    <div className="finance-kpi"><div className="label">صافي متوقع</div><div className={`value ${selectedOrder.expected - selectedOrder.spent < 0 ? "neg" : ""}`}>{formatILS(selectedOrder.expected - selectedOrder.spent)}</div></div>
-                    <div className="finance-kpi"><div className="label">المصروف</div><div className="value">{formatILS(selectedOrder.spent)}</div></div>
-                  </div>
-                  <div className="finance-spent-row">
-                    <label htmlFor="financeSpentInput">المصروف:</label>
-                    <input id="financeSpentInput" type="number" step="0.01" min="0" value={spentInput} onChange={(e) => setSpentInput(e.target.value)} placeholder="المصروف على الطلبية" />
-                    <button type="button" className="finance-btn primary" onClick={saveSpent} disabled={savingSpent}>{savingSpent ? "جاري الحفظ..." : "حفظ المصروف"}</button>
-                    {spentMessage ? <span className="finance-muted">{spentMessage}</span> : null}
-                  </div>
-                </>
-              )}
-            </main>
-          </div>
+
+                <div className="pickup-orders-menu-list">
+                  {!groupedOrders.length ? (
+                    <div className="finance-empty">
+                      ?? ???? ??????
+                      <div className="finance-refresh-row">
+                        <button type="button" className="finance-btn" onClick={loadData}>?????</button>
+                      </div>
+                    </div>
+                  ) : (
+                    groupedOrders.map((group) => (
+                      <section key={group.id} className="group-block">
+                        <div className="month-chip">
+                          <AppNavIcon name="calendar" className="icon" />
+                          <span>{group.label}</span>
+                          <b>({group.orders.length})</b>
+                        </div>
+
+                        <div className="group-orders">
+                          {group.orders.map((order) => {
+                            const active = String(order.id) === String(selectedOrderId);
+                            return (
+                              <button
+                                key={order.id}
+                                type="button"
+                                className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                                onClick={() => {
+                                  setSelectedOrderId(order.id);
+                                  setOrdersMenuOpen(false);
+                                }}
+                              >
+                                <div className="order-main">
+                                  <strong>{order.name || "?????"}</strong>
+                                  <span>{getOrderDateKey(order) || "?"}</span>
+                                </div>
+                                <div className="order-meta">
+                                  <small className="status at_pickup">{formatILS(order.collected)} ?</small>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </section>
+                    ))
+                  )}
+                </div>
+              </aside>
+            </div>
+
+            <div className="finance-grid finance-grid--single">
+              <main className="finance-card">
+                {!selectedOrder ? (
+                  <div className="finance-empty">?????? ????? ?? ???????</div>
+                ) : (
+                  <>
+                    <div className="finance-row">
+                      <b>{selectedOrder.name}</b>
+                      <span
+                        className={`finance-status ${
+                          selectedOrder.pending === 0 && selectedOrder.expected > 0
+                            ? "success"
+                            : selectedOrder.expected === 0
+                              ? "neutral"
+                              : "warning"
+                        }`}
+                      >
+                        {selectedOrder.expected === 0
+                          ? "?? ???? ???????"
+                          : selectedOrder.pending === 0
+                            ? "?????"
+                            : "??? ???????"}
+                      </span>
+                    </div>
+
+                    <div className="finance-kpi-grid">
+                      <div className="finance-kpi">
+                        <div className="label">?? ??????</div>
+                        <div className="value">{formatILS(selectedOrder.collected)}</div>
+                      </div>
+                      <div className="finance-kpi">
+                        <div className="label">????? ???????</div>
+                        <div className="value">{formatILS(selectedOrder.pending)}</div>
+                      </div>
+                      <div className="finance-kpi">
+                        <div className="label">?????? ?????</div>
+                        <div className="value">{formatILS(selectedOrder.expected)}</div>
+                      </div>
+                    </div>
+
+                    <div className="finance-kpi-grid compact">
+                      <div className="finance-kpi">
+                        <div className="label">???? ?????</div>
+                        <div className={`value ${selectedOrder.collected - selectedOrder.spent < 0 ? "neg" : ""}`}>
+                          {formatILS(selectedOrder.collected - selectedOrder.spent)}
+                        </div>
+                      </div>
+                      <div className="finance-kpi">
+                        <div className="label">???? ?????</div>
+                        <div className={`value ${selectedOrder.expected - selectedOrder.spent < 0 ? "neg" : ""}`}>
+                          {formatILS(selectedOrder.expected - selectedOrder.spent)}
+                        </div>
+                      </div>
+                      <div className="finance-kpi">
+                        <div className="label">???????</div>
+                        <div className="value">{formatILS(selectedOrder.spent)}</div>
+                      </div>
+                    </div>
+
+                    <div className="finance-spent-row">
+                      <label htmlFor="financeSpentInput">???????:</label>
+                      <input
+                        id="financeSpentInput"
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={spentInput}
+                        onChange={(event) => setSpentInput(event.target.value)}
+                        placeholder="??????? ??? ???????"
+                      />
+                      <button type="button" className="finance-btn primary" onClick={saveSpent} disabled={savingSpent}>
+                        {savingSpent ? "???? ?????..." : "??? ???????"}
+                      </button>
+                      {spentMessage ? <span className="finance-muted">{spentMessage}</span> : null}
+                    </div>
+
+                    <div className="finance-section-title finance-spacer-top">????? ??? ???? ????????</div>
+                    <div className="finance-table-wrap">
+                      <table className="finance-table">
+                        <thead>
+                          <tr>
+                            <th>
+                              <span className="finance-th-label">
+                                <img src={placeHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
+                                <span>???? ????????</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="finance-th-label">
+                                <img src={countHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
+                                <span>??? ????????</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="finance-th-label">
+                                <img src={collectedHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
+                                <span>?? ??????</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="finance-th-label">
+                                <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
+                                <span>?????</span>
+                              </span>
+                            </th>
+                            <th>
+                              <span className="finance-th-label">
+                                <img src={amountHeaderIcon} alt="" className="finance-th-icon" aria-hidden="true" />
+                                <span>?????? ?????</span>
+                              </span>
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {selectedOrderBreakdown.length ? (
+                            selectedOrderBreakdown.map((item) => (
+                              <tr key={item.pickup}>
+                                <td>{item.pickup}</td>
+                                <td>{item.count}</td>
+                                <td>{formatILS(item.collected)}</td>
+                                <td>{formatILS(item.pending)}</td>
+                                <td>{formatILS(item.expected)}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={5} className="finance-muted">?? ???? ??????</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                )}
+              </main>
+            </div>
+          </>
         ) : null}
+
         {!loading && activeTab === "months" ? (
           <main className="finance-card">
-            <div className="finance-row center"><div className="finance-section-title">ملخص شهري</div></div>
+            <div className="finance-row center">
+              <div className="finance-section-title">???? ????</div>
+            </div>
+
             <div className="finance-month-picker">
               <div className="finance-month-header">
-                <button type="button" className="finance-btn mini" disabled={!monthSummary.years.length || selectedYear === monthSummary.years[0]} onClick={() => setSelectedYear((v) => (v === null ? v : monthSummary.years[Math.max(0, monthSummary.years.indexOf(v) - 1)]))}>‹</button>
-                <b>{selectedYear ?? "—"}</b>
-                <button type="button" className="finance-btn mini" disabled={!monthSummary.years.length || selectedYear === monthSummary.years[monthSummary.years.length - 1]} onClick={() => setSelectedYear((v) => (v === null ? v : monthSummary.years[Math.min(monthSummary.years.length - 1, monthSummary.years.indexOf(v) + 1)]))}>›</button>
+                <button
+                  type="button"
+                  className="finance-btn mini"
+                  disabled={!monthSummary.years.length || selectedYear === monthSummary.years[0]}
+                  onClick={() =>
+                    setSelectedYear((prev) =>
+                      prev === null
+                        ? prev
+                        : monthSummary.years[Math.max(0, monthSummary.years.indexOf(prev) - 1)]
+                    )
+                  }
+                >
+                  ?
+                </button>
+                <b>{selectedYear ?? "?"}</b>
+                <button
+                  type="button"
+                  className="finance-btn mini"
+                  disabled={!monthSummary.years.length || selectedYear === monthSummary.years[monthSummary.years.length - 1]}
+                  onClick={() =>
+                    setSelectedYear((prev) =>
+                      prev === null
+                        ? prev
+                        : monthSummary.years[Math.min(monthSummary.years.length - 1, monthSummary.years.indexOf(prev) + 1)]
+                    )
+                  }
+                >
+                  ?
+                </button>
               </div>
+
               <div className="finance-month-grid">
-                {monthNames().map((name, idx) => {
-                  const key = `${selectedYear}-${String(idx + 1).padStart(2, "0")}`;
+                {monthNames().map((name, index) => {
+                  const key = `${selectedYear}-${String(index + 1).padStart(2, "0")}`;
                   const hasData = monthSummary.map.has(key);
-                  return <button key={name} type="button" className={`finance-month-btn ${selectedMonthKey === key ? "active" : ""}`} disabled={!hasData} onClick={() => setSelectedMonthKey(key)}>{name}</button>;
+                  return (
+                    <button
+                      key={name}
+                      type="button"
+                      className={`finance-month-btn ${selectedMonthKey === key ? "active" : ""}`}
+                      disabled={!hasData}
+                      onClick={() => setSelectedMonthKey(key)}
+                    >
+                      {name}
+                    </button>
+                  );
                 })}
               </div>
             </div>
-            {!selectedMonth ? <div className="finance-empty">لا يوجد بيانات شهرية</div> : (
+
+            {!selectedMonth ? (
+              <div className="finance-empty">?? ???? ?????? ?????</div>
+            ) : (
               <div className="finance-month-shell">
-                <div className="finance-row"><b>{selectedMonth.label}</b><span className={`finance-status ${selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected ? "success" : "warning"}`}>{selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected ? "مكتمل" : "قيد التحصيل"}</span></div>
+                <div className="finance-row">
+                  <b>{selectedMonth.label}</b>
+                  <span
+                    className={`finance-status ${
+                      selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected
+                        ? "success"
+                        : "warning"
+                    }`}
+                  >
+                    {selectedMonth.expected > 0 && selectedMonth.collected >= selectedMonth.expected
+                      ? "?????"
+                      : "??? ???????"}
+                  </span>
+                </div>
+
                 <div className="finance-health-row">
-                  <span className="finance-pill">الطلبات: {selectedMonth.orders}</span>
-                  <span className="finance-pill">المشتريات: {selectedMonth.purchases}</span>
-                  <span className="finance-pill">نسبة التحصيل: {selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0}%</span>
-                  <span className="finance-pill">أكبر نقطة: {topPickupPoint(selectedMonth.pickupTotals)}</span>
+                  <span className="finance-pill">????????: {selectedMonth.orders}</span>
+                  <span className="finance-pill">?????????: {selectedMonth.purchases}</span>
+                  <span className="finance-pill">
+                    ???? ???????: {selectedMonth.expected > 0 ? Math.round((selectedMonth.collected / selectedMonth.expected) * 100) : 0}%
+                  </span>
+                  <span className="finance-pill">???? ????: {topPickupPoint(selectedMonth.pickupTotals)}</span>
                 </div>
+
                 <div className="finance-kpi-grid">
-                  <div className="finance-kpi"><div className="label">تم تحصيله</div><div className="value">{formatILS(selectedMonth.collected)}</div></div>
-                  <div className="finance-kpi"><div className="label">متبقي للتحصيل</div><div className="value">{formatILS(Math.max(0, selectedMonth.expected - selectedMonth.collected))}</div></div>
-                  <div className="finance-kpi"><div className="label">إجمالي متوقع</div><div className="value">{formatILS(selectedMonth.expected)}</div></div>
+                  <div className="finance-kpi">
+                    <div className="label">?? ??????</div>
+                    <div className="value">{formatILS(selectedMonth.collected)}</div>
+                  </div>
+                  <div className="finance-kpi">
+                    <div className="label">????? ???????</div>
+                    <div className="value">{formatILS(Math.max(0, selectedMonth.expected - selectedMonth.collected))}</div>
+                  </div>
+                  <div className="finance-kpi">
+                    <div className="label">?????? ?????</div>
+                    <div className="value">{formatILS(selectedMonth.expected)}</div>
+                  </div>
                 </div>
+
                 <div className="finance-kpi-grid compact">
-                  <div className="finance-kpi"><div className="label">صافي محصّل</div><div className={`value ${selectedMonth.collected - selectedMonth.spent < 0 ? "neg" : ""}`}>{formatILS(selectedMonth.collected - selectedMonth.spent)}</div></div>
-                  <div className="finance-kpi"><div className="label">صافي متوقع</div><div className={`value ${selectedMonth.expected - selectedMonth.spent < 0 ? "neg" : ""}`}>{formatILS(selectedMonth.expected - selectedMonth.spent)}</div></div>
-                  <div className="finance-kpi"><div className="label">المصروف</div><div className="value">{formatILS(selectedMonth.spent)}</div></div>
+                  <div className="finance-kpi">
+                    <div className="label">???? ?????</div>
+                    <div className={`value ${selectedMonth.collected - selectedMonth.spent < 0 ? "neg" : ""}`}>
+                      {formatILS(selectedMonth.collected - selectedMonth.spent)}
+                    </div>
+                  </div>
+                  <div className="finance-kpi">
+                    <div className="label">???? ?????</div>
+                    <div className={`value ${selectedMonth.expected - selectedMonth.spent < 0 ? "neg" : ""}`}>
+                      {formatILS(selectedMonth.expected - selectedMonth.spent)}
+                    </div>
+                  </div>
+                  <div className="finance-kpi">
+                    <div className="label">???????</div>
+                    <div className="value">{formatILS(selectedMonth.spent)}</div>
+                  </div>
                 </div>
               </div>
             )}

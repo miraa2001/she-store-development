@@ -185,6 +185,10 @@
   align-items: start;
 }
 
+.finance-grid--single {
+  grid-template-columns: 1fr;
+}
+
 .finance-card {
   background: #fff;
   border: 1px solid #e7dfeb;
@@ -223,6 +227,14 @@
   background: #f1f4f2;
   padding: 6px 10px;
   font-size: 12px;
+}
+
+.finance-orders-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
 }
 
 .finance-order-groups {
@@ -430,6 +442,54 @@
   gap: 10px;
 }
 
+.finance-spacer-top {
+  margin-top: 12px;
+}
+
+.finance-table-wrap {
+  overflow-x: auto;
+  direction: ltr;
+  max-width: 100%;
+  margin-top: 8px;
+  border-radius: 12px;
+}
+
+.finance-table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+  margin-left: auto;
+}
+
+.finance-table th,
+.finance-table td {
+  border-bottom: 1px solid #e5ece9;
+  padding: 10px;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.finance-table th {
+  color: #64748b;
+  font-size: 13px;
+  background: #fff;
+}
+
+.finance-th-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.finance-th-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex: 0 0 16px;
+}
+
 .finance-health-row {
   display: flex;
   gap: 8px;
@@ -578,6 +638,11 @@
 
   .finance-grid {
     grid-template-columns: 1fr;
+  }
+
+  .finance-orders-menu-row {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .finance-list-card {

@@ -115,14 +115,10 @@ export default function CollectionsPage({ embedded = false }) {
           const list = order.purchases || [];
           if (!list.length) return false;
 
-          const hasPickupPurchases = list.some(
-            (p) => p.pickup_point === PICKUP_HOME || isAuraPickup(p.pickup_point)
-          );
-          if (!hasPickupPurchases) return false;
-
-          return list.every((p) => !!p.collected);
+          return list.some((p) => p.pickup_point === PICKUP_HOME || isAuraPickup(p.pickup_point));
         })
         .map((order) => {
+          const allCollected = (order.purchases || []).every((purchase) => !!purchase.collected);
           const collectedTotal = (order.purchases || []).reduce((sum, purchase) => {
             if (!purchase.collected) return sum;
             return sum + parsePrice(purchase.paid_price ?? purchase.price);
@@ -131,6 +127,7 @@ export default function CollectionsPage({ embedded = false }) {
             id: order.id,
             orderName: order.order_name || "",
             createdAt: order.created_at,
+            allCollected,
             collectedTotal
           };
         });
@@ -169,8 +166,8 @@ export default function CollectionsPage({ embedded = false }) {
       if (purchasesError) throw purchasesError;
 
       const list = data || [];
-      setHomeList(list.filter((purchase) => purchase.pickup_point === PICKUP_HOME && purchase.collected));
-      setPickupList(list.filter((purchase) => isAuraPickup(purchase.pickup_point) && purchase.collected));
+      setHomeList(list.filter((purchase) => purchase.pickup_point === PICKUP_HOME));
+      setPickupList(list.filter((purchase) => isAuraPickup(purchase.pickup_point)));
     } catch (err) {
       console.error(err);
       setError("تعذر تحميل بيانات التحصيل.");
@@ -397,7 +394,9 @@ export default function CollectionsPage({ embedded = false }) {
                 <div className="collections-row">
                   <div>
                     <b>{selectedOrder.orderName}</b>
-                    <span className="collections-status-badge">تم التحصيل</span>
+                    <span className="collections-status-badge">
+                      {selectedOrder.allCollected ? "تم التحصيل" : "قيد التحصيل"}
+                    </span>
                   </div>
                   <div className="collections-row">
                     <span className="collections-pill">عدد المشتريات: {homeList.length + pickupList.length}</span>
