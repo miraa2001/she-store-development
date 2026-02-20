@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatDMY } from "../lib/dateFormat";
@@ -53,6 +54,7 @@ export default function CollectionsPage({ embedded = false }) {
   const [pickupList, setPickupList] = useState([]);
   const location = useLocation();
   const sidebarLinks = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
+  const ordersMenuPortalTarget = typeof document !== "undefined" ? document.body : null;
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -405,82 +407,90 @@ export default function CollectionsPage({ embedded = false }) {
         </div>
       </div>
 
-        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
-          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="pickup-orders-menu-head">
-              <div className="pickup-orders-menu-title">
-                <AppNavIcon name="package" className="icon" />
-                <strong>الطلبات</strong>
-                <b>{orders.length}</b>
-              </div>
-              <button
-                type="button"
-                className="pickup-orders-menu-close"
-                onClick={() => setOrdersMenuOpen(false)}
-                aria-label="إغلاق قائمة الطلبات"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="pickup-orders-menu-list">
-              {loadingOrders ? (
-                <div className="collections-spacer">
-                  <SessionLoader label="جاري تحميل البيانات..." />
-                </div>
-              ) : null}
-              {!loadingOrders && error ? <div className="collections-error collections-spacer">{error}</div> : null}
-
-              {!loadingOrders && !error && !groupedOrders.length ? (
-                <div className="collections-muted collections-spacer">
-                  لا يوجد بيانات
-                  <div className="collections-refresh-row">
-                    <button className="collections-btn" type="button" onClick={loadOrders}>
-                      تحديث
-                    </button>
+      {ordersMenuPortalTarget
+        ? createPortal(
+            <div
+              className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`}
+              onClick={() => setOrdersMenuOpen(false)}
+            >
+              <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+                <div className="pickup-orders-menu-head">
+                  <div className="pickup-orders-menu-title">
+                    <AppNavIcon name="package" className="icon" />
+                    <strong>الطلبات</strong>
+                    <b>{orders.length}</b>
                   </div>
+                  <button
+                    type="button"
+                    className="pickup-orders-menu-close"
+                    onClick={() => setOrdersMenuOpen(false)}
+                    aria-label="إغلاق قائمة الطلبات"
+                  >
+                    ✕
+                  </button>
                 </div>
-              ) : null}
 
-              {!loadingOrders && !error
-                ? groupedOrders.map((group) => (
-                    <section key={group.id} className="group-block">
-                      <div className="month-chip">
-                        <AppNavIcon name="calendar" className="icon" />
-                        <span>{group.label}</span>
-                        <b>({group.orders.length})</b>
-                      </div>
+                <div className="pickup-orders-menu-list">
+                  {loadingOrders ? (
+                    <div className="collections-spacer">
+                      <SessionLoader label="جاري تحميل البيانات..." />
+                    </div>
+                  ) : null}
+                  {!loadingOrders && error ? <div className="collections-error collections-spacer">{error}</div> : null}
 
-                      <div className="group-orders">
-                        {group.orders.map((order) => {
-                          const active = String(selectedOrderId) === String(order.id);
-                          return (
-                            <button
-                              key={order.id}
-                              type="button"
-                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                              onClick={() => {
-                                setSelectedOrderId(order.id);
-                                setOrdersMenuOpen(false);
-                              }}
-                            >
-                              <div className="order-main">
-                                <strong>{order.orderName || "طلبية"}</strong>
-                                <span>{getOrderDateKey(order) || "—"}</span>
-                              </div>
-                              <div className="order-meta">
-                                <b>{formatILS(order.collectedTotal)} ₪</b>
-                              </div>
-                            </button>
-                          );
-                        })}
+                  {!loadingOrders && !error && !groupedOrders.length ? (
+                    <div className="collections-muted collections-spacer">
+                      لا يوجد بيانات
+                      <div className="collections-refresh-row">
+                        <button className="collections-btn" type="button" onClick={loadOrders}>
+                          تحديث
+                        </button>
                       </div>
-                    </section>
-                  ))
-                : null}
-            </div>
-          </aside>
-        </div>
+                    </div>
+                  ) : null}
+
+                  {!loadingOrders && !error
+                    ? groupedOrders.map((group) => (
+                        <section key={group.id} className="group-block">
+                          <div className="month-chip">
+                            <AppNavIcon name="calendar" className="icon" />
+                            <span>{group.label}</span>
+                            <b>({group.orders.length})</b>
+                          </div>
+
+                          <div className="group-orders">
+                            {group.orders.map((order) => {
+                              const active = String(selectedOrderId) === String(order.id);
+                              return (
+                                <button
+                                  key={order.id}
+                                  type="button"
+                                  className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                                  onClick={() => {
+                                    setSelectedOrderId(order.id);
+                                    setOrdersMenuOpen(false);
+                                  }}
+                                >
+                                  <div className="order-main">
+                                    <strong>{order.orderName || "طلبية"}</strong>
+                                    <span>{getOrderDateKey(order) || "—"}</span>
+                                  </div>
+                                  <div className="order-meta">
+                                    <b>{formatILS(order.collectedTotal)} ₪</b>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))
+                    : null}
+                </div>
+              </aside>
+            </div>,
+            ordersMenuPortalTarget
+          )
+        : null}
 
     </div>
   );

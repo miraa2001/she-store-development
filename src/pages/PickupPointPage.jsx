@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation } from "react-router-dom";
 import { formatDMY, formatDateTime } from "../lib/dateFormat";
 import { useAuthProfile } from "../hooks/useAuthProfile";
@@ -102,6 +103,7 @@ export default function PickupPointPage({ embedded = false }) {
     () => (isRahaf ? getOrdersNavItems(profile.role) : []),
     [isRahaf, profile.role]
   );
+  const ordersMenuPortalTarget = typeof document !== "undefined" ? document.body : null;
   const auraSearchPostFilter = useCallback(
     (purchase) => isAuraPickup(purchase.pickup_point),
     []
@@ -819,112 +821,120 @@ export default function PickupPointPage({ embedded = false }) {
         </div>
       </div>
 
-        <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
-          <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
-            <div className="pickup-orders-menu-head">
-              <div className="pickup-orders-menu-title">
-                <AppNavIcon name="package" className="icon" />
-                <strong>الطلبات</strong>
-                <b>{orders.length}</b>
-              </div>
-              <button
-                type="button"
-                className="pickup-orders-menu-close"
-                onClick={() => setOrdersMenuOpen(false)}
-                aria-label="إغلاق قائمة الطلبات"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="pickup-orders-menu-list">
-              {loadingOrders ? (
-                <div className="pickuppoint-spacer">
-                  <SessionLoader label="جاري تحميل البيانات..." />
-                </div>
-              ) : null}
-              {!loadingOrders && error ? <div className="pickuppoint-error pickuppoint-spacer">{error}</div> : null}
-
-              {!loadingOrders && !error && !(isLaaura ? mergedDateOrders.length : groupedOrders.length) ? (
-                <div className="pickuppoint-muted pickuppoint-spacer">
-                  لا يوجد بيانات
-                  <div className="pickuppoint-refresh-row">
-                    <button className="pickuppoint-btn" type="button" onClick={loadOrders}>
-                      تحديث
-                    </button>
+      {ordersMenuPortalTarget
+        ? createPortal(
+            <div
+              className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`}
+              onClick={() => setOrdersMenuOpen(false)}
+            >
+              <aside className="pickup-orders-menu-panel" onClick={(event) => event.stopPropagation()}>
+                <div className="pickup-orders-menu-head">
+                  <div className="pickup-orders-menu-title">
+                    <AppNavIcon name="package" className="icon" />
+                    <strong>الطلبات</strong>
+                    <b>{orders.length}</b>
                   </div>
+                  <button
+                    type="button"
+                    className="pickup-orders-menu-close"
+                    onClick={() => setOrdersMenuOpen(false)}
+                    aria-label="إغلاق قائمة الطلبات"
+                  >
+                    ✕
+                  </button>
                 </div>
-              ) : null}
 
-              {!loadingOrders && !error && isLaaura && mergedDateOrders.length ? (
-                <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
-                  {mergedDateOrders.map((item) => {
-                    const active = String(item.id) === String(selectedItemId);
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                        onClick={() => {
-                          setSelectedItemId(item.id);
-                          setOrdersMenuOpen(false);
-                        }}
-                      >
-                        <div className="order-main">
-                          <strong>{item.label}</strong>
-                          <span>{item.orderIds.length > 1 ? `${item.orderIds.length} طلبيات` : "طلبية واحدة"}</span>
-                        </div>
-                        <div className="order-meta">
-                          <small className="status at_pickup">نقطة الاستلام</small>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : null}
+                <div className="pickup-orders-menu-list">
+                  {loadingOrders ? (
+                    <div className="pickuppoint-spacer">
+                      <SessionLoader label="جاري تحميل البيانات..." />
+                    </div>
+                  ) : null}
+                  {!loadingOrders && error ? <div className="pickuppoint-error pickuppoint-spacer">{error}</div> : null}
 
-              {!loadingOrders && !error && !isLaaura && groupedOrders.length ? (
-                <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
-                  {groupedOrders.map((group) => (
-                    <section key={group.id} className="group-block">
-                      <div className="month-chip">
-                        <AppNavIcon name="calendar" className="icon" />
-                        <span>{group.label}</span>
-                        <b>({group.orders.length})</b>
+                  {!loadingOrders && !error && !(isLaaura ? mergedDateOrders.length : groupedOrders.length) ? (
+                    <div className="pickuppoint-muted pickuppoint-spacer">
+                      لا يوجد بيانات
+                      <div className="pickuppoint-refresh-row">
+                        <button className="pickuppoint-btn" type="button" onClick={loadOrders}>
+                          تحديث
+                        </button>
                       </div>
+                    </div>
+                  ) : null}
 
-                      <div className="group-orders">
-                        {group.orders.map((order) => {
-                          const active = String(order.id) === String(selectedItemId);
-                          return (
-                            <button
-                              key={order.id}
-                              type="button"
-                              className={`order-row order-row-btn ${active ? "selected" : ""}`}
-                              onClick={() => {
-                                setSelectedItemId(order.id);
-                                setOrdersMenuOpen(false);
-                              }}
-                            >
-                              <div className="order-main">
-                                <strong>{order.orderName || "طلبية"}</strong>
-                                <span>{getOrderDateKey(order) || "—"}</span>
-                              </div>
+                  {!loadingOrders && !error && isLaaura && mergedDateOrders.length ? (
+                    <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
+                      {mergedDateOrders.map((item) => {
+                        const active = String(item.id) === String(selectedItemId);
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                            onClick={() => {
+                              setSelectedItemId(item.id);
+                              setOrdersMenuOpen(false);
+                            }}
+                          >
+                            <div className="order-main">
+                              <strong>{item.label}</strong>
+                              <span>{item.orderIds.length > 1 ? `${item.orderIds.length} طلبيات` : "طلبية واحدة"}</span>
+                            </div>
+                            <div className="order-meta">
+                              <small className="status at_pickup">نقطة الاستلام</small>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
 
-                              <div className="order-meta">
-                                <small className="status at_pickup">نقطة الاستلام</small>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  ))}
+                  {!loadingOrders && !error && !isLaaura && groupedOrders.length ? (
+                    <div className="workspace-list pickuppoint-orders-list pickup-orders-list">
+                      {groupedOrders.map((group) => (
+                        <section key={group.id} className="group-block">
+                          <div className="month-chip">
+                            <AppNavIcon name="calendar" className="icon" />
+                            <span>{group.label}</span>
+                            <b>({group.orders.length})</b>
+                          </div>
+
+                          <div className="group-orders">
+                            {group.orders.map((order) => {
+                              const active = String(order.id) === String(selectedItemId);
+                              return (
+                                <button
+                                  key={order.id}
+                                  type="button"
+                                  className={`order-row order-row-btn ${active ? "selected" : ""}`}
+                                  onClick={() => {
+                                    setSelectedItemId(order.id);
+                                    setOrdersMenuOpen(false);
+                                  }}
+                                >
+                                  <div className="order-main">
+                                    <strong>{order.orderName || "طلبية"}</strong>
+                                    <span>{getOrderDateKey(order) || "—"}</span>
+                                  </div>
+
+                                  <div className="order-meta">
+                                    <small className="status at_pickup">نقطة الاستلام</small>
+                                  </div>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
-            </div>
-          </aside>
-        </div>
+              </aside>
+            </div>,
+            ordersMenuPortalTarget
+          )
+        : null}
 
     </div>
   );

@@ -134,7 +134,7 @@
   width: 100vw;
   height: 100dvh;
   background: rgba(15, 23, 42, 0.35);
-  z-index: 2600;
+  z-index: 6000;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.16s ease;
@@ -159,7 +159,7 @@
   transition: transform 0.18s ease;
   display: flex;
   flex-direction: column;
-  z-index: 2610;
+  z-index: 6010;
 }
 
 .pickup-orders-menu-overlay.open .pickup-orders-menu-panel {
