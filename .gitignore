@@ -1,15 +1,7 @@
 UI_SPEC.md
-Redesign Header and Sidebar
-Redesign Header and Sidebar/*
-Redesign Header and Sidebar.zip
 node_modules/
 dist/
 .env
 .env.*
 !.env.example
-files.zip
-OrdersBottomSheet.jsx
-OrderDrawer.jsx
-WelcomePage.jsx
-.tmp_pickup_upgrade
-.tmp_pickup_upgrade/*
+PickupDashboardRedesign.jsx
