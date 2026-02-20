@@ -571,6 +571,12 @@
     justify-content: center;
   }
 
+  .pickuppoint-pill {
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
   .pickuppoint-global-summary,
   .pickuppoint-card {
     border-radius: 16px;

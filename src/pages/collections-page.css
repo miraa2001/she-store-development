@@ -395,3 +395,57 @@
     background: linear-gradient(to left, #f6f8f7, rgba(246, 248, 247, 0));
   }
 }
+
+@media (max-width: 767px) {
+  .collections-wrap {
+    padding: 10px;
+  }
+
+  .collections-topbar {
+    gap: 8px;
+  }
+
+  .collections-orders-menu-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .collections-orders-menu-row .pickup-orders-menu-trigger,
+  .collections-orders-menu-row .collections-pill {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .collections-card {
+    border-radius: 16px;
+    padding: 10px;
+  }
+
+  .collections-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .collections-row > * {
+    width: 100%;
+  }
+
+  .collections-row .collections-pill,
+  .collections-row .collections-btn {
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .collections-section-title {
+    width: 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}

@@ -451,3 +451,54 @@
     background: linear-gradient(to left, #f6f8f7, rgba(246, 248, 247, 0));
   }
 }
+
+@media (max-width: 767px) {
+  .archive-wrap {
+    padding: 10px;
+  }
+
+  .archive-topbar {
+    gap: 8px;
+  }
+
+  .archive-orders-menu-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .archive-orders-menu-row .pickup-orders-menu-trigger,
+  .archive-orders-menu-row .archive-pill {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .archive-main-shell {
+    gap: 8px;
+  }
+
+  .archive-card {
+    border-radius: 16px;
+    padding: 10px;
+  }
+
+  .archive-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .archive-row > * {
+    width: 100%;
+  }
+
+  .archive-row .archive-pill,
+  .archive-row .archive-btn {
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+}

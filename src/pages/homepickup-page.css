@@ -609,6 +609,12 @@
     justify-self: stretch;
   }
 
+  .homepickup-pill {
+    min-height: 44px;
+    justify-content: center;
+    text-align: center;
+  }
+
   .homepickup-card {
     border-radius: 16px;
   }
