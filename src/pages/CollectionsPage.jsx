@@ -113,10 +113,14 @@ export default function CollectionsPage({ embedded = false }) {
       const filtered = (data || [])
         .filter((order) => {
           const list = order.purchases || [];
-          return (
-            list.some((p) => p.pickup_point === PICKUP_HOME && p.collected) ||
-            list.some((p) => isAuraPickup(p.pickup_point) && p.collected)
+          if (!list.length) return false;
+
+          const hasPickupPurchases = list.some(
+            (p) => p.pickup_point === PICKUP_HOME || isAuraPickup(p.pickup_point)
           );
+          if (!hasPickupPurchases) return false;
+
+          return list.every((p) => !!p.collected);
         })
         .map((order) => {
           const collectedTotal = (order.purchases || []).reduce((sum, purchase) => {
