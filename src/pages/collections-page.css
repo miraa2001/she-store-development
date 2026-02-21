@@ -190,11 +190,14 @@
 .collections-pill {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   border: 1px solid #d8e3de;
   border-radius: 999px;
   background: #f1f4f2;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 4px 8px;
+  font-size: 11px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .collections-orders-list {
@@ -261,14 +264,22 @@
 }
 
 .collections-method-summary-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 680px;
+  margin-inline: auto;
 }
 
 .collections-method-summary-row .collections-pill {
-  min-height: 38px;
+  width: 100%;
+  min-height: 34px;
+}
+
+.collections-top-pills-row {
+  justify-content: center;
 }
 
 .collections-th-label {
@@ -490,12 +501,12 @@
 
   .collections-method-summary-row {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .collections-method-summary-row .collections-pill {
     width: 100%;
-    min-height: 44px;
+    min-height: 36px;
     justify-content: center;
     text-align: center;
   }

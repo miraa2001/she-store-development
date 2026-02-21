@@ -352,7 +352,7 @@ export default function CollectionsPage({ embedded = false }) {
                       {selectedOrder.allCollected ? "تم التحصيل" : "قيد التحصيل"}
                     </span>
                   </div>
-                  <div className="collections-row">
+                  <div className="collections-row collections-top-pills-row">
                     <span className="collections-pill">عدد المشتريات: {homeList.length + pickupList.length}</span>
                     <span className="collections-pill">مجموع البيت: {formatILS(homeTotal)} ₪</span>
                     <span className="collections-pill">مجموع نقطة الاستلام: {formatILS(pickupTotal)} ₪</span>
@@ -375,22 +375,16 @@ export default function CollectionsPage({ embedded = false }) {
                       </div>
                       <div className="collections-method-summary">
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            محصّل ومستلم: {homeSummary.pickedCollectedCount} • المجموع:{" "}
-                            {formatILS(homeSummary.pickedCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">محصّل ومستلم: {homeSummary.pickedCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(homeSummary.pickedCollectedSum)} ₪</span>
                         </div>
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            مستلم وغير محصّل: {homeSummary.pickedNotCollectedCount} • المجموع:{" "}
-                            {formatILS(homeSummary.pickedNotCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">مستلم وغير محصّل: {homeSummary.pickedNotCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(homeSummary.pickedNotCollectedSum)} ₪</span>
                         </div>
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            غير مستلم وغير محصّل: {homeSummary.notPickedNotCollectedCount} • المجموع:{" "}
-                            {formatILS(homeSummary.notPickedNotCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">غير مستلم وغير محصّل: {homeSummary.notPickedNotCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(homeSummary.notPickedNotCollectedSum)} ₪</span>
                         </div>
                       </div>
                       <div className="collections-table-wrap">
@@ -450,22 +444,16 @@ export default function CollectionsPage({ embedded = false }) {
                       </div>
                       <div className="collections-method-summary">
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            محصّل ومستلم: {pickupSummary.pickedCollectedCount} • المجموع:{" "}
-                            {formatILS(pickupSummary.pickedCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">محصّل ومستلم: {pickupSummary.pickedCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(pickupSummary.pickedCollectedSum)} ₪</span>
                         </div>
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            مستلم وغير محصّل: {pickupSummary.pickedNotCollectedCount} • المجموع:{" "}
-                            {formatILS(pickupSummary.pickedNotCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">مستلم وغير محصّل: {pickupSummary.pickedNotCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(pickupSummary.pickedNotCollectedSum)} ₪</span>
                         </div>
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">
-                            غير مستلم وغير محصّل: {pickupSummary.notPickedNotCollectedCount} • المجموع:{" "}
-                            {formatILS(pickupSummary.notPickedNotCollectedSum)} ₪
-                          </span>
+                          <span className="collections-pill">غير مستلم وغير محصّل: {pickupSummary.notPickedNotCollectedCount}</span>
+                          <span className="collections-pill">المجموع: {formatILS(pickupSummary.notPickedNotCollectedSum)} ₪</span>
                         </div>
                       </div>
                       <div className="collections-table-wrap">
