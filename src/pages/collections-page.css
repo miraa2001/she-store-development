@@ -265,7 +265,7 @@
 
 .collections-method-summary-row {
   display: grid;
-  grid-template-columns: repeat(2, 23vw);
+  grid-template-columns: repeat(2, 26vw);
   align-items: center;
   gap: 8px;
   justify-content: center;
@@ -507,7 +507,7 @@
 
   .collections-method-summary-row {
     display: grid;
-    grid-template-columns: repeat(2, 23vw);
+    grid-template-columns: repeat(2, 26vw);
   }
 
   .collections-method-summary-row .collections-pill {
