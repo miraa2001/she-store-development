@@ -12,6 +12,9 @@ import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import customerHeaderIcon from "../assets/icons/pickup/customer.png";
+import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
+import pickedHeaderIcon from "../assets/icons/pickup/picked-up.png";
 import "./pickup-common.css";
 import "./collections-page.css";
 
@@ -68,16 +71,39 @@ export default function CollectionsPage({ embedded = false }) {
   );
 
   const homeTotal = useMemo(
-    () => homeList.reduce((sum, item) => sum + parsePrice(item.paid_price ?? item.price), 0),
+    () => homeList.reduce((sum, item) => sum + parsePrice(item.paid_price), 0),
     [homeList]
   );
 
   const pickupTotal = useMemo(
-    () => pickupList.reduce((sum, item) => sum + parsePrice(item.paid_price ?? item.price), 0),
+    () => pickupList.reduce((sum, item) => sum + parsePrice(item.paid_price), 0),
     [pickupList]
   );
 
   const grandTotal = homeTotal + pickupTotal;
+  const allPurchases = useMemo(() => [...homeList, ...pickupList], [homeList, pickupList]);
+
+  const homePicked = useMemo(() => homeList.filter((purchase) => !!purchase.picked_up), [homeList]);
+  const homeNotPicked = useMemo(() => homeList.filter((purchase) => !purchase.picked_up), [homeList]);
+  const pickupPicked = useMemo(() => pickupList.filter((purchase) => !!purchase.picked_up), [pickupList]);
+  const pickupNotPicked = useMemo(() => pickupList.filter((purchase) => !purchase.picked_up), [pickupList]);
+
+  const collectedAndPicked = useMemo(
+    () => allPurchases.filter((purchase) => !!purchase.picked_up && !!purchase.collected),
+    [allPurchases]
+  );
+  const toBeCollected = useMemo(
+    () => allPurchases.filter((purchase) => !!purchase.picked_up && !purchase.collected),
+    [allPurchases]
+  );
+  const collectedAndPickedSum = useMemo(
+    () => collectedAndPicked.reduce((sum, purchase) => sum + parsePrice(purchase.paid_price), 0),
+    [collectedAndPicked]
+  );
+  const toBeCollectedSum = useMemo(
+    () => toBeCollected.reduce((sum, purchase) => sum + parsePrice(purchase.paid_price), 0),
+    [toBeCollected]
+  );
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -127,7 +153,7 @@ export default function CollectionsPage({ embedded = false }) {
           const allCollected = (order.purchases || []).every((purchase) => !!purchase.collected);
           const collectedTotal = (order.purchases || []).reduce((sum, purchase) => {
             if (!purchase.collected) return sum;
-            return sum + parsePrice(purchase.paid_price ?? purchase.price);
+            return sum + parsePrice(purchase.paid_price);
           }, 0);
           return {
             id: order.id,
@@ -165,7 +191,7 @@ export default function CollectionsPage({ embedded = false }) {
     try {
       const { data, error: purchasesError } = await sb
         .from("purchases")
-        .select("id, customer_name, price, paid_price, pickup_point, collected")
+        .select("id, customer_name, price, paid_price, pickup_point, collected, picked_up")
         .eq("order_id", orderId)
         .order("created_at", { ascending: true });
 
@@ -283,7 +309,7 @@ export default function CollectionsPage({ embedded = false }) {
               <SheStoreLogo className="topbar-logo-link" imageClassName="topbar-logo-img" />
               <div className="collections-brand">
                 <b>تحصيل المبالغ</b>
-                <div className="collections-muted">الطلبات المحصلة</div>
+                <div className="collections-muted">طلبات البيت ونقطة الاستلام</div>
               </div>
             </div>
             <button type="button" className="collections-menu-btn" onClick={() => setSidebarOpen(true)}>
@@ -335,6 +361,21 @@ export default function CollectionsPage({ embedded = false }) {
                   </div>
                 </div>
 
+                <div className="collections-summary-rows">
+                  <div className="collections-summary-row">
+                    <span className="collections-pill">محصّل ومستلم: {collectedAndPicked.length}</span>
+                    <span className="collections-pill">بانتظار التحصيل: {toBeCollected.length}</span>
+                  </div>
+                  <div className="collections-summary-row">
+                    <span className="collections-pill">
+                      مجموع محصّل ومستلم: {formatILS(collectedAndPickedSum)} ₪
+                    </span>
+                    <span className="collections-pill">
+                      مجموع بانتظار التحصيل: {formatILS(toBeCollectedSum)} ₪
+                    </span>
+                  </div>
+                </div>
+
                 {loadingDetails ? (
                   <div className="collections-spacer">
                     <SessionLoader label="جاري تحميل تفاصيل التحصيل..." />
@@ -343,61 +384,217 @@ export default function CollectionsPage({ embedded = false }) {
 
                 {!loadingDetails ? (
                   <>
-                    <div className="collections-section-title">مستلمو البيت</div>
-                    <div className="collections-table-wrap">
-                      <table className="collections-table">
-                        <thead>
-                          <tr>
-                            <th>الزبون</th>
-                            <th>السعر</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {homeList.length ? (
-                            homeList.map((purchase) => (
-                              <tr key={purchase.id}>
-                                <td>{purchase.customer_name || ""}</td>
-                                <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={2} className="collections-muted">
-                                لا يوجد مشتريات
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                    <section className="collections-compare-section">
+                      <div className="collections-section-title collections-section-title--with-icon">
+                        <AppNavIcon name="home" className="icon" />
+                        <span>استلام البيت</span>
+                      </div>
+                      <div className="collections-compare-grid">
+                        <article className="collections-compare-card">
+                          <div className="collections-compare-title">
+                            <img src={pickedHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                            <span>تم الاستلام</span>
+                            <b>{homePicked.length}</b>
+                          </div>
+                          <div className="collections-table-wrap">
+                            <table className="collections-table">
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img
+                                        src={customerHeaderIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="collections-th-icon"
+                                      />
+                                      الزبون
+                                    </span>
+                                  </th>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img src={priceHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                                      المدفوع
+                                    </span>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {homePicked.length ? (
+                                  homePicked.map((purchase) => (
+                                    <tr key={purchase.id}>
+                                      <td>{purchase.customer_name || ""}</td>
+                                      <td>{formatILS(parsePrice(purchase.paid_price))}</td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={2} className="collections-muted">
+                                      لا يوجد مشتريات
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </article>
 
-                    <div className="collections-section-title">نقطة الاستلام - La Aura</div>
-                    <div className="collections-table-wrap">
-                      <table className="collections-table">
-                        <thead>
-                          <tr>
-                            <th>الزبون</th>
-                            <th>السعر</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {pickupList.length ? (
-                            pickupList.map((purchase) => (
-                              <tr key={purchase.id}>
-                                <td>{purchase.customer_name || ""}</td>
-                                <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan={2} className="collections-muted">
-                                لا يوجد مشتريات
-                              </td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
+                        <article className="collections-compare-card">
+                          <div className="collections-compare-title">
+                            <img src={pickedHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                            <span>غير مستلم</span>
+                            <b>{homeNotPicked.length}</b>
+                          </div>
+                          <div className="collections-table-wrap">
+                            <table className="collections-table">
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img
+                                        src={customerHeaderIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="collections-th-icon"
+                                      />
+                                      الزبون
+                                    </span>
+                                  </th>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img src={priceHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                                      المدفوع
+                                    </span>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {homeNotPicked.length ? (
+                                  homeNotPicked.map((purchase) => (
+                                    <tr key={purchase.id}>
+                                      <td>{purchase.customer_name || ""}</td>
+                                      <td>{formatILS(parsePrice(purchase.paid_price))}</td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={2} className="collections-muted">
+                                      لا يوجد مشتريات
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </article>
+                      </div>
+                    </section>
+
+                    <section className="collections-compare-section">
+                      <div className="collections-section-title collections-section-title--with-icon">
+                        <AppNavIcon name="map" className="icon" />
+                        <span>نقطة الاستلام - La Aura</span>
+                      </div>
+                      <div className="collections-compare-grid">
+                        <article className="collections-compare-card">
+                          <div className="collections-compare-title">
+                            <img src={pickedHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                            <span>تم الاستلام</span>
+                            <b>{pickupPicked.length}</b>
+                          </div>
+                          <div className="collections-table-wrap">
+                            <table className="collections-table">
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img
+                                        src={customerHeaderIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="collections-th-icon"
+                                      />
+                                      الزبون
+                                    </span>
+                                  </th>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img src={priceHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                                      المدفوع
+                                    </span>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pickupPicked.length ? (
+                                  pickupPicked.map((purchase) => (
+                                    <tr key={purchase.id}>
+                                      <td>{purchase.customer_name || ""}</td>
+                                      <td>{formatILS(parsePrice(purchase.paid_price))}</td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={2} className="collections-muted">
+                                      لا يوجد مشتريات
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </article>
+
+                        <article className="collections-compare-card">
+                          <div className="collections-compare-title">
+                            <img src={pickedHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                            <span>غير مستلم</span>
+                            <b>{pickupNotPicked.length}</b>
+                          </div>
+                          <div className="collections-table-wrap">
+                            <table className="collections-table">
+                              <thead>
+                                <tr>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img
+                                        src={customerHeaderIcon}
+                                        alt=""
+                                        aria-hidden="true"
+                                        className="collections-th-icon"
+                                      />
+                                      الزبون
+                                    </span>
+                                  </th>
+                                  <th>
+                                    <span className="collections-th-label">
+                                      <img src={priceHeaderIcon} alt="" aria-hidden="true" className="collections-th-icon" />
+                                      المدفوع
+                                    </span>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pickupNotPicked.length ? (
+                                  pickupNotPicked.map((purchase) => (
+                                    <tr key={purchase.id}>
+                                      <td>{purchase.customer_name || ""}</td>
+                                      <td>{formatILS(parsePrice(purchase.paid_price))}</td>
+                                    </tr>
+                                  ))
+                                ) : (
+                                  <tr>
+                                    <td colSpan={2} className="collections-muted">
+                                      لا يوجد مشتريات
+                                    </td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                        </article>
+                      </div>
+                    </section>
                   </>
                 ) : null}
               </>
