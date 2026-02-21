@@ -275,7 +275,13 @@
 
 .collections-method-summary-row .collections-pill {
   width: 100%;
-  min-height: 34px;
+  height: 36px;
+  min-height: 36px;
+  max-height: 36px;
+  padding: 0 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .collections-top-pills-row {
@@ -506,7 +512,9 @@
 
   .collections-method-summary-row .collections-pill {
     width: 100%;
+    height: 36px;
     min-height: 36px;
+    max-height: 36px;
     justify-content: center;
     text-align: center;
   }
