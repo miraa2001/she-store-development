@@ -375,23 +375,21 @@ export default function CollectionsPage({ embedded = false }) {
                       </div>
                       <div className="collections-method-summary">
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">محصّل ومستلم: {homeSummary.pickedCollectedCount}</span>
                           <span className="collections-pill">
-                            المجموع: {formatILS(homeSummary.pickedCollectedSum)} ₪
-                          </span>
-                        </div>
-                        <div className="collections-method-summary-row">
-                          <span className="collections-pill">مستلم وغير محصّل: {homeSummary.pickedNotCollectedCount}</span>
-                          <span className="collections-pill">
-                            المجموع: {formatILS(homeSummary.pickedNotCollectedSum)} ₪
+                            محصّل ومستلم: {homeSummary.pickedCollectedCount} • المجموع:{" "}
+                            {formatILS(homeSummary.pickedCollectedSum)} ₪
                           </span>
                         </div>
                         <div className="collections-method-summary-row">
                           <span className="collections-pill">
-                            غير مستلم وغير محصّل: {homeSummary.notPickedNotCollectedCount}
+                            مستلم وغير محصّل: {homeSummary.pickedNotCollectedCount} • المجموع:{" "}
+                            {formatILS(homeSummary.pickedNotCollectedSum)} ₪
                           </span>
+                        </div>
+                        <div className="collections-method-summary-row">
                           <span className="collections-pill">
-                            المجموع: {formatILS(homeSummary.notPickedNotCollectedSum)} ₪
+                            غير مستلم وغير محصّل: {homeSummary.notPickedNotCollectedCount} • المجموع:{" "}
+                            {formatILS(homeSummary.notPickedNotCollectedSum)} ₪
                           </span>
                         </div>
                       </div>
@@ -452,25 +450,21 @@ export default function CollectionsPage({ embedded = false }) {
                       </div>
                       <div className="collections-method-summary">
                         <div className="collections-method-summary-row">
-                          <span className="collections-pill">محصّل ومستلم: {pickupSummary.pickedCollectedCount}</span>
                           <span className="collections-pill">
-                            المجموع: {formatILS(pickupSummary.pickedCollectedSum)} ₪
+                            محصّل ومستلم: {pickupSummary.pickedCollectedCount} • المجموع:{" "}
+                            {formatILS(pickupSummary.pickedCollectedSum)} ₪
                           </span>
                         </div>
                         <div className="collections-method-summary-row">
                           <span className="collections-pill">
-                            مستلم وغير محصّل: {pickupSummary.pickedNotCollectedCount}
-                          </span>
-                          <span className="collections-pill">
-                            المجموع: {formatILS(pickupSummary.pickedNotCollectedSum)} ₪
+                            مستلم وغير محصّل: {pickupSummary.pickedNotCollectedCount} • المجموع:{" "}
+                            {formatILS(pickupSummary.pickedNotCollectedSum)} ₪
                           </span>
                         </div>
                         <div className="collections-method-summary-row">
                           <span className="collections-pill">
-                            غير مستلم وغير محصّل: {pickupSummary.notPickedNotCollectedCount}
-                          </span>
-                          <span className="collections-pill">
-                            المجموع: {formatILS(pickupSummary.notPickedNotCollectedSum)} ₪
+                            غير مستلم وغير محصّل: {pickupSummary.notPickedNotCollectedCount} • المجموع:{" "}
+                            {formatILS(pickupSummary.notPickedNotCollectedSum)} ₪
                           </span>
                         </div>
                       </div>
