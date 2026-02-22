@@ -298,6 +298,12 @@ export default function OrdersTab({
                       </div>
                     ) : null}
 
+                    {canShowPurchaseNotes && purchaseNote ? (
+                      <div className="purchaseVNote" title={purchaseNote}>
+                        <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
+                      </div>
+                    ) : null}
+
                     {canShowWhatsapp || menuNode ? (
                       <div className="wa-actions-row purchaseVWa">
                         {canShowWhatsapp ? (
@@ -311,12 +317,6 @@ export default function OrdersTab({
                           </>
                         ) : null}
                         {menuNode ? <div className="purchaseVInlineMenu">{menuNode}</div> : null}
-                      </div>
-                    ) : null}
-
-                    {canShowPurchaseNotes && purchaseNote ? (
-                      <div className="purchaseVNote" title={purchaseNote}>
-                        <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
                       </div>
                     ) : null}
                   </article>
@@ -372,17 +372,17 @@ export default function OrdersTab({
                     ) : null}
                   </div>
 
+                  {canShowPurchaseNotes && purchaseNote ? (
+                    <div className="purchase-mobile-note" title={purchaseNote}>
+                      <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
+                    </div>
+                  ) : null}
+
                   {menuNode ? (
                     <div className="purchase-mobile-actions">
                       <div className="purchase-head-actions">
                         {menuNode}
                       </div>
-                    </div>
-                  ) : null}
-
-                  {canShowPurchaseNotes && purchaseNote ? (
-                    <div className="purchase-mobile-note" title={purchaseNote}>
-                      <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
                     </div>
                   ) : null}
                 </div>
