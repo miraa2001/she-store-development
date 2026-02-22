@@ -55,6 +55,7 @@ export default function ImageAnnotatorModal({
   const [saving, setSaving] = useState(false);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
   const [displayDimensions, setDisplayDimensions] = useState({ width: 0, height: 0 });
+  const [canvasReadyTick, setCanvasReadyTick] = useState(0);
   const [previewUrl, setPreviewUrl] = useState("");
   const [activeTool, setActiveTool] = useState("brush");
   const [brushSize, setBrushSize] = useState("medium");
@@ -68,6 +69,13 @@ export default function ImageAnnotatorModal({
       setActiveTool("brush");
     }
   }, [activeTool]);
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveTool("brush");
+    setBrushSize("medium");
+    setSelectedColor("#FF0000");
+  }, [open]);
 
   useEffect(() => {
     if (!open || !file) return undefined;
@@ -126,6 +134,7 @@ export default function ImageAnnotatorModal({
       canvas.originalWidth = originalWidth;
       canvas.originalHeight = originalHeight;
       fabricCanvasRef.current = canvas;
+      setCanvasReadyTick((prev) => prev + 1);
 
       canvas.requestRenderAll();
       setIsLoading(false);
@@ -245,7 +254,7 @@ export default function ImageAnnotatorModal({
       return;
     }
 
-  }, [activeTool, brushSize, selectedColor]);
+  }, [activeTool, brushSize, selectedColor, canvasReadyTick]);
 
   const handleUndo = () => {
     const canvas = fabricCanvasRef.current;
