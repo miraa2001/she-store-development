@@ -926,6 +926,17 @@ export default function OrdersPage() {
     clearFormAiStatus();
   };
 
+  const replaceNewImage = (index, nextFile) => {
+    if (!nextFile) return;
+    setFormState((prev) => {
+      if (!Array.isArray(prev.newFiles) || index < 0 || index >= prev.newFiles.length) return prev;
+      const nextFiles = [...prev.newFiles];
+      nextFiles[index] = nextFile;
+      return { ...prev, newFiles: nextFiles };
+    });
+    clearFormAiStatus();
+  };
+
   const toggleExistingImageRemoval = (imageId) => {
     setFormState((prev) => {
       const ids = prev.removeImageIds.includes(imageId)
@@ -1809,6 +1820,7 @@ export default function OrdersPage() {
         onAnalyzeWithGemini={analyzeFormImagesWithGemini}
         onToggleExistingImageRemoval={toggleExistingImageRemoval}
         onRemoveNewImage={removeNewImage}
+        onReplaceNewImage={replaceNewImage}
         onOpenAddCustomerModal={openQuickCustomerModal}
         Icon={Icon}
       />

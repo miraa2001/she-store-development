@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Stepper, { Step } from "../common/Stepper";
 import FileUploadDropzone from "../common/FileUploadDropzone";
+import ImageEditorModal from "../common/ImageEditorModal";
 
 export default function PurchaseFormModal({
   open,
@@ -28,11 +29,13 @@ export default function PurchaseFormModal({
   onAnalyzeWithGemini,
   onToggleExistingImageRemoval,
   onRemoveNewImage,
+  onReplaceNewImage,
   onOpenAddCustomerModal,
   Icon
 }) {
   const [customerSearch, setCustomerSearch] = useState("");
   const [customerPicked, setCustomerPicked] = useState(false);
+  const [imageEditor, setImageEditor] = useState({ open: false, index: -1, file: null });
 
   useEffect(() => {
     if (!open) return;
@@ -56,6 +59,23 @@ export default function PurchaseFormModal({
   const handleStepperSubmit = async () => {
     const ok = await onSubmit({ preventDefault: () => {} });
     return ok;
+  };
+
+  const openImageEditor = (index) => {
+    const targetFile = formState.newFiles?.[index];
+    if (!targetFile) return;
+    setImageEditor({ open: true, index, file: targetFile });
+  };
+
+  const closeImageEditor = () => {
+    setImageEditor({ open: false, index: -1, file: null });
+  };
+
+  const handleSaveEditedImage = async (editedFile) => {
+    if (typeof onReplaceNewImage === "function" && imageEditor.index >= 0) {
+      onReplaceNewImage(imageEditor.index, editedFile);
+    }
+    closeImageEditor();
   };
 
   const detailsFields = (
@@ -314,9 +334,22 @@ export default function PurchaseFormModal({
           {newFilePreviews.map((item, index) => (
             <div key={item.key} className="modal-new-image">
               <img src={item.url} alt="صورة جديدة" />
-              <button type="button" onClick={() => onRemoveNewImage(index)} disabled={formSaving || formAiRunning}>
-                حذف
-              </button>
+              <div className="modal-new-image-actions">
+                <button
+                  type="button"
+                  onClick={() => openImageEditor(index)}
+                  disabled={formSaving || formAiRunning}
+                >
+                  تعديل
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onRemoveNewImage(index)}
+                  disabled={formSaving || formAiRunning}
+                >
+                  حذف
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -394,6 +427,15 @@ export default function PurchaseFormModal({
           </form>
         )}
       </div>
+
+      <ImageEditorModal
+        open={imageEditor.open}
+        file={imageEditor.file}
+        onClose={closeImageEditor}
+        onSave={handleSaveEditedImage}
+        disabled={formSaving || formAiRunning}
+        Icon={Icon}
+      />
     </div>
   );
 }
