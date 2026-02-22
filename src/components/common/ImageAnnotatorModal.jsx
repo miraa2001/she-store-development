@@ -38,7 +38,6 @@ export default function ImageAnnotatorModal({
   const fabricCanvasRef = useRef(null);
   const imageUrlRef = useRef(null);
   const sourceImageRef = useRef(null);
-  const baseImageObjectRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -107,21 +106,18 @@ export default function ImageAnnotatorModal({
 
       sourceImageRef.current = img;
 
+      // FIXED: Use proper setBackgroundImage method with callback
       const fabricImg = new fabric.Image(img, {
         scaleX: scale,
         scaleY: scale,
         selectable: false,
-        evented: false,
-        hasControls: false,
-        hasBorders: false,
-        lockMovementX: true,
-        lockMovementY: true
+        evented: false
       });
-      baseImageObjectRef.current = fabricImg;
-      canvas.add(fabricImg);
-      fabricImg.sendToBack();
-      canvas.requestRenderAll();
-      if (mounted) setIsLoading(false);
+      
+      canvas.setBackgroundImage(fabricImg, () => {
+        canvas.renderAll();
+        if (mounted) setIsLoading(false);
+      });
     };
 
     img.onerror = (error) => {
@@ -136,7 +132,6 @@ export default function ImageAnnotatorModal({
     return () => {
       mounted = false;
       sourceImageRef.current = null;
-      baseImageObjectRef.current = null;
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
@@ -211,6 +206,12 @@ export default function ImageAnnotatorModal({
         isDown = false;
         rect = null;
       });
+      return;
+    }
+
+    if (activeTool === "select") {
+      canvas.isDrawingMode = false;
+      canvas.selection = true;
     }
   }, [activeTool, brushSize, selectedColor]);
 
@@ -219,25 +220,28 @@ export default function ImageAnnotatorModal({
     if (!canvas) return;
     const objects = canvas.getObjects();
     if (!objects.length) return;
-    const removable = objects.filter((object) => object !== baseImageObjectRef.current);
-    if (!removable.length) return;
-    canvas.remove(removable[removable.length - 1]);
+    canvas.remove(objects[objects.length - 1]);
     canvas.renderAll();
   };
 
   const handleClear = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-    const objects = canvas.getObjects();
-    objects.forEach((object) => {
-      if (object !== baseImageObjectRef.current) {
-        canvas.remove(object);
-      }
-    });
-    if (baseImageObjectRef.current) {
-      baseImageObjectRef.current.sendToBack();
+    canvas.clear();
+    canvas.backgroundColor = "#ffffff";
+
+    // FIXED: Re-add background image using setBackgroundImage
+    if (sourceImageRef.current) {
+      const backgroundImage = new fabric.Image(sourceImageRef.current, {
+        scaleX: canvas.originalScale,
+        scaleY: canvas.originalScale,
+        selectable: false,
+        evented: false
+      });
+      canvas.setBackgroundImage(backgroundImage, () => {
+        canvas.renderAll();
+      });
     }
-    canvas.requestRenderAll();
   };
 
   const handleSave = async () => {
@@ -268,7 +272,7 @@ export default function ImageAnnotatorModal({
         height: originalDimensions.height
       });
 
-      const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
+      const objects = canvas.getObjects();
       for (const obj of objects) {
         // eslint-disable-next-line no-await-in-loop
         const cloned = await new Promise((resolve) => {
@@ -324,25 +328,38 @@ export default function ImageAnnotatorModal({
       });
 
       setIsLoading(false);
+      setSaving(false);
       onSave?.(editedFile);
     } catch (error) {
-      console.error("Error saving edited image:", error);
+      console.error("Save error:", error);
+      setLoadError(String(error?.message || "Failed to save"));
       setIsLoading(false);
-      setLoadError(error?.message || "Failed to save edited image");
-    } finally {
       setSaving(false);
     }
   };
 
   if (!open) return null;
 
+  const toolButtons = [
+    { id: "brush", label: "فرشاة", icon: "🖌️" },
+    { id: "eraser", label: "ممحاة", icon: "🧹" },
+    { id: "rectangle", label: "مستطيل", icon: "▭" },
+    { id: "select", label: "تحديد", icon: "👆" }
+  ];
+
+  const sizeButtons = [
+    { id: "thin", label: "رفيع" },
+    { id: "medium", label: "متوسط" },
+    { id: "thick", label: "سميك" }
+  ];
+
   return (
     <div className="image-annotator-overlay">
       <div className="image-annotator-modal">
         <div className="annotator-header">
           <h3>تعديل الصورة</h3>
-          <button type="button" className="close-btn" onClick={closeHandler} disabled={disabled || saving}>
-            ×
+          <button type="button" className="close-btn" onClick={closeHandler} disabled={saving}>
+            ✕
           </button>
         </div>
 
@@ -350,38 +367,35 @@ export default function ImageAnnotatorModal({
           <div className="tool-section">
             <label>الأداة:</label>
             <div className="tool-buttons">
-              <button type="button" className={activeTool === "brush" ? "active" : ""} onClick={() => setActiveTool("brush")}>
-                B
-              </button>
-              <button type="button" className={activeTool === "eraser" ? "active" : ""} onClick={() => setActiveTool("eraser")}>
-                E
-              </button>
-              <button
-                type="button"
-                className={activeTool === "rectangle" ? "active" : ""}
-                onClick={() => setActiveTool("rectangle")}
-              >
-                ▭
-              </button>
+              {toolButtons.map((tool) => (
+                <button
+                  key={tool.id}
+                  type="button"
+                  className={activeTool === tool.id ? "active" : ""}
+                  onClick={() => setActiveTool(tool.id)}
+                  title={tool.label}
+                  disabled={saving}
+                >
+                  <span>{tool.icon}</span>
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="tool-section">
-            <label>السُمك:</label>
+            <label>السمك:</label>
             <div className="size-buttons">
-              <button type="button" className={brushSize === "thin" ? "active" : ""} onClick={() => setBrushSize("thin")}>
-                رفيع
-              </button>
-              <button
-                type="button"
-                className={brushSize === "medium" ? "active" : ""}
-                onClick={() => setBrushSize("medium")}
-              >
-                متوسط
-              </button>
-              <button type="button" className={brushSize === "thick" ? "active" : ""} onClick={() => setBrushSize("thick")}>
-                سميك
-              </button>
+              {sizeButtons.map((size) => (
+                <button
+                  key={size.id}
+                  type="button"
+                  className={brushSize === size.id ? "active" : ""}
+                  onClick={() => setBrushSize(size.id)}
+                  disabled={saving}
+                >
+                  {size.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -395,32 +409,44 @@ export default function ImageAnnotatorModal({
                   className={`color-swatch ${selectedColor === color ? "active" : ""}`}
                   style={{ backgroundColor: color }}
                   onClick={() => setSelectedColor(color)}
+                  title={color}
+                  disabled={saving}
                 />
               ))}
-              <button type="button" className="color-picker-btn" onClick={() => setShowColorPicker((prev) => !prev)}>
+              <button
+                type="button"
+                className="color-picker-btn"
+                onClick={() => setShowColorPicker(!showColorPicker)}
+                disabled={saving}
+              >
                 +
               </button>
             </div>
-            {showColorPicker ? (
+            {showColorPicker && (
               <div className="custom-color-picker">
-                <input type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} />
+                <input
+                  type="color"
+                  value={selectedColor}
+                  onChange={(e) => setSelectedColor(e.target.value)}
+                  disabled={saving}
+                />
               </div>
-            ) : null}
+            )}
           </div>
 
           <div className="tool-section">
-            <button type="button" className="action-btn" onClick={handleUndo}>
+            <button type="button" className="action-btn" onClick={handleUndo} disabled={saving}>
               ↶ تراجع
             </button>
-            <button type="button" className="action-btn" onClick={handleClear}>
+            <button type="button" className="action-btn" onClick={handleClear} disabled={saving}>
               مسح
             </button>
           </div>
         </div>
 
         <div className="annotator-canvas-container">
-          {isLoading ? <div className="loading-indicator">جاري التحميل...</div> : null}
-          {loadError ? (
+          {isLoading && <div className="loading-indicator">جاري التحميل...</div>}
+          {loadError && !isLoading && (
             <div className="error-indicator">
               خطأ: {loadError}
               <br />
@@ -428,20 +454,15 @@ export default function ImageAnnotatorModal({
                 إغلاق
               </button>
             </div>
-          ) : null}
+          )}
           <canvas ref={canvasRef} />
         </div>
 
         <div className="annotator-footer">
-          <button type="button" className="cancel-btn" onClick={closeHandler} disabled={isLoading || saving || disabled}>
+          <button type="button" className="cancel-btn" onClick={closeHandler} disabled={saving}>
             إلغاء
           </button>
-          <button
-            type="button"
-            className="save-btn"
-            onClick={handleSave}
-            disabled={isLoading || Boolean(loadError) || saving || disabled}
-          >
+          <button type="button" className="save-btn" onClick={handleSave} disabled={saving || isLoading || !!loadError}>
             {saving ? "جاري الحفظ..." : "حفظ"}
           </button>
         </div>
