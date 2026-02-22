@@ -271,7 +271,7 @@ export default function ImageAnnotatorModal({
 
     if (activeTool === "crop") {
       canvas.isDrawingMode = false;
-      canvas.selection = false;
+      canvas.selection = true;
 
       const allObjects = canvas.getObjects();
       allObjects.forEach((object) => {
@@ -300,8 +300,8 @@ export default function ImageAnnotatorModal({
           evented: true,
           hasControls: true,
           hasBorders: true,
-          lockMovementX: true,
-          lockMovementY: true,
+          lockMovementX: false,
+          lockMovementY: false,
           lockRotation: true,
           isCrop: true
         });
@@ -324,15 +324,16 @@ export default function ImageAnnotatorModal({
         evented: true,
         hasControls: true,
         hasBorders: true,
-        lockMovementX: true,
-        lockMovementY: true,
+        lockMovementX: false,
+        lockMovementY: false,
         lockRotation: true,
         stroke: selectedColor,
         borderColor: selectedColor,
         cornerColor: selectedColor,
         cornerStrokeColor: "#ffffff",
         cornerStyle: "circle",
-        transparentCorners: false
+        transparentCorners: false,
+        minScaleLimit: 0.05
       });
       cropRect.setControlsVisibility({
         tl: true,
@@ -346,57 +347,6 @@ export default function ImageAnnotatorModal({
         mtr: false
       });
       canvas.setActiveObject(cropRect);
-
-      const clampCropRect = (target) => {
-        if (!target || !target.isCrop) return;
-
-        const maxW = canvas.getWidth();
-        const maxH = canvas.getHeight();
-
-        let left = Number(target.left || 0);
-        let top = Number(target.top || 0);
-        let width = Number(
-          typeof target.getScaledWidth === "function"
-            ? target.getScaledWidth()
-            : (target.width || 0) * (target.scaleX || 1)
-        );
-        let height = Number(
-          typeof target.getScaledHeight === "function"
-            ? target.getScaledHeight()
-            : (target.height || 0) * (target.scaleY || 1)
-        );
-
-        width = Math.max(minCropSize, width);
-        height = Math.max(minCropSize, height);
-
-        left = Math.max(0, left);
-        top = Math.max(0, top);
-
-        if (left + width > maxW) width = maxW - left;
-        if (top + height > maxH) height = maxH - top;
-
-        target.set({
-          left,
-          top,
-          width: Math.max(minCropSize, width),
-          height: Math.max(minCropSize, height),
-          scaleX: 1,
-          scaleY: 1
-        });
-      };
-
-      canvas.on("object:scaling", (event) => {
-        if (!event?.target?.isCrop) return;
-        clampCropRect(event.target);
-        canvas.requestRenderAll();
-      });
-
-      canvas.on("object:modified", (event) => {
-        if (!event?.target?.isCrop) return;
-        clampCropRect(event.target);
-        canvas.requestRenderAll();
-      });
-
       canvas.requestRenderAll();
       return;
     }
