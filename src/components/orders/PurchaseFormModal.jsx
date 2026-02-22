@@ -79,11 +79,7 @@ export default function PurchaseFormModal({
         />
       </label>
 
-      {isCustomerLocked ? (
-        <div className="customer-picked-note customer-field-full customer-locked-note">
-          اسم الزبون مقفّل أثناء تعديل المشترى.
-        </div>
-      ) : customerPicked ? (
+      {customerPicked ? (
         <div className="customer-picked-note customer-field-full">
           {"\u062A\u0645 \u0627\u062E\u062A\u064A\u0627\u0631 \u0627\u0644\u0632\u0628\u0648\u0646 \u0628\u0646\u062C\u0627\u062D."}
         </div>

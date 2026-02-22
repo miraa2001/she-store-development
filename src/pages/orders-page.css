@@ -1803,12 +1803,6 @@
   box-shadow: none !important;
 }
 
-.customer-locked-note {
-  border-color: rgba(148, 163, 184, 0.5);
-  background: #f3f4f6;
-  color: #475467;
-}
-
 .readonly-field {
   background: #f3f4f6 !important;
   color: #667085;
