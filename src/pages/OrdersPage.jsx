@@ -309,6 +309,8 @@ export default function OrdersPage() {
   const [deleteSnapshot, setDeleteSnapshot] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false);
+  const [paidPriceDialog, setPaidPriceDialog] = useState(null);
+  const [paidPriceDialogBusy, setPaidPriceDialogBusy] = useState(false);
   const [orderDialog, setOrderDialog] = useState(null);
   const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
@@ -1225,16 +1227,44 @@ export default function OrdersPage() {
     }
   };
 
-  const handleMarkPaid = async (purchase) => {
+  const handleMarkPaid = (purchase) => {
+    if (!purchase) return;
+    setMenuPurchaseId("");
+    setPaidPriceDialog({
+      purchaseId: purchase.id,
+      customerName: purchase.customer_name || "",
+      price: String(purchase.price ?? ""),
+      paidPrice: String(purchase.paid_price ?? purchase.price ?? "")
+    });
+  };
+
+  const closePaidPriceDialog = () => {
+    if (paidPriceDialogBusy) return;
+    setPaidPriceDialog(null);
+  };
+
+  const submitPaidPriceDialog = async () => {
+    if (!paidPriceDialog || paidPriceDialogBusy) return;
+    const nextPaid = Number(paidPriceDialog.paidPrice);
+    if (!Number.isFinite(nextPaid) || nextPaid < 0) {
+      setToast({ type: "warn", text: "السعر المدفوع غير صالح." });
+      return;
+    }
+
+    setPaidPriceDialogBusy(true);
     try {
-      await markPurchasePaidPrice(purchase.id, parsePrice(purchase.price));
-      setToast({ type: "success", text: "تم تحديث المدفوع." });
-      setMenuPurchaseId("");
-      await refreshPurchases(selectedOrder.id);
-      await refreshOrders(selectedOrder.id);
+      await markPurchasePaidPrice(paidPriceDialog.purchaseId, nextPaid);
+      setToast({ type: "success", text: "تم تحديث السعر المدفوع." });
+      setPaidPriceDialog(null);
+      if (selectedOrder?.id) {
+        await refreshPurchases(selectedOrder.id);
+        await refreshOrders(selectedOrder.id);
+      }
     } catch (error) {
       console.error(error);
-      setToast({ type: "danger", text: "فشل تحديث المدفوع." });
+      setToast({ type: "danger", text: "فشل تحديث السعر المدفوع." });
+    } finally {
+      setPaidPriceDialogBusy(false);
     }
   };
 
@@ -1937,6 +1967,77 @@ export default function OrdersPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {paidPriceDialog ? (
+        <div className="purchase-modal-backdrop" onClick={closePaidPriceDialog}>
+          <div
+            className="purchase-modal-card purchase-modal-card-customer purchase-modal-card-delete"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="purchase-modal-head">
+              <h3>تعديل المدفوع</h3>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={closePaidPriceDialog}
+                disabled={paidPriceDialogBusy}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="purchase-modal-body delete-confirm-body">
+              {paidPriceDialog.customerName ? (
+                <div className="delete-confirm-target">{paidPriceDialog.customerName}</div>
+              ) : null}
+
+              <label>
+                <span>السعر الأصلي</span>
+                <input
+                  type="number"
+                  value={paidPriceDialog.price}
+                  disabled
+                  className="readonly-field"
+                />
+              </label>
+
+              <label>
+                <span>السعر المدفوع</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={paidPriceDialog.paidPrice}
+                  onChange={(event) =>
+                    setPaidPriceDialog((prev) => (prev ? { ...prev, paidPrice: event.target.value } : prev))
+                  }
+                  disabled={paidPriceDialogBusy}
+                  autoFocus
+                />
+              </label>
+
+              <div className="purchase-modal-foot">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={submitPaidPriceDialog}
+                  disabled={paidPriceDialogBusy}
+                >
+                  {paidPriceDialogBusy ? "جاري الحفظ..." : "حفظ"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost-light"
+                  onClick={closePaidPriceDialog}
+                  disabled={paidPriceDialogBusy}
+                >
+                  إلغاء
+                </button>
+              </div>
             </div>
           </div>
         </div>

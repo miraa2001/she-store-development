@@ -51,6 +51,7 @@ export default function PurchaseFormModal({
   if (!open) return null;
 
   const isAddMode = formMode === "add";
+  const isCustomerLocked = formMode === "edit";
 
   const handleStepperSubmit = async () => {
     const ok = await onSubmit({ preventDefault: () => {} });
@@ -64,8 +65,9 @@ export default function PurchaseFormModal({
         <input
           type="text"
           value={customerSearch}
-          className={customerPicked ? "customer-picked-input" : ""}
+          className={`${customerPicked ? "customer-picked-input" : ""} ${isCustomerLocked ? "customer-locked-input" : ""}`.trim()}
           onChange={(event) => {
+            if (isCustomerLocked) return;
             const nextValue = event.target.value;
             setCustomerSearch(nextValue);
             if (customerPicked) {
@@ -73,11 +75,15 @@ export default function PurchaseFormModal({
             }
           }}
           placeholder="اكتبي اسم الزبون..."
-          disabled={customersLoading || formSaving}
+          disabled={isCustomerLocked || customersLoading || formSaving}
         />
       </label>
 
-      {customerPicked ? (
+      {isCustomerLocked ? (
+        <div className="customer-picked-note customer-field-full customer-locked-note">
+          اسم الزبون مقفّل أثناء تعديل المشترى.
+        </div>
+      ) : customerPicked ? (
         <div className="customer-picked-note customer-field-full">
           {"\u062A\u0645 \u0627\u062E\u062A\u064A\u0627\u0631 \u0627\u0644\u0632\u0628\u0648\u0646 \u0628\u0646\u062C\u0627\u062D."}
         </div>
@@ -129,13 +135,14 @@ export default function PurchaseFormModal({
         <select
           value={formState.customerId}
           onChange={(event) => {
+            if (isCustomerLocked) return;
             const customerId = event.target.value;
             onCustomerChange(customerId);
             const selected = customers.find((customer) => String(customer.id) === String(customerId));
             setCustomerSearch(selected?.name || "");
             setCustomerPicked(Boolean(customerId && selected?.name));
           }}
-          disabled={customersLoading || formSaving}
+          disabled={isCustomerLocked || customersLoading || formSaving}
         >
           <option value="">اختاري الزبون</option>
           {customers.map((customer) => (
