@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Component, useEffect, useMemo, useRef, useState } from "react";
 import Konva from "konva";
 import { Image as KonvaImage, Layer, Line, Rect, Stage } from "react-konva";
 
@@ -13,6 +13,34 @@ const SIZE_OPTIONS = [
 ];
 
 const COLOR_PRESETS = ["#e11d48", "#f59e0b", "#22c55e", "#3b82f6", "#8b5cf6", "#111827", "#ffffff"];
+
+class KonvaErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidUpdate(prevProps) {
+    if (prevProps.resetKey !== this.props.resetKey && this.state.hasError) {
+      this.setState({ hasError: false });
+    }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="workspace-empty workspace-error">
+          تعذر فتح محرر الصورة حالياً. أغلقي النافذة ثم أعيدي المحاولة.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -38,7 +66,10 @@ function getEditedFileName(originalName, outputType) {
 function computeViewBox(imgW, imgH) {
   const maxW = Math.max(280, window.innerWidth - 96);
   const maxH = Math.max(220, window.innerHeight - 360);
-  const scale = Math.min(maxW / imgW, maxH / imgH, 1);
+  const scaleByViewport = Math.min(maxW / imgW, maxH / imgH, 1);
+  const maxStageSide = 2048;
+  const scaleByStageLimit = Math.min(maxStageSide / imgW, maxStageSide / imgH, 1);
+  const scale = Math.min(scaleByViewport, scaleByStageLimit);
   return {
     scale,
     stageW: Math.max(1, Math.round(imgW * scale)),
@@ -337,7 +368,6 @@ export default function ImageAnnotatorModal({
       }
 
       draftLayerRef.current?.batchDraw();
-      container.setPointerCapture?.(event.pointerId);
     };
 
     const onPointerMove = (event) => {
@@ -537,47 +567,49 @@ export default function ImageAnnotatorModal({
           {loading || !imageMeta ? (
             <div className="workspace-empty">Preparing image…</div>
           ) : (
-            <Stage ref={stageRef} width={view.stageW} height={view.stageH} className="image-editor-stage">
-              <Layer listening={false}>
-                <KonvaImage image={imageMeta.image} x={0} y={0} width={view.stageW} height={view.stageH} />
-              </Layer>
+            <KonvaErrorBoundary resetKey={`${file.name}-${file.size}-${file.lastModified}`}>
+              <Stage ref={stageRef} width={view.stageW} height={view.stageH} className="image-editor-stage">
+                <Layer listening={false}>
+                  <KonvaImage image={imageMeta.image} x={0} y={0} width={view.stageW} height={view.stageH} />
+                </Layer>
 
-              <Layer listening={false}>
-                {ops.map((op, index) => {
-                  if (op.kind === "stroke") {
+                <Layer listening={false}>
+                  {ops.map((op, index) => {
+                    if (op.kind === "stroke") {
+                      return (
+                        <Line
+                          key={`op-${index}`}
+                          points={pointsToStage(op.points, view.scale)}
+                          stroke={op.color}
+                          strokeWidth={op.width * view.scale}
+                          lineCap="round"
+                          lineJoin="round"
+                          globalCompositeOperation={op.tool === TOOL_ERASER ? "destination-out" : "source-over"}
+                        />
+                      );
+                    }
+
                     return (
-                      <Line
+                      <Rect
                         key={`op-${index}`}
-                        points={pointsToStage(op.points, view.scale)}
+                        x={op.x * view.scale}
+                        y={op.y * view.scale}
+                        width={op.w * view.scale}
+                        height={op.h * view.scale}
                         stroke={op.color}
                         strokeWidth={op.width * view.scale}
-                        lineCap="round"
-                        lineJoin="round"
-                        globalCompositeOperation={op.tool === TOOL_ERASER ? "destination-out" : "source-over"}
+                        fillEnabled={false}
                       />
                     );
-                  }
+                  })}
+                </Layer>
 
-                  return (
-                    <Rect
-                      key={`op-${index}`}
-                      x={op.x * view.scale}
-                      y={op.y * view.scale}
-                      width={op.w * view.scale}
-                      height={op.h * view.scale}
-                      stroke={op.color}
-                      strokeWidth={op.width * view.scale}
-                      fillEnabled={false}
-                    />
-                  );
-                })}
-              </Layer>
-
-              <Layer ref={draftLayerRef} listening={false}>
-                <Line ref={draftLineRef} visible={false} />
-                <Rect ref={draftRectRef} visible={false} fillEnabled={false} />
-              </Layer>
-            </Stage>
+                <Layer ref={draftLayerRef} listening={false}>
+                  <Line ref={draftLineRef} visible={false} />
+                  <Rect ref={draftRectRef} visible={false} fillEnabled={false} />
+                </Layer>
+              </Stage>
+            </KonvaErrorBoundary>
           )}
         </div>
 
