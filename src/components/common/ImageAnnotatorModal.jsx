@@ -38,6 +38,7 @@ export default function ImageAnnotatorModal({
   const fabricCanvasRef = useRef(null);
   const imageUrlRef = useRef(null);
   const sourceImageRef = useRef(null);
+  const baseImageObjectRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -51,48 +52,23 @@ export default function ImageAnnotatorModal({
   const closeHandler = onCancel || onClose;
 
   useEffect(() => {
-    console.log("=== ImageAnnotatorModal Effect ===");
-    console.log("open:", open);
-    console.log("file:", file);
-    console.log("file instanceof File:", file instanceof File);
-    console.log("file instanceof Blob:", file instanceof Blob);
-    
-    if (!open || !file) {
-      console.log("Modal not open or no file, skipping");
-      return undefined;
-    }
+    if (!open || !file) return undefined;
 
     let mounted = true;
     setIsLoading(true);
     setLoadError("");
 
-    console.log("Creating object URL from file...");
     const imageUrl = URL.createObjectURL(file);
     imageUrlRef.current = imageUrl;
-    console.log("Object URL created:", imageUrl);
-
-    console.log("File details:");
-    console.log("  - name:", file.name);
-    console.log("  - type:", file.type);
-    console.log("  - size:", file.size);
-    console.log("  - lastModified:", file.lastModified);
 
     const img = new Image();
-    img.crossOrigin = "anonymous"; // Try with CORS
-
     img.onload = () => {
-      console.log("=== Image onload fired ===");
-      if (!mounted) {
-        console.log("Component unmounted, aborting");
-        return;
-      }
+      if (!mounted) return;
 
       const originalWidth = img.naturalWidth || img.width;
       const originalHeight = img.naturalHeight || img.height;
-      console.log("Image dimensions:", originalWidth, "x", originalHeight);
 
       if (!originalWidth || !originalHeight) {
-        console.error("Invalid dimensions!");
         setLoadError("Invalid image dimensions");
         setIsLoading(false);
         return;
@@ -103,92 +79,72 @@ export default function ImageAnnotatorModal({
       const scale = Math.min(maxWidth / originalWidth, maxHeight / originalHeight, 1);
       const displayWidth = Math.max(1, Math.floor(originalWidth * scale));
       const displayHeight = Math.max(1, Math.floor(originalHeight * scale));
-      
-      console.log("Display calculations:");
-      console.log("  - maxWidth:", maxWidth);
-      console.log("  - maxHeight:", maxHeight);
-      console.log("  - scale:", scale);
-      console.log("  - displayWidth:", displayWidth);
-      console.log("  - displayHeight:", displayHeight);
 
       setOriginalDimensions({ width: originalWidth, height: originalHeight });
+      sourceImageRef.current = img;
 
       if (fabricCanvasRef.current) {
-        console.log("Disposing existing canvas");
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
       }
 
       if (!canvasRef.current) {
-        console.error("Canvas ref is null!");
         setLoadError("Canvas element not found");
         setIsLoading(false);
         return;
       }
 
-      console.log("Creating Fabric canvas...");
-      try {
-        const canvas = new fabric.Canvas(canvasRef.current, {
-          width: displayWidth,
-          height: displayHeight,
-          backgroundColor: "#ffffff"
-        });
+      const canvas = new fabric.Canvas(canvasRef.current, {
+        width: displayWidth,
+        height: displayHeight,
+        backgroundColor: "#ffffff",
+        preserveObjectStacking: true,
+        selection: false
+      });
 
-        console.log("Fabric canvas created successfully");
-        canvas.originalScale = scale;
-        canvas.originalWidth = originalWidth;
-        canvas.originalHeight = originalHeight;
-        fabricCanvasRef.current = canvas;
+      canvas.originalScale = scale;
+      canvas.originalWidth = originalWidth;
+      canvas.originalHeight = originalHeight;
+      fabricCanvasRef.current = canvas;
 
-        sourceImageRef.current = img;
+      const baseImageObject = new fabric.Image(img, {
+        left: 0,
+        top: 0,
+        scaleX: scale,
+        scaleY: scale,
+        selectable: false,
+        evented: false,
+        hasControls: false,
+        hasBorders: false,
+        lockMovementX: true,
+        lockMovementY: true,
+        hoverCursor: "default"
+      });
 
-        console.log("Creating Fabric Image from loaded img...");
-        const fabricImg = new fabric.Image(img, {
-          scaleX: scale,
-          scaleY: scale,
-          selectable: false,
-          evented: false
-        });
-
-        console.log("Fabric Image created, setting as background...");
-        canvas.setBackgroundImage(fabricImg, () => {
-          console.log("Background image set, rendering...");
-          canvas.renderAll();
-          console.log("Canvas rendered!");
-          if (mounted) {
-            console.log("Setting isLoading to false");
-            setIsLoading(false);
-          }
-        });
-      } catch (err) {
-        console.error("Error creating Fabric canvas:", err);
-        setLoadError("Failed to initialize canvas: " + err.message);
-        setIsLoading(false);
-      }
+      baseImageObjectRef.current = baseImageObject;
+      canvas.add(baseImageObject);
+      baseImageObject.sendToBack();
+      canvas.requestRenderAll();
+      setIsLoading(false);
     };
 
-    img.onerror = (error) => {
-      console.error("=== Image onerror fired ===");
-      console.error("Error loading image:", error);
+    img.onerror = () => {
       if (!mounted) return;
       setLoadError("Failed to load image");
       setIsLoading(false);
     };
 
-    console.log("Setting img.src to:", imageUrl);
     img.src = imageUrl;
 
     return () => {
-      console.log("=== Cleanup function ===");
       mounted = false;
+      baseImageObjectRef.current = null;
       sourceImageRef.current = null;
       if (fabricCanvasRef.current) {
-        console.log("Disposing canvas in cleanup");
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
       }
       if (imageUrlRef.current) {
-        console.log("Revoking object URL:", imageUrlRef.current);
         URL.revokeObjectURL(imageUrlRef.current);
         imageUrlRef.current = null;
       }
@@ -251,11 +207,14 @@ export default function ImageAnnotatorModal({
           width: Math.abs(pointer.x - startX),
           height: Math.abs(pointer.y - startY)
         });
-        canvas.renderAll();
+        canvas.requestRenderAll();
       });
 
       canvas.on("mouse:up", () => {
         isDown = false;
+        if (rect && (!rect.width || !rect.height)) {
+          canvas.remove(rect);
+        }
         rect = null;
       });
       return;
@@ -270,29 +229,25 @@ export default function ImageAnnotatorModal({
   const handleUndo = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-    const objects = canvas.getObjects();
+    const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
     if (!objects.length) return;
     canvas.remove(objects[objects.length - 1]);
-    canvas.renderAll();
+    canvas.requestRenderAll();
   };
 
   const handleClear = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-    canvas.clear();
-    canvas.backgroundColor = "#ffffff";
-
-    if (sourceImageRef.current) {
-      const backgroundImage = new fabric.Image(sourceImageRef.current, {
-        scaleX: canvas.originalScale,
-        scaleY: canvas.originalScale,
-        selectable: false,
-        evented: false
-      });
-      canvas.setBackgroundImage(backgroundImage, () => {
-        canvas.renderAll();
-      });
+    const objects = canvas.getObjects();
+    objects.forEach((object) => {
+      if (object !== baseImageObjectRef.current) {
+        canvas.remove(object);
+      }
+    });
+    if (baseImageObjectRef.current) {
+      baseImageObjectRef.current.sendToBack();
     }
+    canvas.requestRenderAll();
   };
 
   const handleSave = async () => {
@@ -311,19 +266,18 @@ export default function ImageAnnotatorModal({
       const ctx = exportCanvas.getContext("2d");
       if (!ctx) throw new Error("2D canvas context unavailable");
 
-      const scaleFactor = 1 / canvas.originalScale;
-
       if (!sourceImageRef.current) {
         throw new Error("Missing source image");
       }
       ctx.drawImage(sourceImageRef.current, 0, 0, originalDimensions.width, originalDimensions.height);
 
+      const scaleFactor = 1 / canvas.originalScale;
       const tempCanvas = new fabric.Canvas(null, {
         width: originalDimensions.width,
         height: originalDimensions.height
       });
 
-      const objects = canvas.getObjects();
+      const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
       for (const obj of objects) {
         // eslint-disable-next-line no-await-in-loop
         const cloned = await new Promise((resolve) => {
@@ -347,7 +301,7 @@ export default function ImageAnnotatorModal({
         tempCanvas.add(cloned);
       }
 
-      tempCanvas.renderAll();
+      tempCanvas.requestRenderAll();
       const drawingsDataUrl = tempCanvas.toDataURL({ format: "png", quality: 1, multiplier: 1 });
       tempCanvas.dispose();
 
@@ -379,79 +333,68 @@ export default function ImageAnnotatorModal({
       });
 
       setIsLoading(false);
-      setSaving(false);
       onSave?.(editedFile);
     } catch (error) {
-      console.error("Save error:", error);
-      setLoadError(String(error?.message || "Failed to save"));
       setIsLoading(false);
+      setLoadError(error?.message || "Failed to save edited image");
+    } finally {
       setSaving(false);
     }
   };
 
   if (!open) return null;
 
-  const toolButtons = [
-    { id: "brush", label: "فرشاة", icon: "🖌️" },
-    { id: "eraser", label: "ممحاة", icon: "🧹" },
-    { id: "rectangle", label: "مستطيل", icon: "▭" },
-    { id: "select", label: "تحديد", icon: "👆" }
-  ];
-
-  const sizeButtons = [
-    { id: "thin", label: "رفيع" },
-    { id: "medium", label: "متوسط" },
-    { id: "thick", label: "سميك" }
-  ];
-
   return (
     <div className="image-annotator-overlay">
       <div className="image-annotator-modal">
         <div className="annotator-header">
-          <h3>تعديل الصورة</h3>
-          <button type="button" className="close-btn" onClick={closeHandler} disabled={saving}>
-            ✕
+          <h3>Edit image</h3>
+          <button type="button" className="close-btn" onClick={closeHandler} disabled={disabled || saving}>
+            X
           </button>
         </div>
 
         <div className="annotator-toolbar">
           <div className="tool-section">
-            <label>الأداة:</label>
+            <label>Tool:</label>
             <div className="tool-buttons">
-              {toolButtons.map((tool) => (
-                <button
-                  key={tool.id}
-                  type="button"
-                  className={activeTool === tool.id ? "active" : ""}
-                  onClick={() => setActiveTool(tool.id)}
-                  title={tool.label}
-                  disabled={saving}
-                >
-                  <span>{tool.icon}</span>
-                </button>
-              ))}
+              <button type="button" className={activeTool === "brush" ? "active" : ""} onClick={() => setActiveTool("brush")}>
+                B
+              </button>
+              <button type="button" className={activeTool === "eraser" ? "active" : ""} onClick={() => setActiveTool("eraser")}>
+                E
+              </button>
+              <button
+                type="button"
+                className={activeTool === "rectangle" ? "active" : ""}
+                onClick={() => setActiveTool("rectangle")}
+              >
+                []
+              </button>
             </div>
           </div>
 
           <div className="tool-section">
-            <label>السمك:</label>
+            <label>Size:</label>
             <div className="size-buttons">
-              {sizeButtons.map((size) => (
-                <button
-                  key={size.id}
-                  type="button"
-                  className={brushSize === size.id ? "active" : ""}
-                  onClick={() => setBrushSize(size.id)}
-                  disabled={saving}
-                >
-                  {size.label}
-                </button>
-              ))}
+              <button type="button" className={brushSize === "thin" ? "active" : ""} onClick={() => setBrushSize("thin")}>
+                Thin
+              </button>
+              <button
+                type="button"
+                className={brushSize === "medium" ? "active" : ""}
+                onClick={() => setBrushSize("medium")}
+              >
+                Medium
+              </button>
+              <button type="button" className={brushSize === "thick" ? "active" : ""} onClick={() => setBrushSize("thick")}>
+                Thick
+              </button>
             </div>
           </div>
 
           <div className="tool-section">
-            <label>اللون:</label>
+            <label>Color:</label>
             <div className="color-palette">
               {COLORS.map((color) => (
                 <button
@@ -460,61 +403,54 @@ export default function ImageAnnotatorModal({
                   className={`color-swatch ${selectedColor === color ? "active" : ""}`}
                   style={{ backgroundColor: color }}
                   onClick={() => setSelectedColor(color)}
-                  title={color}
-                  disabled={saving}
                 />
               ))}
-              <button
-                type="button"
-                className="color-picker-btn"
-                onClick={() => setShowColorPicker(!showColorPicker)}
-                disabled={saving}
-              >
+              <button type="button" className="color-picker-btn" onClick={() => setShowColorPicker((prev) => !prev)}>
                 +
               </button>
             </div>
-            {showColorPicker && (
+            {showColorPicker ? (
               <div className="custom-color-picker">
-                <input
-                  type="color"
-                  value={selectedColor}
-                  onChange={(e) => setSelectedColor(e.target.value)}
-                  disabled={saving}
-                />
+                <input type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} />
               </div>
-            )}
+            ) : null}
           </div>
 
           <div className="tool-section">
-            <button type="button" className="action-btn" onClick={handleUndo} disabled={saving}>
-              ↶ تراجع
+            <button type="button" className="action-btn" onClick={handleUndo}>
+              Undo
             </button>
-            <button type="button" className="action-btn" onClick={handleClear} disabled={saving}>
-              مسح
+            <button type="button" className="action-btn" onClick={handleClear}>
+              Clear
             </button>
           </div>
         </div>
 
         <div className="annotator-canvas-container">
-          {isLoading && <div className="loading-indicator">جاري التحميل...</div>}
-          {loadError && !isLoading && (
+          {isLoading ? <div className="loading-indicator">Loading...</div> : null}
+          {loadError ? (
             <div className="error-indicator">
-              خطأ: {loadError}
+              Error: {loadError}
               <br />
               <button type="button" onClick={closeHandler} style={{ marginTop: "10px" }}>
-                إغلاق
+                Close
               </button>
             </div>
-          )}
+          ) : null}
           <canvas ref={canvasRef} />
         </div>
 
         <div className="annotator-footer">
-          <button type="button" className="cancel-btn" onClick={closeHandler} disabled={saving}>
-            إلغاء
+          <button type="button" className="cancel-btn" onClick={closeHandler} disabled={isLoading || saving || disabled}>
+            Cancel
           </button>
-          <button type="button" className="save-btn" onClick={handleSave} disabled={saving || isLoading || !!loadError}>
-            {saving ? "جاري الحفظ..." : "حفظ"}
+          <button
+            type="button"
+            className="save-btn"
+            onClick={handleSave}
+            disabled={isLoading || Boolean(loadError) || saving || disabled}
+          >
+            {saving ? "Saving..." : "Save"}
           </button>
         </div>
       </div>
