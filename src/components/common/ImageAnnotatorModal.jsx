@@ -51,29 +51,48 @@ export default function ImageAnnotatorModal({
   const closeHandler = onCancel || onClose;
 
   useEffect(() => {
-    if (!open || !file) return undefined;
+    console.log("=== ImageAnnotatorModal Effect ===");
+    console.log("open:", open);
+    console.log("file:", file);
+    console.log("file instanceof File:", file instanceof File);
+    console.log("file instanceof Blob:", file instanceof Blob);
+    
+    if (!open || !file) {
+      console.log("Modal not open or no file, skipping");
+      return undefined;
+    }
 
     let mounted = true;
     setIsLoading(true);
     setLoadError("");
 
+    console.log("Creating object URL from file...");
     const imageUrl = URL.createObjectURL(file);
     imageUrlRef.current = imageUrl;
+    console.log("Object URL created:", imageUrl);
 
-    console.log("File to edit:", file);
-    console.log("File type:", file?.type);
-    console.log("File size:", file?.size);
+    console.log("File details:");
+    console.log("  - name:", file.name);
+    console.log("  - type:", file.type);
+    console.log("  - size:", file.size);
+    console.log("  - lastModified:", file.lastModified);
 
     const img = new Image();
+    img.crossOrigin = "anonymous"; // Try with CORS
 
     img.onload = () => {
-      if (!mounted) return;
+      console.log("=== Image onload fired ===");
+      if (!mounted) {
+        console.log("Component unmounted, aborting");
+        return;
+      }
 
       const originalWidth = img.naturalWidth || img.width;
       const originalHeight = img.naturalHeight || img.height;
-      console.log("Image loaded:", originalWidth, "x", originalHeight);
+      console.log("Image dimensions:", originalWidth, "x", originalHeight);
 
       if (!originalWidth || !originalHeight) {
+        console.error("Invalid dimensions!");
         setLoadError("Invalid image dimensions");
         setIsLoading(false);
         return;
@@ -84,59 +103,92 @@ export default function ImageAnnotatorModal({
       const scale = Math.min(maxWidth / originalWidth, maxHeight / originalHeight, 1);
       const displayWidth = Math.max(1, Math.floor(originalWidth * scale));
       const displayHeight = Math.max(1, Math.floor(originalHeight * scale));
-      console.log("Display size:", displayWidth, "x", displayHeight, "scale:", scale);
+      
+      console.log("Display calculations:");
+      console.log("  - maxWidth:", maxWidth);
+      console.log("  - maxHeight:", maxHeight);
+      console.log("  - scale:", scale);
+      console.log("  - displayWidth:", displayWidth);
+      console.log("  - displayHeight:", displayHeight);
 
       setOriginalDimensions({ width: originalWidth, height: originalHeight });
 
       if (fabricCanvasRef.current) {
+        console.log("Disposing existing canvas");
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
       }
 
-      const canvas = new fabric.Canvas(canvasRef.current, {
-        width: displayWidth,
-        height: displayHeight,
-        backgroundColor: "#ffffff"
-      });
+      if (!canvasRef.current) {
+        console.error("Canvas ref is null!");
+        setLoadError("Canvas element not found");
+        setIsLoading(false);
+        return;
+      }
 
-      canvas.originalScale = scale;
-      canvas.originalWidth = originalWidth;
-      canvas.originalHeight = originalHeight;
-      fabricCanvasRef.current = canvas;
+      console.log("Creating Fabric canvas...");
+      try {
+        const canvas = new fabric.Canvas(canvasRef.current, {
+          width: displayWidth,
+          height: displayHeight,
+          backgroundColor: "#ffffff"
+        });
 
-      sourceImageRef.current = img;
+        console.log("Fabric canvas created successfully");
+        canvas.originalScale = scale;
+        canvas.originalWidth = originalWidth;
+        canvas.originalHeight = originalHeight;
+        fabricCanvasRef.current = canvas;
 
-      // FIXED: Use proper setBackgroundImage method with callback
-      const fabricImg = new fabric.Image(img, {
-        scaleX: scale,
-        scaleY: scale,
-        selectable: false,
-        evented: false
-      });
-      
-      canvas.setBackgroundImage(fabricImg, () => {
-        canvas.renderAll();
-        if (mounted) setIsLoading(false);
-      });
+        sourceImageRef.current = img;
+
+        console.log("Creating Fabric Image from loaded img...");
+        const fabricImg = new fabric.Image(img, {
+          scaleX: scale,
+          scaleY: scale,
+          selectable: false,
+          evented: false
+        });
+
+        console.log("Fabric Image created, setting as background...");
+        canvas.setBackgroundImage(fabricImg, () => {
+          console.log("Background image set, rendering...");
+          canvas.renderAll();
+          console.log("Canvas rendered!");
+          if (mounted) {
+            console.log("Setting isLoading to false");
+            setIsLoading(false);
+          }
+        });
+      } catch (err) {
+        console.error("Error creating Fabric canvas:", err);
+        setLoadError("Failed to initialize canvas: " + err.message);
+        setIsLoading(false);
+      }
     };
 
     img.onerror = (error) => {
+      console.error("=== Image onerror fired ===");
+      console.error("Error loading image:", error);
       if (!mounted) return;
-      console.error("Image load error:", error);
       setLoadError("Failed to load image");
       setIsLoading(false);
     };
 
+    console.log("Setting img.src to:", imageUrl);
     img.src = imageUrl;
 
     return () => {
+      console.log("=== Cleanup function ===");
       mounted = false;
       sourceImageRef.current = null;
       if (fabricCanvasRef.current) {
+        console.log("Disposing canvas in cleanup");
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
       }
       if (imageUrlRef.current) {
+        console.log("Revoking object URL:", imageUrlRef.current);
         URL.revokeObjectURL(imageUrlRef.current);
         imageUrlRef.current = null;
       }
@@ -230,7 +282,6 @@ export default function ImageAnnotatorModal({
     canvas.clear();
     canvas.backgroundColor = "#ffffff";
 
-    // FIXED: Re-add background image using setBackgroundImage
     if (sourceImageRef.current) {
       const backgroundImage = new fabric.Image(sourceImageRef.current, {
         scaleX: canvas.originalScale,
