@@ -30,7 +30,7 @@ const TEXT_SIZES = {
 const TOOL_OPTIONS = [
   { id: "brush", label: "\u0641\u0631\u0634\u0627\u0629", hint: "Brush" },
   { id: "rectangle", label: "\u0645\u0633\u062A\u0637\u064A\u0644", hint: "Rectangle" },
-  { id: "crop", label: "\u0642\u0635 \u062D\u0631", hint: "Crop" },
+  { id: "crop", label: "\u0642\u0635", hint: "Crop (handles)" },
   { id: "text", label: "\u0646\u0635", hint: "Text" }
 ];
 
@@ -176,6 +176,8 @@ export default function ImageAnnotatorModal({
     if (!canvas) return;
 
     canvas.off("path:created");
+    canvas.off("object:scaling");
+    canvas.off("object:modified");
     canvas.off("mouse:down");
     canvas.off("mouse:move");
     canvas.off("mouse:up");
@@ -266,62 +268,131 @@ export default function ImageAnnotatorModal({
       canvas.isDrawingMode = false;
       canvas.selection = false;
 
-      let cropRect = null;
-      let isDown = false;
-      let startX = 0;
-      let startY = 0;
+      const allObjects = canvas.getObjects();
+      allObjects.forEach((object) => {
+        if (!object?.isCrop) {
+          object.set({
+            selectable: false,
+            evented: false
+          });
+        }
+      });
 
-      canvas.on("mouse:down", (event) => {
-        isDown = true;
-        const pointer = canvas.getPointer(event.e);
-        startX = pointer.x;
-        startY = pointer.y;
-
-        canvas
-          .getObjects()
-          .filter((object) => object?.isCrop)
-          .forEach((object) => canvas.remove(object));
-
+      const minCropSize = 20;
+      let cropRect = allObjects.find((object) => object?.isCrop);
+      if (!cropRect) {
+        const margin = 12;
         cropRect = new fabric.Rect({
-          left: startX,
-          top: startY,
-          width: 0,
-          height: 0,
-          fill: "rgba(255,255,255,0.15)",
+          left: margin,
+          top: margin,
+          width: Math.max(minCropSize, canvas.getWidth() - margin * 2),
+          height: Math.max(minCropSize, canvas.getHeight() - margin * 2),
+          fill: "rgba(255,255,255,0.12)",
           stroke: selectedColor,
           strokeWidth: 2,
           strokeDashArray: [8, 6],
-          selectable: false,
-          evented: false,
-          hasControls: false,
-          hasBorders: false,
+          selectable: true,
+          evented: true,
+          hasControls: true,
+          hasBorders: true,
           lockMovementX: true,
           lockMovementY: true,
           lockRotation: true,
           isCrop: true
         });
-        canvas.add(cropRect);
-      });
-
-      canvas.on("mouse:move", (event) => {
-        if (!isDown || !cropRect) return;
-        const pointer = canvas.getPointer(event.e);
-        cropRect.set({
-          left: Math.min(startX, pointer.x),
-          top: Math.min(startY, pointer.y),
-          width: Math.abs(pointer.x - startX),
-          height: Math.abs(pointer.y - startY)
+        cropRect.setControlsVisibility({
+          tl: true,
+          tr: true,
+          bl: true,
+          br: true,
+          ml: true,
+          mr: true,
+          mt: true,
+          mb: true,
+          mtr: false
         });
+        canvas.add(cropRect);
+      }
+
+      cropRect.set({
+        selectable: true,
+        evented: true,
+        hasControls: true,
+        hasBorders: true,
+        lockMovementX: true,
+        lockMovementY: true,
+        lockRotation: true,
+        stroke: selectedColor,
+        borderColor: selectedColor,
+        cornerColor: selectedColor,
+        cornerStrokeColor: "#ffffff",
+        cornerStyle: "circle",
+        transparentCorners: false
+      });
+      cropRect.setControlsVisibility({
+        tl: true,
+        tr: true,
+        bl: true,
+        br: true,
+        ml: true,
+        mr: true,
+        mt: true,
+        mb: true,
+        mtr: false
+      });
+      canvas.setActiveObject(cropRect);
+
+      const clampCropRect = (target) => {
+        if (!target || !target.isCrop) return;
+
+        const maxW = canvas.getWidth();
+        const maxH = canvas.getHeight();
+
+        let left = Number(target.left || 0);
+        let top = Number(target.top || 0);
+        let width = Number(
+          typeof target.getScaledWidth === "function"
+            ? target.getScaledWidth()
+            : (target.width || 0) * (target.scaleX || 1)
+        );
+        let height = Number(
+          typeof target.getScaledHeight === "function"
+            ? target.getScaledHeight()
+            : (target.height || 0) * (target.scaleY || 1)
+        );
+
+        width = Math.max(minCropSize, width);
+        height = Math.max(minCropSize, height);
+
+        left = Math.max(0, left);
+        top = Math.max(0, top);
+
+        if (left + width > maxW) width = maxW - left;
+        if (top + height > maxH) height = maxH - top;
+
+        target.set({
+          left,
+          top,
+          width: Math.max(minCropSize, width),
+          height: Math.max(minCropSize, height),
+          scaleX: 1,
+          scaleY: 1
+        });
+      };
+
+      canvas.on("object:scaling", (event) => {
+        if (!event?.target?.isCrop) return;
+        clampCropRect(event.target);
         canvas.requestRenderAll();
       });
 
-      canvas.on("mouse:up", () => {
-        isDown = false;
-        if (cropRect && (!cropRect.width || !cropRect.height)) {
-          canvas.remove(cropRect);
-        }
-        cropRect = null;
+      canvas.on("object:modified", (event) => {
+        if (!event?.target?.isCrop) return;
+        clampCropRect(event.target);
+        canvas.requestRenderAll();
       });
+
+      canvas.requestRenderAll();
       return;
     }
 
