@@ -38,12 +38,13 @@ export default function ImageAnnotatorModal({
   const fabricCanvasRef = useRef(null);
   const imageUrlRef = useRef(null);
   const sourceImageRef = useRef(null);
-  const baseImageObjectRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
   const [saving, setSaving] = useState(false);
   const [originalDimensions, setOriginalDimensions] = useState({ width: 0, height: 0 });
+  const [displayDimensions, setDisplayDimensions] = useState({ width: 0, height: 0 });
+  const [previewUrl, setPreviewUrl] = useState("");
   const [activeTool, setActiveTool] = useState("brush");
   const [brushSize, setBrushSize] = useState("medium");
   const [selectedColor, setSelectedColor] = useState("#FF0000");
@@ -60,6 +61,7 @@ export default function ImageAnnotatorModal({
 
     const imageUrl = URL.createObjectURL(file);
     imageUrlRef.current = imageUrl;
+    setPreviewUrl(imageUrl);
 
     const img = new Image();
     img.onload = () => {
@@ -81,6 +83,7 @@ export default function ImageAnnotatorModal({
       const displayHeight = Math.max(1, Math.floor(originalHeight * scale));
 
       setOriginalDimensions({ width: originalWidth, height: originalHeight });
+      setDisplayDimensions({ width: displayWidth, height: displayHeight });
       sourceImageRef.current = img;
 
       if (fabricCanvasRef.current) {
@@ -97,7 +100,7 @@ export default function ImageAnnotatorModal({
       const canvas = new fabric.Canvas(canvasRef.current, {
         width: displayWidth,
         height: displayHeight,
-        backgroundColor: "#ffffff",
+        backgroundColor: "transparent",
         preserveObjectStacking: true,
         selection: false
       });
@@ -107,23 +110,6 @@ export default function ImageAnnotatorModal({
       canvas.originalHeight = originalHeight;
       fabricCanvasRef.current = canvas;
 
-      const baseImageObject = new fabric.Image(img, {
-        left: 0,
-        top: 0,
-        scaleX: scale,
-        scaleY: scale,
-        selectable: false,
-        evented: false,
-        hasControls: false,
-        hasBorders: false,
-        lockMovementX: true,
-        lockMovementY: true,
-        hoverCursor: "default"
-      });
-
-      baseImageObjectRef.current = baseImageObject;
-      canvas.add(baseImageObject);
-      baseImageObject.sendToBack();
       canvas.requestRenderAll();
       setIsLoading(false);
     };
@@ -138,8 +124,8 @@ export default function ImageAnnotatorModal({
 
     return () => {
       mounted = false;
-      baseImageObjectRef.current = null;
       sourceImageRef.current = null;
+      setPreviewUrl("");
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
@@ -229,7 +215,7 @@ export default function ImageAnnotatorModal({
   const handleUndo = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-    const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
+    const objects = canvas.getObjects();
     if (!objects.length) return;
     canvas.remove(objects[objects.length - 1]);
     canvas.requestRenderAll();
@@ -239,14 +225,7 @@ export default function ImageAnnotatorModal({
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
     const objects = canvas.getObjects();
-    objects.forEach((object) => {
-      if (object !== baseImageObjectRef.current) {
-        canvas.remove(object);
-      }
-    });
-    if (baseImageObjectRef.current) {
-      baseImageObjectRef.current.sendToBack();
-    }
+    objects.forEach((object) => canvas.remove(object));
     canvas.requestRenderAll();
   };
 
@@ -277,7 +256,7 @@ export default function ImageAnnotatorModal({
         height: originalDimensions.height
       });
 
-      const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
+      const objects = canvas.getObjects();
       for (const obj of objects) {
         // eslint-disable-next-line no-await-in-loop
         const cloned = await new Promise((resolve) => {
@@ -437,7 +416,16 @@ export default function ImageAnnotatorModal({
               </button>
             </div>
           ) : null}
-          <canvas ref={canvasRef} />
+          <div
+            className="annotator-stage"
+            style={{
+              width: displayDimensions.width || undefined,
+              height: displayDimensions.height || undefined
+            }}
+          >
+            {previewUrl && !loadError ? <img className="annotator-preview-image" src={previewUrl} alt="" draggable={false} /> : null}
+            <canvas ref={canvasRef} />
+          </div>
         </div>
 
         <div className="annotator-footer">
