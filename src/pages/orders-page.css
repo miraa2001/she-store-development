@@ -1964,8 +1964,21 @@
   gap: 8px;
 }
 
+.image-editor-card-external {
+  grid-template-rows: auto 1fr auto;
+}
+
 .image-editor-head {
   padding-bottom: 8px;
+}
+
+.image-editor-external-wrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
 }
 
 .image-editor-tools {
