@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Stepper, { Step } from "../common/Stepper";
 import FileUploadDropzone from "../common/FileUploadDropzone";
-import ImageEditorModal from "../common/ImageEditorModal";
+import ImageAnnotatorModal from "../common/ImageAnnotatorModal";
 
 export default function PurchaseFormModal({
   open,
@@ -428,7 +428,7 @@ export default function PurchaseFormModal({
         )}
       </div>
 
-      <ImageEditorModal
+      <ImageAnnotatorModal
         open={imageEditor.open}
         file={imageEditor.file}
         onClose={closeImageEditor}

@@ -2021,17 +2021,14 @@
   place-items: center;
 }
 
-.image-editor-canvas {
-  display: block;
-  width: min(100%, 1000px);
-  height: auto;
-  max-height: calc(100svh - 360px);
+.image-editor-stage-wrap {
   touch-action: none;
-  background: #fff;
 }
 
-.image-editor-canvas.is-hidden {
-  display: none;
+.image-editor-stage {
+  display: block;
+  max-width: 100%;
+  background: #fff;
 }
 
 .image-editor-foot {
