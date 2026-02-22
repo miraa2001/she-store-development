@@ -21,9 +21,17 @@ const BRUSH_SIZES = {
   thick: 10
 };
 
+const TEXT_SIZES = {
+  thin: 16,
+  medium: 24,
+  thick: 32
+};
+
 const TOOL_OPTIONS = [
   { id: "brush", label: "\u0641\u0631\u0634\u0627\u0629", hint: "Brush" },
-  { id: "rectangle", label: "\u0645\u0633\u062A\u0637\u064A\u0644", hint: "Rectangle" }
+  { id: "rectangle", label: "\u0645\u0633\u062A\u0637\u064A\u0644", hint: "Rectangle" },
+  { id: "crop", label: "\u0642\u0635 \u062D\u0631", hint: "Crop" },
+  { id: "text", label: "\u0646\u0635", hint: "Text" }
 ];
 
 const SIZE_OPTIONS = [
@@ -65,7 +73,7 @@ export default function ImageAnnotatorModal({
   const closeHandler = onCancel || onClose;
 
   useEffect(() => {
-    if (activeTool !== "brush" && activeTool !== "rectangle") {
+    if (!["brush", "rectangle", "crop", "text"].includes(activeTool)) {
       setActiveTool("brush");
     }
   }, [activeTool]);
@@ -254,6 +262,97 @@ export default function ImageAnnotatorModal({
       return;
     }
 
+    if (activeTool === "crop") {
+      canvas.isDrawingMode = false;
+      canvas.selection = false;
+
+      let cropRect = null;
+      let isDown = false;
+      let startX = 0;
+      let startY = 0;
+
+      canvas.on("mouse:down", (event) => {
+        isDown = true;
+        const pointer = canvas.getPointer(event.e);
+        startX = pointer.x;
+        startY = pointer.y;
+
+        canvas
+          .getObjects()
+          .filter((object) => object?.isCrop)
+          .forEach((object) => canvas.remove(object));
+
+        cropRect = new fabric.Rect({
+          left: startX,
+          top: startY,
+          width: 0,
+          height: 0,
+          fill: "rgba(255,255,255,0.15)",
+          stroke: selectedColor,
+          strokeWidth: 2,
+          strokeDashArray: [8, 6],
+          selectable: false,
+          evented: false,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true,
+          isCrop: true
+        });
+        canvas.add(cropRect);
+      });
+
+      canvas.on("mouse:move", (event) => {
+        if (!isDown || !cropRect) return;
+        const pointer = canvas.getPointer(event.e);
+        cropRect.set({
+          left: Math.min(startX, pointer.x),
+          top: Math.min(startY, pointer.y),
+          width: Math.abs(pointer.x - startX),
+          height: Math.abs(pointer.y - startY)
+        });
+        canvas.requestRenderAll();
+      });
+
+      canvas.on("mouse:up", () => {
+        isDown = false;
+        if (cropRect && (!cropRect.width || !cropRect.height)) {
+          canvas.remove(cropRect);
+        }
+        cropRect = null;
+      });
+      return;
+    }
+
+    if (activeTool === "text") {
+      canvas.isDrawingMode = false;
+      canvas.selection = false;
+
+      canvas.on("mouse:down", (event) => {
+        const nextText = window.prompt("اكتبي النص");
+        if (!nextText || !String(nextText).trim()) return;
+        const pointer = canvas.getPointer(event.e);
+        const textObject = new fabric.Text(String(nextText), {
+          left: pointer.x,
+          top: pointer.y,
+          fill: selectedColor,
+          fontSize: TEXT_SIZES[brushSize] || TEXT_SIZES.medium,
+          fontFamily: "Arial",
+          selectable: false,
+          evented: false,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true
+        });
+        canvas.add(textObject);
+        canvas.requestRenderAll();
+      });
+      return;
+    }
+
   }, [activeTool, brushSize, selectedColor, canvasReadyTick]);
 
   const handleUndo = () => {
@@ -294,13 +393,40 @@ export default function ImageAnnotatorModal({
       }
       ctx.drawImage(sourceImageRef.current, 0, 0, originalDimensions.width, originalDimensions.height);
 
-      const scaleFactor = 1 / canvas.originalScale;
       const tempCanvas = new fabric.Canvas(null, {
         width: originalDimensions.width,
         height: originalDimensions.height
       });
 
-      const objects = canvas.getObjects();
+      const scaleFactor = 1 / canvas.originalScale;
+      const cropObject = canvas.getObjects().find((obj) => obj?.isCrop);
+      let cropRegion = null;
+      if (cropObject) {
+        const rawX = Number(cropObject.left || 0) * scaleFactor;
+        const rawY = Number(cropObject.top || 0) * scaleFactor;
+        const rawW =
+          Number(
+            typeof cropObject.getScaledWidth === "function"
+              ? cropObject.getScaledWidth()
+              : (cropObject.width || 0) * (cropObject.scaleX || 1)
+          ) * scaleFactor;
+        const rawH =
+          Number(
+            typeof cropObject.getScaledHeight === "function"
+              ? cropObject.getScaledHeight()
+              : (cropObject.height || 0) * (cropObject.scaleY || 1)
+          ) * scaleFactor;
+
+        const x = Math.max(0, Math.min(originalDimensions.width - 1, Math.round(rawX)));
+        const y = Math.max(0, Math.min(originalDimensions.height - 1, Math.round(rawY)));
+        const w = Math.max(1, Math.round(rawW));
+        const h = Math.max(1, Math.round(rawH));
+        const clampedW = Math.max(1, Math.min(w, originalDimensions.width - x));
+        const clampedH = Math.max(1, Math.min(h, originalDimensions.height - y));
+        cropRegion = { x, y, w: clampedW, h: clampedH };
+      }
+
+      const objects = canvas.getObjects().filter((obj) => !obj?.isCrop);
       for (const obj of objects) {
         // eslint-disable-next-line no-await-in-loop
         const cloned = await new Promise((resolve) => {
@@ -336,8 +462,29 @@ export default function ImageAnnotatorModal({
       });
       ctx.drawImage(drawingsImage, 0, 0);
 
+      let outputCanvas = exportCanvas;
+      if (cropRegion) {
+        const croppedCanvas = document.createElement("canvas");
+        croppedCanvas.width = cropRegion.w;
+        croppedCanvas.height = cropRegion.h;
+        const croppedCtx = croppedCanvas.getContext("2d");
+        if (!croppedCtx) throw new Error("Crop canvas context unavailable");
+        croppedCtx.drawImage(
+          exportCanvas,
+          cropRegion.x,
+          cropRegion.y,
+          cropRegion.w,
+          cropRegion.h,
+          0,
+          0,
+          cropRegion.w,
+          cropRegion.h
+        );
+        outputCanvas = croppedCanvas;
+      }
+
       const blob = await new Promise((resolve, reject) => {
-        exportCanvas.toBlob(
+        outputCanvas.toBlob(
           (outputBlob) => {
             if (!outputBlob) {
               reject(new Error("Failed to export edited image"));
