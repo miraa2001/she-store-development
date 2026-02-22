@@ -21,6 +21,18 @@ const BRUSH_SIZES = {
   thick: 10
 };
 
+const TOOL_OPTIONS = [
+  { id: "brush", label: "\u0641\u0631\u0634\u0627\u0629", hint: "Brush" },
+  { id: "eraser", label: "\u0645\u0645\u062D\u0627\u0629", hint: "Eraser" },
+  { id: "rectangle", label: "\u0645\u0633\u062A\u0637\u064A\u0644", hint: "Rectangle" }
+];
+
+const SIZE_OPTIONS = [
+  { id: "thin", label: "\u0631\u0641\u064A\u0639", hint: "Thin" },
+  { id: "medium", label: "\u0645\u062A\u0648\u0633\u0637", hint: "Medium" },
+  { id: "thick", label: "\u0633\u0645\u064A\u0643", hint: "Thick" }
+];
+
 function toEditedFileName(name) {
   const base = String(name || "image").replace(/\.[^/.]+$/, "") || "image";
   return `${base}-edited.png`;
@@ -206,10 +218,6 @@ export default function ImageAnnotatorModal({
       return;
     }
 
-    if (activeTool === "select") {
-      canvas.isDrawingMode = false;
-      canvas.selection = true;
-    }
   }, [activeTool, brushSize, selectedColor]);
 
   const handleUndo = () => {
@@ -345,45 +353,49 @@ export default function ImageAnnotatorModal({
 
         <div className="annotator-toolbar">
           <div className="tool-section">
-            <label>Tool:</label>
+            <label>{`\u0627\u0644\u0623\u062F\u0627\u0629:`}</label>
             <div className="tool-buttons">
-              <button type="button" className={activeTool === "brush" ? "active" : ""} onClick={() => setActiveTool("brush")}>
-                B
-              </button>
-              <button type="button" className={activeTool === "eraser" ? "active" : ""} onClick={() => setActiveTool("eraser")}>
-                E
-              </button>
-              <button
-                type="button"
-                className={activeTool === "rectangle" ? "active" : ""}
-                onClick={() => setActiveTool("rectangle")}
-              >
-                []
-              </button>
+              {TOOL_OPTIONS.map((tool) => (
+                <button
+                  key={tool.id}
+                  type="button"
+                  className={activeTool === tool.id ? "active" : ""}
+                  onClick={() => setActiveTool(tool.id)}
+                  aria-label={tool.hint}
+                  title={tool.hint}
+                >
+                  <span className="tool-button-content">
+                    <span className="tool-btn-title">{tool.label}</span>
+                    <span className="tool-btn-sub">{tool.hint}</span>
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="tool-section">
-            <label>Size:</label>
+            <label>{`\u0627\u0644\u0633\u0645\u0643:`}</label>
             <div className="size-buttons">
-              <button type="button" className={brushSize === "thin" ? "active" : ""} onClick={() => setBrushSize("thin")}>
-                Thin
-              </button>
-              <button
-                type="button"
-                className={brushSize === "medium" ? "active" : ""}
-                onClick={() => setBrushSize("medium")}
-              >
-                Medium
-              </button>
-              <button type="button" className={brushSize === "thick" ? "active" : ""} onClick={() => setBrushSize("thick")}>
-                Thick
-              </button>
+              {SIZE_OPTIONS.map((size) => (
+                <button
+                  key={size.id}
+                  type="button"
+                  className={brushSize === size.id ? "active" : ""}
+                  onClick={() => setBrushSize(size.id)}
+                  aria-label={size.hint}
+                  title={size.hint}
+                >
+                  <span className="tool-button-content">
+                    <span className="tool-btn-title">{size.label}</span>
+                    <span className="tool-btn-sub">{size.hint}</span>
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
 
           <div className="tool-section">
-            <label>Color:</label>
+            <label>{`\u0627\u0644\u0644\u0648\u0646:`}</label>
             <div className="color-palette">
               {COLORS.map((color) => (
                 <button
@@ -407,10 +419,10 @@ export default function ImageAnnotatorModal({
 
           <div className="tool-section">
             <button type="button" className="action-btn" onClick={handleUndo}>
-              Undo
+              {`\u062A\u0631\u0627\u062C\u0639`}
             </button>
             <button type="button" className="action-btn" onClick={handleClear}>
-              Clear
+              {`\u0645\u0633\u062D`}
             </button>
           </div>
         </div>

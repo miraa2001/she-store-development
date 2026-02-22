@@ -84,11 +84,30 @@
   background: #fff;
   color: #1f2937;
   border-radius: 10px;
-  min-height: 38px;
-  padding: 0 12px;
+  min-height: 40px;
+  min-width: 88px;
+  padding: 6px 10px;
   font-family: inherit;
   font-size: 13px;
   cursor: pointer;
+}
+
+.tool-button-content {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  line-height: 1.05;
+}
+
+.tool-btn-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.tool-btn-sub {
+  font-size: 10px;
+  opacity: 0.72;
 }
 
 .tool-buttons button.active,
@@ -96,6 +115,11 @@
   border-color: rgba(109, 63, 107, 0.6);
   background: #47143f;
   color: #fff;
+}
+
+.tool-buttons button.active .tool-btn-sub,
+.size-buttons button.active .tool-btn-sub {
+  opacity: 0.9;
 }
 
 .action-btn:hover,
@@ -278,6 +302,12 @@
   .size-buttons {
     flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .tool-buttons button,
+  .size-buttons button {
+    min-width: 96px;
   }
 
   .tool-buttons button,
