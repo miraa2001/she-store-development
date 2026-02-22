@@ -188,7 +188,14 @@ export default function PurchaseFormModal({
           step="0.01"
           min="0"
           value={formState.price}
-          onChange={(event) => onUpdateForm({ price: event.target.value })}
+          onChange={(event) => {
+            const nextPrice = event.target.value;
+            if (formMode === "add") {
+              onUpdateForm({ price: nextPrice, paidPrice: nextPrice });
+              return;
+            }
+            onUpdateForm({ price: nextPrice });
+          }}
           disabled={formSaving}
         />
       </label>

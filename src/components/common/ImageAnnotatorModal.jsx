@@ -324,8 +324,18 @@ export default function ImageAnnotatorModal({
   if (!open) return null;
 
   return (
-    <div className="image-annotator-overlay">
-      <div className="image-annotator-modal">
+    <div
+      className="image-annotator-overlay"
+      onClick={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <div
+        className="image-annotator-modal"
+        onClick={(event) => event.stopPropagation()}
+        onMouseDown={(event) => event.stopPropagation()}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
         <div className="annotator-header">
           <h3>Edit image</h3>
           <button type="button" className="close-btn" onClick={closeHandler} disabled={disabled || saving}>
