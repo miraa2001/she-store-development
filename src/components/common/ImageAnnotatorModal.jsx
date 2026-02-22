@@ -303,13 +303,15 @@ export default function ImageAnnotatorModal({
           lockMovementX: false,
           lockMovementY: false,
           lockRotation: true,
+          cornerSize: 20,
+          touchCornerSize: 28,
           isCrop: true
         });
         cropRect.setControlsVisibility({
-          tl: true,
-          tr: true,
-          bl: true,
-          br: true,
+          tl: false,
+          tr: false,
+          bl: false,
+          br: false,
           ml: true,
           mr: true,
           mt: true,
@@ -333,13 +335,15 @@ export default function ImageAnnotatorModal({
         cornerStrokeColor: "#ffffff",
         cornerStyle: "circle",
         transparentCorners: false,
-        minScaleLimit: 0.05
+        minScaleLimit: 0.05,
+        cornerSize: 20,
+        touchCornerSize: 28
       });
       cropRect.setControlsVisibility({
-        tl: true,
-        tr: true,
-        bl: true,
-        br: true,
+        tl: false,
+        tr: false,
+        bl: false,
+        br: false,
         ml: true,
         mr: true,
         mt: true,
@@ -360,11 +364,22 @@ export default function ImageAnnotatorModal({
           object.set({
             selectable: true,
             evented: true,
-            hasControls: false,
+            hasControls: true,
             hasBorders: true,
-            lockScalingX: true,
-            lockScalingY: true,
+            lockScalingX: false,
+            lockScalingY: false,
             lockRotation: true
+          });
+          object.setControlsVisibility({
+            tl: true,
+            tr: true,
+            bl: true,
+            br: true,
+            ml: false,
+            mr: false,
+            mt: false,
+            mb: false,
+            mtr: false
           });
         } else if (!object?.isCrop) {
           object.set({
@@ -396,11 +411,22 @@ export default function ImageAnnotatorModal({
           editable: true,
           selectable: true,
           evented: true,
-          hasControls: false,
+          hasControls: true,
           hasBorders: true,
-          lockScalingX: true,
-          lockScalingY: true,
+          lockScalingX: false,
+          lockScalingY: false,
           lockRotation: true
+        });
+        textObject.setControlsVisibility({
+          tl: true,
+          tr: true,
+          bl: true,
+          br: true,
+          ml: false,
+          mr: false,
+          mt: false,
+          mb: false,
+          mtr: false
         });
         canvas.add(textObject);
         canvas.setActiveObject(textObject);
