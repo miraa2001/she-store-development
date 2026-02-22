@@ -38,6 +38,7 @@ export default function ImageAnnotatorModal({
   const fabricCanvasRef = useRef(null);
   const imageUrlRef = useRef(null);
   const sourceImageRef = useRef(null);
+  const baseImageObjectRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -110,9 +111,15 @@ export default function ImageAnnotatorModal({
         scaleX: scale,
         scaleY: scale,
         selectable: false,
-        evented: false
+        evented: false,
+        hasControls: false,
+        hasBorders: false,
+        lockMovementX: true,
+        lockMovementY: true
       });
-      canvas.backgroundImage = fabricImg;
+      baseImageObjectRef.current = fabricImg;
+      canvas.add(fabricImg);
+      fabricImg.sendToBack();
       canvas.requestRenderAll();
       if (mounted) setIsLoading(false);
     };
@@ -129,6 +136,7 @@ export default function ImageAnnotatorModal({
     return () => {
       mounted = false;
       sourceImageRef.current = null;
+      baseImageObjectRef.current = null;
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
@@ -211,26 +219,25 @@ export default function ImageAnnotatorModal({
     if (!canvas) return;
     const objects = canvas.getObjects();
     if (!objects.length) return;
-    canvas.remove(objects[objects.length - 1]);
+    const removable = objects.filter((object) => object !== baseImageObjectRef.current);
+    if (!removable.length) return;
+    canvas.remove(removable[removable.length - 1]);
     canvas.renderAll();
   };
 
   const handleClear = () => {
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
-    canvas.clear();
-    canvas.backgroundColor = "#ffffff";
-
-    if (sourceImageRef.current) {
-      const backgroundImage = new fabric.Image(sourceImageRef.current, {
-        scaleX: canvas.originalScale,
-        scaleY: canvas.originalScale,
-        selectable: false,
-        evented: false
-      });
-      canvas.backgroundImage = backgroundImage;
-      canvas.requestRenderAll();
+    const objects = canvas.getObjects();
+    objects.forEach((object) => {
+      if (object !== baseImageObjectRef.current) {
+        canvas.remove(object);
+      }
+    });
+    if (baseImageObjectRef.current) {
+      baseImageObjectRef.current.sendToBack();
     }
+    canvas.requestRenderAll();
   };
 
   const handleSave = async () => {
@@ -261,7 +268,7 @@ export default function ImageAnnotatorModal({
         height: originalDimensions.height
       });
 
-      const objects = canvas.getObjects();
+      const objects = canvas.getObjects().filter((object) => object !== baseImageObjectRef.current);
       for (const obj of objects) {
         // eslint-disable-next-line no-await-in-loop
         const cloned = await new Promise((resolve) => {
