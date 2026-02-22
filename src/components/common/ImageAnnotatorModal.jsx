@@ -40,6 +40,11 @@ const SIZE_OPTIONS = [
   { id: "thick", label: "\u0633\u0645\u064A\u0643", hint: "Thick" }
 ];
 
+function isTextObject(object) {
+  if (!object) return false;
+  return object.type === "text" || object.type === "i-text" || object.type === "textbox";
+}
+
 function toEditedFileName(name) {
   const base = String(name || "image").replace(/\.[^/.]+$/, "") || "image";
   return `${base}-edited.png`;
@@ -398,27 +403,58 @@ export default function ImageAnnotatorModal({
 
     if (activeTool === "text") {
       canvas.isDrawingMode = false;
-      canvas.selection = false;
+      canvas.selection = true;
+
+      canvas.getObjects().forEach((object) => {
+        if (isTextObject(object)) {
+          object.set({
+            selectable: true,
+            evented: true,
+            hasControls: false,
+            hasBorders: true,
+            lockScalingX: true,
+            lockScalingY: true,
+            lockRotation: true
+          });
+        } else if (!object?.isCrop) {
+          object.set({
+            selectable: false,
+            evented: false
+          });
+        }
+      });
 
       canvas.on("mouse:down", (event) => {
-        const nextText = window.prompt("اكتبي النص");
-        if (!nextText || !String(nextText).trim()) return;
+        if (isTextObject(event?.target)) {
+          canvas.setActiveObject(event.target);
+          if (typeof event.target.enterEditing === "function") {
+            event.target.enterEditing();
+            event.target.selectAll?.();
+          }
+          canvas.requestRenderAll();
+          return;
+        }
+
         const pointer = canvas.getPointer(event.e);
-        const textObject = new fabric.Text(String(nextText), {
+        const textObject = new fabric.Textbox("", {
           left: pointer.x,
           top: pointer.y,
+          width: 220,
           fill: selectedColor,
           fontSize: TEXT_SIZES[brushSize] || TEXT_SIZES.medium,
           fontFamily: "Arial",
-          selectable: false,
-          evented: false,
+          editable: true,
+          selectable: true,
+          evented: true,
           hasControls: false,
-          hasBorders: false,
-          lockMovementX: true,
-          lockMovementY: true,
+          hasBorders: true,
+          lockScalingX: true,
+          lockScalingY: true,
           lockRotation: true
         });
         canvas.add(textObject);
+        canvas.setActiveObject(textObject);
+        textObject.enterEditing();
         canvas.requestRenderAll();
       });
       return;
