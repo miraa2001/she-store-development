@@ -37,6 +37,7 @@ export default function ImageAnnotatorModal({
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const imageUrlRef = useRef(null);
+  const sourceImageRef = useRef(null);
 
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -64,7 +65,6 @@ export default function ImageAnnotatorModal({
     console.log("File size:", file?.size);
 
     const img = new Image();
-    img.crossOrigin = "anonymous";
 
     img.onload = () => {
       if (!mounted) return;
@@ -104,25 +104,17 @@ export default function ImageAnnotatorModal({
       canvas.originalHeight = originalHeight;
       fabricCanvasRef.current = canvas;
 
-      fabric.Image.fromURL(
-        imageUrl,
-        (fabricImg) => {
-          if (!mounted || !fabricCanvasRef.current || !fabricImg) return;
+      sourceImageRef.current = img;
 
-          fabricImg.set({
-            scaleX: scale,
-            scaleY: scale,
-            selectable: false,
-            evented: false
-          });
-
-          canvas.setBackgroundImage(fabricImg, () => {
-            canvas.renderAll();
-            if (mounted) setIsLoading(false);
-          });
-        },
-        { crossOrigin: "anonymous" }
-      );
+      const fabricImg = new fabric.Image(img, {
+        scaleX: scale,
+        scaleY: scale,
+        selectable: false,
+        evented: false
+      });
+      canvas.backgroundImage = fabricImg;
+      canvas.requestRenderAll();
+      if (mounted) setIsLoading(false);
     };
 
     img.onerror = (error) => {
@@ -136,6 +128,7 @@ export default function ImageAnnotatorModal({
 
     return () => {
       mounted = false;
+      sourceImageRef.current = null;
       if (fabricCanvasRef.current) {
         fabricCanvasRef.current.dispose();
         fabricCanvasRef.current = null;
@@ -228,21 +221,15 @@ export default function ImageAnnotatorModal({
     canvas.clear();
     canvas.backgroundColor = "#ffffff";
 
-    if (imageUrlRef.current) {
-      fabric.Image.fromURL(
-        imageUrlRef.current,
-        (fabricImg) => {
-          if (!fabricImg) return;
-          fabricImg.set({
-            scaleX: canvas.originalScale,
-            scaleY: canvas.originalScale,
-            selectable: false,
-            evented: false
-          });
-          canvas.setBackgroundImage(fabricImg, canvas.renderAll.bind(canvas));
-        },
-        { crossOrigin: "anonymous" }
-      );
+    if (sourceImageRef.current) {
+      const backgroundImage = new fabric.Image(sourceImageRef.current, {
+        scaleX: canvas.originalScale,
+        scaleY: canvas.originalScale,
+        selectable: false,
+        evented: false
+      });
+      canvas.backgroundImage = backgroundImage;
+      canvas.requestRenderAll();
     }
   };
 
@@ -264,14 +251,10 @@ export default function ImageAnnotatorModal({
 
       const scaleFactor = 1 / canvas.originalScale;
 
-      const baseImage = new Image();
-      baseImage.crossOrigin = "anonymous";
-      await new Promise((resolve, reject) => {
-        baseImage.onload = resolve;
-        baseImage.onerror = reject;
-        baseImage.src = imageUrlRef.current;
-      });
-      ctx.drawImage(baseImage, 0, 0, originalDimensions.width, originalDimensions.height);
+      if (!sourceImageRef.current) {
+        throw new Error("Missing source image");
+      }
+      ctx.drawImage(sourceImageRef.current, 0, 0, originalDimensions.width, originalDimensions.height);
 
       const tempCanvas = new fabric.Canvas(null, {
         width: originalDimensions.width,
