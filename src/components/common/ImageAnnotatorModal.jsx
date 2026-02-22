@@ -23,7 +23,6 @@ const BRUSH_SIZES = {
 
 const TOOL_OPTIONS = [
   { id: "brush", label: "\u0641\u0631\u0634\u0627\u0629", hint: "Brush" },
-  { id: "eraser", label: "\u0645\u0645\u062D\u0627\u0629", hint: "Eraser" },
   { id: "rectangle", label: "\u0645\u0633\u062A\u0637\u064A\u0644", hint: "Rectangle" }
 ];
 
@@ -63,6 +62,12 @@ export default function ImageAnnotatorModal({
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const closeHandler = onCancel || onClose;
+
+  useEffect(() => {
+    if (activeTool !== "brush" && activeTool !== "rectangle") {
+      setActiveTool("brush");
+    }
+  }, [activeTool]);
 
   useEffect(() => {
     if (!open || !file) return undefined;
@@ -153,18 +158,34 @@ export default function ImageAnnotatorModal({
     const canvas = fabricCanvasRef.current;
     if (!canvas) return;
 
+    canvas.off("path:created");
     canvas.off("mouse:down");
     canvas.off("mouse:move");
     canvas.off("mouse:up");
 
-    if (activeTool === "brush" || activeTool === "eraser") {
+    if (activeTool === "brush") {
       canvas.isDrawingMode = true;
       canvas.selection = false;
 
       const brush = new fabric.PencilBrush(canvas);
       brush.width = BRUSH_SIZES[brushSize] || BRUSH_SIZES.medium;
-      brush.color = activeTool === "eraser" ? "#ffffff" : selectedColor;
+      brush.color = selectedColor;
       canvas.freeDrawingBrush = brush;
+
+      canvas.on("path:created", (event) => {
+        const path = event?.path;
+        if (!path) return;
+        path.set({
+          selectable: false,
+          evented: false,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true
+        });
+        canvas.requestRenderAll();
+      });
       return;
     }
 
@@ -191,7 +212,13 @@ export default function ImageAnnotatorModal({
           fill: "transparent",
           stroke: selectedColor,
           strokeWidth: BRUSH_SIZES[brushSize] || BRUSH_SIZES.medium,
-          selectable: true
+          selectable: false,
+          evented: false,
+          hasControls: false,
+          hasBorders: false,
+          lockMovementX: true,
+          lockMovementY: true,
+          lockRotation: true
         });
         canvas.add(rect);
       });
