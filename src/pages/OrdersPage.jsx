@@ -1717,6 +1717,7 @@ export default function OrdersPage() {
                 purchaseStats={purchaseStats}
                 isMobile={isMobile}
                 isRahaf={isRahaf}
+                isReem={isReem}
                 editMode={editMode}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenAddModal={openAddModal}

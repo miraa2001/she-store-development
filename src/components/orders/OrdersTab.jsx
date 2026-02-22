@@ -23,6 +23,7 @@ export default function OrdersTab({
   purchaseStats,
   isMobile = false,
   isRahaf,
+  isReem = false,
   editMode,
   onUpdateOrderStatus,
   onOpenAddModal,
@@ -47,6 +48,7 @@ export default function OrdersTab({
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
   const highlightRef = useRef(null);
   const canEditOrderStatus = isRahaf && editMode && !!selectedOrder;
+  const canShowPurchaseNotes = isRahaf || isReem;
   const pdfExportIcon = useMemo(() => {
     if (typeof navigator === "undefined") return pdfExportIconWeb;
     const ua = String(navigator.userAgent || "").toLowerCase();
@@ -152,6 +154,7 @@ export default function OrdersTab({
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
             const canShowWhatsapp = !!selectedOrder?.arrived;
+            const purchaseNote = String(purchase.note || "").trim();
             const imageList = Array.isArray(purchase.images)
               ? purchase.images.filter((img) => img?.url)
               : [];
@@ -310,6 +313,12 @@ export default function OrdersTab({
                         {menuNode ? <div className="purchaseVInlineMenu">{menuNode}</div> : null}
                       </div>
                     ) : null}
+
+                    {canShowPurchaseNotes && purchaseNote ? (
+                      <div className="purchaseVNote" title={purchaseNote}>
+                        <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
+                      </div>
+                    ) : null}
                   </article>
                 </div>
 
@@ -368,6 +377,12 @@ export default function OrdersTab({
                       <div className="purchase-head-actions">
                         {menuNode}
                       </div>
+                    </div>
+                  ) : null}
+
+                  {canShowPurchaseNotes && purchaseNote ? (
+                    <div className="purchase-mobile-note" title={purchaseNote}>
+                      <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
                     </div>
                   ) : null}
                 </div>
