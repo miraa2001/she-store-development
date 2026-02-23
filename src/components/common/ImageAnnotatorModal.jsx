@@ -75,6 +75,7 @@ export default function ImageAnnotatorModal({
   const [selectedColor, setSelectedColor] = useState("#FF0000");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [applyingCrop, setApplyingCrop] = useState(false);
+  const [textDraft, setTextDraft] = useState("");
 
   const closeHandler = onCancel || onClose;
 
@@ -310,6 +311,7 @@ export default function ImageAnnotatorModal({
     setActiveTool("brush");
     setBrushSize("medium");
     setSelectedColor("#FF0000");
+    setTextDraft("");
   }, [open]);
 
   useEffect(() => {
@@ -612,17 +614,11 @@ export default function ImageAnnotatorModal({
 
       canvas.on("mouse:down", (event) => {
         if (isTextObject(event?.target)) {
-          canvas.setActiveObject(event.target);
-          if (typeof event.target.enterEditing === "function") {
-            event.target.enterEditing();
-            event.target.selectAll?.();
-          }
-          canvas.requestRenderAll();
           return;
         }
 
         const pointer = canvas.getPointer(event.e);
-        const textObject = new fabric.Textbox("", {
+        const textObject = new fabric.Textbox(String(textDraft || "نص"), {
           left: pointer.x,
           top: pointer.y,
           width: 220,
@@ -651,7 +647,6 @@ export default function ImageAnnotatorModal({
         });
         canvas.add(textObject);
         canvas.setActiveObject(textObject);
-        textObject.enterEditing();
         canvas.requestRenderAll();
       });
       return;
@@ -918,6 +913,20 @@ export default function ImageAnnotatorModal({
               </div>
             ) : null}
           </div>
+
+          {activeTool === "text" ? (
+            <div className="tool-section text-input-section">
+              <label>{`\u0627\u0644\u0646\u0635:`}</label>
+              <input
+                type="text"
+                className="text-draft-input"
+                value={textDraft}
+                onChange={(event) => setTextDraft(event.target.value)}
+                placeholder={"\u0627\u0643\u062A\u0628\u064A \u0627\u0644\u0646\u0635 \u062B\u0645 \u0627\u0636\u063A\u0637\u064A \u0639\u0644\u0649 \u0627\u0644\u0635\u0648\u0631\u0629"}
+                disabled={isLoading || saving || applyingCrop}
+              />
+            </div>
+          ) : null}
 
           <div className="tool-section">
             <button type="button" className="action-btn" onClick={handleUndo} disabled={isLoading || saving || applyingCrop}>
