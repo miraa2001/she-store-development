@@ -2,8 +2,10 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import "./orders-page.css";
 import {
+  ORDER_TYPES,
   ORDER_STATUS,
   ORDER_STATUS_LABELS,
+  SHEIN_ORDER_TYPES,
   createOrder,
   deriveOrderStatus,
   deleteOrderById,
@@ -66,6 +68,15 @@ import ordersMenuIcon from "../assets/icons/navigation/orders.png";
 
 const BAG_OPTIONS = ["كيس كبير", "كيس صغير"];
 const MAX_IMAGES = 10;
+const ORDER_TYPE_OPTIONS = [
+  { value: ORDER_TYPES.IHERB, label: "iHerb" },
+  { value: ORDER_TYPES.SHEIN, label: "Shein" }
+];
+const SHEIN_TYPE_OPTIONS = [
+  { value: SHEIN_ORDER_TYPES.NORMAL, label: "Normal" },
+  { value: SHEIN_ORDER_TYPES.MAKEUP, label: "Makeup" },
+  { value: SHEIN_ORDER_TYPES.ELECTRONICS, label: "Electronics" }
+];
 
 function createEmptyForm(orderId, customers) {
   return {
@@ -1161,7 +1172,9 @@ export default function OrdersPage() {
     setOrderDialog({
       kind: "create",
       orderId: "",
-      name: ""
+      name: "",
+      orderType: ORDER_TYPES.SHEIN,
+      sheinType: SHEIN_ORDER_TYPES.NORMAL
     });
   };
 
@@ -1347,14 +1360,29 @@ export default function OrdersPage() {
   const submitCreateOrder = async () => {
     if (!orderDialog || orderDialog.kind !== "create" || orderDialogBusy) return;
     const nextName = String(orderDialog.name || "").trim();
+    const nextOrderType = String(orderDialog.orderType || "").trim().toLowerCase();
+    const nextSheinType = String(orderDialog.sheinType || "").trim().toLowerCase();
+
     if (!nextName) {
       setToast({ type: "warn", text: "اسم الطلب مطلوب." });
+      return;
+    }
+    if (!Object.values(ORDER_TYPES).includes(nextOrderType)) {
+      setToast({ type: "warn", text: "حددي نوع الطلب." });
+      return;
+    }
+    if (nextOrderType === ORDER_TYPES.SHEIN && !Object.values(SHEIN_ORDER_TYPES).includes(nextSheinType)) {
+      setToast({ type: "warn", text: "حددي نوع طلب شي إن." });
       return;
     }
 
     setOrderDialogBusy(true);
     try {
-      const created = await createOrder(nextName);
+      const created = await createOrder({
+        orderName: nextName,
+        orderType: nextOrderType,
+        sheinType: nextOrderType === ORDER_TYPES.SHEIN ? nextSheinType : null
+      });
       const createdId = created?.id ? String(created.id) : "";
       setToast({ type: "success", text: "تم إنشاء طلب جديد." });
       await refreshOrders(createdId);
@@ -1931,6 +1959,54 @@ export default function OrdersPage() {
                       autoFocus
                     />
                   </label>
+                  {orderDialog.kind === "create" ? (
+                    <label>
+                      <span>نوع الطلب</span>
+                      <select
+                        value={orderDialog.orderType || ""}
+                        onChange={(event) =>
+                          setOrderDialog((prev) =>
+                            prev
+                              ? {
+                                  ...prev,
+                                  orderType: event.target.value,
+                                  sheinType:
+                                    event.target.value === ORDER_TYPES.SHEIN
+                                      ? prev.sheinType || SHEIN_ORDER_TYPES.NORMAL
+                                      : ""
+                                }
+                              : prev
+                          )
+                        }
+                        disabled={orderDialogBusy}
+                      >
+                        {ORDER_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
+                  {orderDialog.kind === "create" && orderDialog.orderType === ORDER_TYPES.SHEIN ? (
+                    <label>
+                      <span>نوع شي إن</span>
+                      <select
+                        value={orderDialog.sheinType || ""}
+                        onChange={(event) =>
+                          setOrderDialog((prev) => (prev ? { ...prev, sheinType: event.target.value } : prev))
+                        }
+                        disabled={orderDialogBusy}
+                      >
+                        <option value="">اختاري النوع</option>
+                        {SHEIN_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                   <div className="purchase-modal-foot">
                     <button
                       type="button"
