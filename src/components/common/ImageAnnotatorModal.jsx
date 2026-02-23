@@ -74,8 +74,230 @@ export default function ImageAnnotatorModal({
   const [brushSize, setBrushSize] = useState("medium");
   const [selectedColor, setSelectedColor] = useState("#FF0000");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [applyingCrop, setApplyingCrop] = useState(false);
 
   const closeHandler = onCancel || onClose;
+
+  const computeDisplayDimensions = (width, height) => {
+    const maxWidth = Math.min(window.innerWidth * 0.85, 1200);
+    const maxHeight = Math.min(window.innerHeight * 0.6, 800);
+    const scale = Math.min(maxWidth / width, maxHeight / height, 1);
+    return {
+      scale,
+      width: Math.max(1, Math.floor(width * scale)),
+      height: Math.max(1, Math.floor(height * scale))
+    };
+  };
+
+  const extractCropRegion = (canvas) => {
+    if (!canvas) return null;
+    const cropObject = canvas.getObjects().find((obj) => obj?.isCrop);
+    if (!cropObject) return null;
+
+    const scaleFactor = 1 / canvas.originalScale;
+    const rawX = Number(cropObject.left || 0) * scaleFactor;
+    const rawY = Number(cropObject.top || 0) * scaleFactor;
+    const rawW =
+      Number(
+        typeof cropObject.getScaledWidth === "function"
+          ? cropObject.getScaledWidth()
+          : (cropObject.width || 0) * (cropObject.scaleX || 1)
+      ) * scaleFactor;
+    const rawH =
+      Number(
+        typeof cropObject.getScaledHeight === "function"
+          ? cropObject.getScaledHeight()
+          : (cropObject.height || 0) * (cropObject.scaleY || 1)
+      ) * scaleFactor;
+
+    const x = Math.max(0, Math.min(originalDimensions.width - 1, Math.round(rawX)));
+    const y = Math.max(0, Math.min(originalDimensions.height - 1, Math.round(rawY)));
+    const w = Math.max(1, Math.round(rawW));
+    const h = Math.max(1, Math.round(rawH));
+    const clampedW = Math.max(1, Math.min(w, originalDimensions.width - x));
+    const clampedH = Math.max(1, Math.min(h, originalDimensions.height - y));
+    return { x, y, w: clampedW, h: clampedH };
+  };
+
+  const renderMergedCanvas = async (canvas) => {
+    if (!canvas) throw new Error("Missing canvas");
+    if (!sourceImageRef.current) throw new Error("Missing source image");
+
+    const mergedCanvas = document.createElement("canvas");
+    mergedCanvas.width = originalDimensions.width;
+    mergedCanvas.height = originalDimensions.height;
+    const mergedCtx = mergedCanvas.getContext("2d");
+    if (!mergedCtx) throw new Error("2D canvas context unavailable");
+
+    mergedCtx.drawImage(sourceImageRef.current, 0, 0, originalDimensions.width, originalDimensions.height);
+
+    const tempCanvas = new fabric.Canvas(null, {
+      width: originalDimensions.width,
+      height: originalDimensions.height
+    });
+
+    const scaleFactor = 1 / canvas.originalScale;
+    const objects = canvas.getObjects().filter((obj) => !obj?.isCrop);
+    for (const obj of objects) {
+      // eslint-disable-next-line no-await-in-loop
+      const cloned = await new Promise((resolve) => {
+        obj.clone((clonedObj) => {
+          clonedObj.set({
+            scaleX: (obj.scaleX || 1) * scaleFactor,
+            scaleY: (obj.scaleY || 1) * scaleFactor,
+            left: (obj.left || 0) * scaleFactor,
+            top: (obj.top || 0) * scaleFactor,
+            strokeWidth: (obj.strokeWidth || 1) * scaleFactor
+          });
+
+          if (clonedObj.type === "path" && clonedObj.path) {
+            clonedObj.path = clonedObj.path.map((pathPoint) =>
+              pathPoint.map((val, idx) => (idx > 0 && typeof val === "number" ? val * scaleFactor : val))
+            );
+          }
+          resolve(clonedObj);
+        });
+      });
+      tempCanvas.add(cloned);
+    }
+
+    tempCanvas.requestRenderAll();
+    const drawingsDataUrl = tempCanvas.toDataURL({ format: "png", quality: 1, multiplier: 1 });
+    tempCanvas.dispose();
+
+    const drawingsImage = new Image();
+    await new Promise((resolve, reject) => {
+      drawingsImage.onload = resolve;
+      drawingsImage.onerror = reject;
+      drawingsImage.src = drawingsDataUrl;
+    });
+    mergedCtx.drawImage(drawingsImage, 0, 0);
+
+    return mergedCanvas;
+  };
+
+  const finalizeTextEditing = () => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    canvas.getObjects().forEach((obj) => {
+      if (isTextObject(obj) && typeof obj.exitEditing === "function" && obj.isEditing) {
+        obj.exitEditing();
+      }
+    });
+    canvas.discardActiveObject();
+    canvas.requestRenderAll();
+  };
+
+  const applyCropSelection = async () => {
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return false;
+
+    const cropRegion = extractCropRegion(canvas);
+    if (!cropRegion) return false;
+
+    const isFullImageCrop =
+      cropRegion.x === 0 &&
+      cropRegion.y === 0 &&
+      cropRegion.w >= originalDimensions.width &&
+      cropRegion.h >= originalDimensions.height;
+
+    if (isFullImageCrop) {
+      canvas.getObjects().filter((obj) => obj?.isCrop).forEach((obj) => canvas.remove(obj));
+      canvas.requestRenderAll();
+      return false;
+    }
+
+    try {
+      setApplyingCrop(true);
+      setIsLoading(true);
+
+      const mergedCanvas = await renderMergedCanvas(canvas);
+      const croppedCanvas = document.createElement("canvas");
+      croppedCanvas.width = cropRegion.w;
+      croppedCanvas.height = cropRegion.h;
+      const croppedCtx = croppedCanvas.getContext("2d");
+      if (!croppedCtx) throw new Error("Crop canvas context unavailable");
+
+      croppedCtx.drawImage(
+        mergedCanvas,
+        cropRegion.x,
+        cropRegion.y,
+        cropRegion.w,
+        cropRegion.h,
+        0,
+        0,
+        cropRegion.w,
+        cropRegion.h
+      );
+
+      const dataUrl = croppedCanvas.toDataURL("image/png", 1);
+      const nextImage = new Image();
+      await new Promise((resolve, reject) => {
+        nextImage.onload = resolve;
+        nextImage.onerror = reject;
+        nextImage.src = dataUrl;
+      });
+
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+        fabricCanvasRef.current = null;
+      }
+
+      const nextOriginalWidth = nextImage.naturalWidth || nextImage.width;
+      const nextOriginalHeight = nextImage.naturalHeight || nextImage.height;
+      const nextDisplay = computeDisplayDimensions(nextOriginalWidth, nextOriginalHeight);
+
+      setOriginalDimensions({ width: nextOriginalWidth, height: nextOriginalHeight });
+      setDisplayDimensions({ width: nextDisplay.width, height: nextDisplay.height });
+      setPreviewUrl(dataUrl);
+      sourceImageRef.current = nextImage;
+
+      const nextCanvas = new fabric.Canvas(canvasRef.current, {
+        width: nextDisplay.width,
+        height: nextDisplay.height,
+        backgroundColor: "transparent",
+        preserveObjectStacking: true,
+        selection: false
+      });
+      nextCanvas.originalScale = nextDisplay.scale;
+      nextCanvas.originalWidth = nextOriginalWidth;
+      nextCanvas.originalHeight = nextOriginalHeight;
+      fabricCanvasRef.current = nextCanvas;
+      setCanvasReadyTick((prev) => prev + 1);
+      setIsLoading(false);
+      return true;
+    } catch (error) {
+      setLoadError(error?.message || "Failed to apply crop");
+      setIsLoading(false);
+      return false;
+    } finally {
+      setApplyingCrop(false);
+    }
+  };
+
+  const handleToolChange = async (nextTool) => {
+    if (nextTool === activeTool) return;
+
+    if (activeTool === "text") {
+      finalizeTextEditing();
+    }
+
+    if (activeTool === "crop" && nextTool !== "crop") {
+      await applyCropSelection();
+    }
+
+    setActiveTool(nextTool);
+  };
+
+  const handleSizeChange = (nextSize) => {
+    setBrushSize(nextSize);
+    if (activeTool !== "text") return;
+    const canvas = fabricCanvasRef.current;
+    const activeObject = canvas?.getActiveObject?.();
+    if (!activeObject || !isTextObject(activeObject)) return;
+    activeObject.set("fontSize", TEXT_SIZES[nextSize] || TEXT_SIZES.medium);
+    canvas.requestRenderAll();
+  };
 
   useEffect(() => {
     if (!["brush", "rectangle", "crop", "text"].includes(activeTool)) {
@@ -114,11 +336,10 @@ export default function ImageAnnotatorModal({
         return;
       }
 
-      const maxWidth = Math.min(window.innerWidth * 0.85, 1200);
-      const maxHeight = Math.min(window.innerHeight * 0.6, 800);
-      const scale = Math.min(maxWidth / originalWidth, maxHeight / originalHeight, 1);
-      const displayWidth = Math.max(1, Math.floor(originalWidth * scale));
-      const displayHeight = Math.max(1, Math.floor(originalHeight * scale));
+      const nextDisplay = computeDisplayDimensions(originalWidth, originalHeight);
+      const scale = nextDisplay.scale;
+      const displayWidth = nextDisplay.width;
+      const displayHeight = nextDisplay.height;
 
       setOriginalDimensions({ width: originalWidth, height: originalHeight });
       setDisplayDimensions({ width: displayWidth, height: displayHeight });
@@ -612,7 +833,7 @@ export default function ImageAnnotatorModal({
       >
         <div className="annotator-header">
           <h3>Edit image</h3>
-          <button type="button" className="close-btn" onClick={closeHandler} disabled={disabled || saving}>
+          <button type="button" className="close-btn" onClick={closeHandler} disabled={disabled || saving || applyingCrop}>
             X
           </button>
         </div>
@@ -626,9 +847,12 @@ export default function ImageAnnotatorModal({
                   key={tool.id}
                   type="button"
                   className={activeTool === tool.id ? "active" : ""}
-                  onClick={() => setActiveTool(tool.id)}
+                  onClick={() => {
+                    handleToolChange(tool.id);
+                  }}
                   aria-label={tool.hint}
                   title={tool.hint}
+                  disabled={isLoading || saving || applyingCrop}
                 >
                   <span className="tool-button-content">
                     <span className="tool-btn-title">{tool.label}</span>
@@ -647,9 +871,10 @@ export default function ImageAnnotatorModal({
                   key={size.id}
                   type="button"
                   className={brushSize === size.id ? "active" : ""}
-                  onClick={() => setBrushSize(size.id)}
+                  onClick={() => handleSizeChange(size.id)}
                   aria-label={size.hint}
                   title={size.hint}
+                  disabled={isLoading || saving || applyingCrop}
                 >
                   <span className="tool-button-content">
                     <span className="tool-btn-title">{size.label}</span>
@@ -670,24 +895,35 @@ export default function ImageAnnotatorModal({
                   className={`color-swatch ${selectedColor === color ? "active" : ""}`}
                   style={{ backgroundColor: color }}
                   onClick={() => setSelectedColor(color)}
+                  disabled={isLoading || saving || applyingCrop}
                 />
               ))}
-              <button type="button" className="color-picker-btn" onClick={() => setShowColorPicker((prev) => !prev)}>
+              <button
+                type="button"
+                className="color-picker-btn"
+                onClick={() => setShowColorPicker((prev) => !prev)}
+                disabled={isLoading || saving || applyingCrop}
+              >
                 +
               </button>
             </div>
             {showColorPicker ? (
               <div className="custom-color-picker">
-                <input type="color" value={selectedColor} onChange={(event) => setSelectedColor(event.target.value)} />
+                <input
+                  type="color"
+                  value={selectedColor}
+                  onChange={(event) => setSelectedColor(event.target.value)}
+                  disabled={isLoading || saving || applyingCrop}
+                />
               </div>
             ) : null}
           </div>
 
           <div className="tool-section">
-            <button type="button" className="action-btn" onClick={handleUndo}>
+            <button type="button" className="action-btn" onClick={handleUndo} disabled={isLoading || saving || applyingCrop}>
               {`\u062A\u0631\u0627\u062C\u0639`}
             </button>
-            <button type="button" className="action-btn" onClick={handleClear}>
+            <button type="button" className="action-btn" onClick={handleClear} disabled={isLoading || saving || applyingCrop}>
               {`\u0645\u0633\u062D`}
             </button>
           </div>
@@ -717,14 +953,19 @@ export default function ImageAnnotatorModal({
         </div>
 
         <div className="annotator-footer">
-          <button type="button" className="cancel-btn" onClick={closeHandler} disabled={isLoading || saving || disabled}>
+          <button
+            type="button"
+            className="cancel-btn"
+            onClick={closeHandler}
+            disabled={isLoading || saving || disabled || applyingCrop}
+          >
             Cancel
           </button>
           <button
             type="button"
             className="save-btn"
             onClick={handleSave}
-            disabled={isLoading || Boolean(loadError) || saving || disabled}
+            disabled={isLoading || Boolean(loadError) || saving || disabled || applyingCrop}
           >
             {saving ? "Saving..." : "Save"}
           </button>
