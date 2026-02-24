@@ -155,6 +155,7 @@ export default function OrdersTab({
           {filteredPurchases.map((purchase) => {
             const canShowWhatsapp = !!selectedOrder?.arrived;
             const purchaseNote = String(purchase.note || "").trim();
+            const mobileNoteText = purchaseNote || "لا توجد ملاحظة";
             const imageList = Array.isArray(purchase.images)
               ? purchase.images.filter((img) => img?.url)
               : [];
@@ -355,7 +356,11 @@ export default function OrdersTab({
                     </div>
 
                     <div className="purchase-mobile-summary">
-                      Pickup: {purchase.pickup_point || "-"} • Bag: {purchase.bag_size || "-"}
+                      مكان الاستلام: {purchase.pickup_point || "-"}
+                    </div>
+
+                    <div className="purchase-mobile-summary">
+                      حجم الكيس: {purchase.bag_size || "-"}
                     </div>
 
                     {purchase.links?.length ? (
@@ -380,9 +385,9 @@ export default function OrdersTab({
                     ) : null}
                   </div>
 
-                  {canShowPurchaseNotes && purchaseNote ? (
+                  {canShowPurchaseNotes ? (
                     <div className="purchase-mobile-note" title={purchaseNote}>
-                      <strong>ملاحظة:</strong> <span>{purchaseNote}</span>
+                      <strong>ملاحظة:</strong> <span>{mobileNoteText}</span>
                     </div>
                   ) : null}
 
