@@ -156,6 +156,7 @@ export default function OrdersTab({
             const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
             const purchaseNote = String(purchase.note || "").trim();
             const mobileNoteText = purchaseNote || "لا توجد ملاحظة";
+            const shouldShowMobileNote = canShowPurchaseNotes && (isReem ? !!purchaseNote : true);
             const imageList = Array.isArray(purchase.images)
               ? purchase.images.filter((img) => img?.url)
               : [];
@@ -385,7 +386,7 @@ export default function OrdersTab({
                     ) : null}
                   </div>
 
-                  {canShowPurchaseNotes ? (
+                  {shouldShowMobileNote ? (
                     <div className="purchase-mobile-note" title={purchaseNote}>
                       <strong>ملاحظة:</strong> <span>{mobileNoteText}</span>
                     </div>
