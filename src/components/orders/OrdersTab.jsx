@@ -153,7 +153,7 @@ export default function OrdersTab({
       {!purchasesLoading && !purchasesError && filteredPurchases.length && !hidePurchaseGrid ? (
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
-            const canShowWhatsapp = !!selectedOrder?.arrived;
+            const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;
             const purchaseNote = String(purchase.note || "").trim();
             const mobileNoteText = purchaseNote || "لا توجد ملاحظة";
             const imageList = Array.isArray(purchase.images)
@@ -284,11 +284,11 @@ export default function OrdersTab({
                         <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
                       </div>
                       <div className="purchaseVField">
-                        <p className="purchaseVLabel">Pickup Method</p>
+                        <p className="purchaseVLabel">مكان الاستلام</p>
                         <p className="purchaseVValue">{purchase.pickup_point || "-"}</p>
                       </div>
                       <div className="purchaseVField">
-                        <p className="purchaseVLabel">Bag Size</p>
+                        <p className="purchaseVLabel">حجم الكيس</p>
                         <p className="purchaseVValue">{purchase.bag_size || "-"}</p>
                       </div>
                     </div>
