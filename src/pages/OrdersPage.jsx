@@ -448,13 +448,14 @@ export default function OrdersPage() {
     try {
       const data = await fetchOrdersWithSummary();
       const allOrders = data || [];
-      setOrders(allOrders);
+      const visibleOrders = isReem ? allOrders.filter((order) => !!order.arrived) : allOrders;
+      setOrders(visibleOrders);
       setSelectedOrderId((prev) => {
         const candidate = preferredId || prev;
-        if (candidate && allOrders.some((order) => String(order.id) === String(candidate))) {
+        if (candidate && visibleOrders.some((order) => String(order.id) === String(candidate))) {
           return candidate;
         }
-        return allOrders[0]?.id || "";
+        return visibleOrders[0]?.id || "";
       });
     } catch (error) {
       console.error(error);
@@ -462,7 +463,7 @@ export default function OrdersPage() {
     } finally {
       setOrdersLoading(false);
     }
-  }, []);
+  }, [isReem]);
 
   const refreshCustomers = useCallback(async () => {
     setCustomersLoading(true);

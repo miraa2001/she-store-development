@@ -283,8 +283,12 @@ export default function OrdersTab({
                         <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
                       </div>
                       <div className="purchaseVField">
-                        <p className="purchaseVLabel">مكان الاستلام</p>
-                        <p className="purchaseVValue">{purchase.pickup_point || "—"}</p>
+                        <p className="purchaseVLabel">Pickup Method</p>
+                        <p className="purchaseVValue">{purchase.pickup_point || "-"}</p>
+                      </div>
+                      <div className="purchaseVField">
+                        <p className="purchaseVLabel">Bag Size</p>
+                        <p className="purchaseVValue">{purchase.bag_size || "-"}</p>
                       </div>
                     </div>
 
@@ -348,6 +352,10 @@ export default function OrdersTab({
 
                     <div className="purchase-mobile-summary">
                       {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
+                    </div>
+
+                    <div className="purchase-mobile-summary">
+                      Pickup: {purchase.pickup_point || "-"} • Bag: {purchase.bag_size || "-"}
                     </div>
 
                     {purchase.links?.length ? (
