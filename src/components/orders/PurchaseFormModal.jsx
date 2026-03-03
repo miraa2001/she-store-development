@@ -365,7 +365,7 @@ export default function PurchaseFormModal({
   );
 
   return (
-    <div className="purchase-modal-backdrop" onClick={onClose}>
+    <div className="purchase-modal-backdrop">
       <div className="purchase-modal-card" onClick={(event) => event.stopPropagation()}>
         <div className="purchase-modal-head">
           <h3>{isAddMode ? "إضافة مشترى" : "تعديل المشترى"}</h3>
