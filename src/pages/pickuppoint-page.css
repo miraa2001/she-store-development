@@ -764,3 +764,16 @@
     --size: 36px;
   }
 }
+
+@supports (-webkit-touch-callout: none) {
+  .pickuppoint-page .pickuppoint-search-row,
+  .pickuppoint-page .pickuppoint-search-results,
+  .pickuppoint-page .pickuppoint-card,
+  .pickuppoint-page .pickuppoint-table-wrap,
+  .pickuppoint-page .pickup-orders-menu-panel,
+  .pickuppoint-page .order-row,
+  .pickuppoint-page .month-chip {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}

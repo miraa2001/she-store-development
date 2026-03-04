@@ -105,14 +105,16 @@ export default function PickupPointPage({ embedded = false }) {
 
   const groupedOrders = useMemo(() => buildOrderGroups(orders), [orders]);
   const mergedOrders = useMemo(() => buildMergedOrders(groupedOrders), [groupedOrders]);
+  const allOrderIds = useMemo(() => orders.map((order) => order.id), [orders]);
   const selectedOrder = useMemo(() => {
     return mergedOrders.find((order) => String(order.id) === String(selectedItemId)) || null;
   }, [mergedOrders, selectedItemId]);
 
   const selectedOrderIds = useMemo(() => {
+    if (isLaaura) return allOrderIds;
     if (!selectedOrder) return [];
     return selectedOrder.orderIds || [];
-  }, [selectedOrder]);
+  }, [allOrderIds, isLaaura, selectedOrder]);
 
   const visiblePurchases = useMemo(() => purchases.filter((purchase) => !purchase.collected), [purchases]);
   const pickedTotal = useMemo(
@@ -122,6 +124,24 @@ export default function PickupPointPage({ embedded = false }) {
         .reduce((sum, purchase) => sum + parsePrice(purchase.paid_price ?? purchase.price), 0),
     [visiblePurchases]
   );
+  const laauraOrderSections = useMemo(() => {
+    return groupedOrders
+      .map((group) => {
+        const ids = new Set(group.orders.map((order) => String(order.id)));
+        const sectionPurchases = visiblePurchases.filter((purchase) => ids.has(String(purchase.order_id)));
+        const sectionPickedTotal = sectionPurchases
+          .filter((purchase) => purchase.picked_up)
+          .reduce((sum, purchase) => sum + parsePrice(purchase.paid_price ?? purchase.price), 0);
+
+        return {
+          id: `section-${group.dateKey}`,
+          name: formatDropOffOrderName(group.dateKey),
+          purchases: sectionPurchases,
+          pickedTotal: sectionPickedTotal
+        };
+      })
+      .filter((section) => section.purchases.length > 0);
+  }, [groupedOrders, visiblePurchases]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -154,12 +174,19 @@ export default function PickupPointPage({ embedded = false }) {
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
+    if (isLaaura) {
+      setSelectedItemId("");
+      if (!orders.length) setPurchases([]);
+      return;
+    }
+
     setSelectedItemId((prev) => {
       if (prev && mergedOrders.some((order) => String(order.id) === String(prev))) return prev;
       return mergedOrders[0]?.id || "";
     });
+
     if (!mergedOrders.length) setPurchases([]);
-  }, [mergedOrders]);
+  }, [isLaaura, mergedOrders, orders.length]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
@@ -545,6 +572,7 @@ export default function PickupPointPage({ embedded = false }) {
         ) : null}
 
         <div className="pickuppoint-search-row pickup-section-header">
+          {!isLaaura ? (
           <button
             type="button"
             className="pickup-orders-menu-trigger"
@@ -555,6 +583,7 @@ export default function PickupPointPage({ embedded = false }) {
             <span>الطلبات</span>
             <b>{mergedOrders.length}</b>
           </button>
+          ) : null}
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -606,7 +635,116 @@ export default function PickupPointPage({ embedded = false }) {
               </div>
             ) : null}
 
-            {!selectedOrder ? (
+            {isLaaura ? (
+              <>
+                {loadingPurchases ? (
+                  <div className="pickuppoint-spacer">
+                    <SessionLoader label={"\u062C\u0627\u0631\u064A \u062A\u062D\u0645\u064A\u0644 \u0627\u0644\u0645\u0634\u062A\u0631\u064A\u0627\u062A..."} />
+                  </div>
+                ) : null}
+
+                {!loadingPurchases && !laauraOrderSections.length ? (
+                  <div className="pickuppoint-muted pickuppoint-spacer">
+                    {"\u0644\u0627 \u064A\u0648\u062C\u062F \u0628\u064A\u0627\u0646\u0627\u062A"}
+                    <div className="pickuppoint-refresh-row">
+                      <button className="pickuppoint-btn" type="button" onClick={loadOrders}>
+                        {"\u062A\u062D\u062F\u064A\u062B"}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!loadingPurchases && laauraOrderSections.length ? (
+                  <div className="pickuppoint-laaura-groups">
+                    {laauraOrderSections.map((section) => (
+                      <section key={section.id} className="pickuppoint-laaura-group">
+                        <div className="pickuppoint-row">
+                          <div>
+                            <b>{section.name}</b>
+                          </div>
+                        </div>
+
+                        <div className="pickuppoint-order-summary-card">
+                          <div className="pickuppoint-order-pills-row">
+                            <span className="pickuppoint-pill">
+                              {"\u0639\u062F\u062F \u0627\u0644\u0645\u0634\u062A\u0631\u064A\u0627\u062A"}: {section.purchases.length}
+                            </span>
+                            <span className="pickuppoint-pill">
+                              {"\u0645\u062C\u0645\u0648\u0639 \u0627\u0644\u0645\u0633\u062A\u0644\u0645"}: {formatILS(section.pickedTotal)} ₪
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="pickuppoint-table-wrap pickup-table-wrap">
+                          <table className="pickuppoint-table pickup-table">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>
+                                  <span className="pickuppoint-th-label">
+                                    <img src={customerHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                    <span>{"\u0627\u0644\u0632\u0628\u0648\u0646"}</span>
+                                  </span>
+                                </th>
+                                <th>
+                                  <span className="pickuppoint-th-label">
+                                    <img src={priceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                    <span>{"\u0627\u0644\u0633\u0639\u0631"}</span>
+                                  </span>
+                                </th>
+                                <th>
+                                  <span className="pickuppoint-th-label">
+                                    <img src={bagHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                    <span>{"\u062D\u062C\u0645 \u0627\u0644\u0643\u064A\u0633"}</span>
+                                  </span>
+                                </th>
+                                <th>
+                                  <span className="pickuppoint-th-label">
+                                    <img src={pickedUpHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                    <span>{"\u062A\u0645 \u0627\u0644\u0627\u0633\u062A\u0644\u0627\u0645"}</span>
+                                  </span>
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {section.purchases.map((purchase, index) => {
+                                const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
+                                return (
+                                  <tr key={purchase.id} className={isHighlight ? "highlight" : ""}>
+                                    <td>{index + 1}</td>
+                                    <td>{purchase.customer_name || ""}</td>
+                                    <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
+                                    <td>{purchase.bag_size || "—"}</td>
+                                    <td>
+                                      <div className="pickuppoint-pick-row pickup-checkbox-wrap">
+                                        <PickupAnimatedCheckbox
+                                          checked={!!purchase.picked_up}
+                                          onChange={(event) => togglePicked(purchase.id, event.target.checked)}
+                                          ariaLabel={
+                                            purchase.picked_up
+                                              ? "\u062A\u0645 \u0627\u0644\u0627\u0633\u062A\u0644\u0627\u0645"
+                                              : "\u063A\u064A\u0631 \u0645\u0633\u062A\u0644\u0645"
+                                          }
+                                        />
+                                        <span className={`pickuppoint-status ${purchase.picked_up ? "success" : "neutral"}`}>
+                                          {purchase.picked_up
+                                            ? "\u062A\u0645 \u0627\u0644\u0627\u0633\u062A\u0644\u0627\u0645"
+                                            : "\u063A\u064A\u0631 \u0645\u0633\u062A\u0644\u0645"}
+                                        </span>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </section>
+                    ))}
+                  </div>
+                ) : null}
+              </>
+            ) : !selectedOrder ? (
               <div className="pickuppoint-muted pickuppoint-spacer">
                 لا يوجد بيانات
                 <div className="pickuppoint-refresh-row">
@@ -793,7 +931,7 @@ export default function PickupPointPage({ embedded = false }) {
         </div>
       </div>
 
-      {ordersMenuPortalTarget
+      {ordersMenuPortalTarget && !isLaaura
         ? createPortal(
             <div
               className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`}
