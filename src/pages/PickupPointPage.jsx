@@ -84,6 +84,7 @@ export default function PickupPointPage({ embedded = false }) {
   const location = useLocation();
   const highlightTimeoutRef = useRef(null);
   const lastLoadedOrderKeyRef = useRef("");
+  const purchaseRowRefs = useRef(new Map());
 
   const isRahaf = profile.role === "rahaf";
   const isLaaura = profile.role === "laaura";
@@ -159,6 +160,14 @@ export default function PickupPointPage({ embedded = false }) {
       if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (!highlightPurchaseId) return;
+    const rowNode = purchaseRowRefs.current.get(String(highlightPurchaseId));
+    if (rowNode && typeof rowNode.scrollIntoView === "function") {
+      rowNode.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlightPurchaseId]);
 
   useEffect(() => {
     const shouldLockBody = ordersMenuOpen || (!embedded && sidebarOpen);
@@ -467,15 +476,27 @@ export default function PickupPointPage({ embedded = false }) {
       (order.orderIds || []).some((id) => String(id) === String(result.order_id))
     );
     if (!targetOrder) return;
-    setSelectedItemId(targetOrder.id);
+    if (!isLaaura) {
+      setSelectedItemId(targetOrder.id);
+    }
 
     clearSearchResults();
+    setSearch("");
     setHighlightPurchaseId(result.id);
 
     if (highlightTimeoutRef.current) window.clearTimeout(highlightTimeoutRef.current);
     highlightTimeoutRef.current = window.setTimeout(() => {
       setHighlightPurchaseId("");
     }, 2500);
+  }
+
+  function bindPurchaseRowRef(purchaseId, node) {
+    const key = String(purchaseId);
+    if (!node) {
+      purchaseRowRefs.current.delete(key);
+      return;
+    }
+    purchaseRowRefs.current.set(key, node);
   }
 
   if (profile.loading) {
@@ -675,7 +696,7 @@ export default function PickupPointPage({ embedded = false }) {
                           </div>
                         </div>
 
-                        <div className="pickuppoint-table-wrap pickup-table-wrap">
+                        <div className="pickuppoint-table-wrap pickuppoint-table-wrap-flat pickup-table-wrap">
                           <table className="pickuppoint-table pickup-table">
                             <thead>
                               <tr>
@@ -710,7 +731,11 @@ export default function PickupPointPage({ embedded = false }) {
                               {section.purchases.map((purchase, index) => {
                                 const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
                                 return (
-                                  <tr key={purchase.id} className={isHighlight ? "highlight" : ""}>
+                                  <tr
+                                    key={purchase.id}
+                                    className={isHighlight ? "highlight" : ""}
+                                    ref={(node) => bindPurchaseRowRef(purchase.id, node)}
+                                  >
                                     <td>{index + 1}</td>
                                     <td>{purchase.customer_name || ""}</td>
                                     <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
@@ -839,7 +864,11 @@ export default function PickupPointPage({ embedded = false }) {
                             const isHighlight = highlightPurchaseId && String(highlightPurchaseId) === String(purchase.id);
                             const isEditing = String(paidEditor.id) === String(purchase.id);
                             return (
-                              <tr key={purchase.id} className={isHighlight ? "highlight" : ""}>
+                              <tr
+                                key={purchase.id}
+                                className={isHighlight ? "highlight" : ""}
+                                ref={(node) => bindPurchaseRowRef(purchase.id, node)}
+                              >
                                 <td>{index + 1}</td>
                                 <td>{purchase.customer_name || ""}</td>
                                 <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
