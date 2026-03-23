@@ -431,7 +431,7 @@ export default function OrdersPage() {
   const purchaseStats = useMemo(() => {
     const count = purchases.length;
     const totalQty = purchases.reduce((sum, item) => sum + Number(item.qty || 0), 0);
-    const totalPrice = purchases.reduce((sum, item) => sum + parsePrice(item.price), 0);
+    const totalPrice = purchases.reduce((sum, item) => sum + parsePrice(item.paid_price ?? item.price), 0);
     return { count, totalQty, totalPrice };
   }, [purchases]);
 
@@ -1351,7 +1351,7 @@ export default function OrdersPage() {
       const target = await resolvePurchaseWhatsappTarget(purchase);
       const message = buildArrivalNotifyMessage({
         pickupPoint: purchase.pickup_point,
-        price: purchase.price,
+        price: purchase.paid_price ?? purchase.price,
         customerName: target.customerName
       });
       const url = buildWhatsappUrl(target.phone, message);
@@ -1724,7 +1724,7 @@ export default function OrdersPage() {
                   <strong>{row.customer_name || "بدون اسم"}</strong>
                   <span>
                     {orderNameById.get(String(row.order_id)) || "طلب"} • {row.qty || 0} قطع •{" "}
-                    {formatILS(row.price)} ₪
+                    المدفوع: {formatILS(row.paid_price ?? row.price)} ₪
                   </span>
                 </button>
               ))}

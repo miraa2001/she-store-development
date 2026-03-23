@@ -272,7 +272,7 @@ export async function searchPurchasesByCustomerName(query, limit = 50) {
 
   const { data, error } = await sb
     .from("purchases")
-    .select("id, order_id, customer_name, price, qty, created_at")
+    .select("id, order_id, customer_name, price, paid_price, qty, created_at")
     .ilike("customer_name", `%${text}%`)
     .order("created_at", { ascending: false })
     .limit(limit);

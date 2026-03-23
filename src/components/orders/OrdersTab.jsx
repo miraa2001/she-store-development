@@ -77,7 +77,7 @@ export default function OrdersTab({
         <div>
           <h2>{selectedOrder?.name || "اختاري طلبًا"}</h2>
           <p>
-            عدد المشتريات: {purchaseStats.count} — مجموع القطع: {purchaseStats.totalQty} — مجموع الأسعار:{" "}
+            عدد المشتريات: {purchaseStats.count} — مجموع القطع: {purchaseStats.totalQty} — مجموع المدفوع:{" "}
             {formatILS(purchaseStats.totalPrice)} ₪
           </p>
         </div>
@@ -281,8 +281,8 @@ export default function OrdersTab({
                         <p className="purchaseVValue">{purchase.qty || 0}</p>
                       </div>
                       <div className="purchaseVField">
-                        <p className="purchaseVLabel">السعر</p>
-                        <p className="purchaseVValue">{formatILS(purchase.price)} ₪</p>
+                        <p className="purchaseVLabel">المدفوع</p>
+                        <p className="purchaseVValue">{formatILS(purchase.paid_price ?? purchase.price)} ₪</p>
                       </div>
                       <div className="purchaseVField">
                         <p className="purchaseVLabel">مكان الاستلام</p>
@@ -353,7 +353,7 @@ export default function OrdersTab({
                     </div>
 
                     <div className="purchase-mobile-summary">
-                      {purchase.qty || 0} قطع • {formatILS(purchase.price)} ₪
+                      {purchase.qty || 0} قطع • {formatILS(purchase.paid_price ?? purchase.price)} ₪
                     </div>
 
                     <div className="purchase-mobile-summary">

@@ -347,7 +347,7 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
         buildPickupStatusMessage({
           picked: payload.picked_up,
           customerName: target.customer_name,
-          price: target.price,
+          price: target.paid_price ?? target.price,
           pickupLabel: pickupLocation.pickupLabel
         })
       );
@@ -634,7 +634,7 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                 <button key={result.id} type="button" onClick={() => openSearchResult(result)}>
                   <b>{result.customer_name || ""}</b>
                   <div className="pickuppoint-muted">
-                    {orderDisplay} — السعر: {formatILS(result.price)}
+                    {orderDisplay} — المدفوع: {formatILS(result.paid_price ?? result.price)}
                   </div>
                 </button>
               );
@@ -715,7 +715,7 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                                 <th>
                                   <span className="pickuppoint-th-label">
                                     <img src={priceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
-                                    <span>{"\u0627\u0644\u0633\u0639\u0631"}</span>
+                                    <span>{"\u0627\u0644\u0645\u062F\u0641\u0648\u0639"}</span>
                                   </span>
                                 </th>
                                 <th>
@@ -829,14 +829,14 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                           <th>
                             <span className="pickuppoint-th-label">
                               <img src={priceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
-                              <span>السعر</span>
+                              <span>المدفوع</span>
                             </span>
                           </th>
                           {isRahaf ? (
                             <th>
                               <span className="pickuppoint-th-label">
                                 <img src={priceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
-                                <span>المدفوع</span>
+                                <span>تعديل المدفوع</span>
                               </span>
                             </th>
                           ) : null}
@@ -896,7 +896,9 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                                           }}
                                         />
                                       ) : (
-                                        purchase.paid_price ?? "—"
+                                        purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
+                                          ? "—"
+                                          : `${formatILS(purchase.paid_price)} ₪`
                                       )}
                                     </td>
                                     <td className="pickuppoint-edit-col">
