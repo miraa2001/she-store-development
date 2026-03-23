@@ -14,6 +14,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import editPriceHeaderIcon from "../assets/icons/actions/edit-price.png";
 import imagesHeaderIcon from "../assets/icons/pickup/images.png";
 import customerHeaderIcon from "../assets/icons/pickup/customer.png";
 import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
@@ -735,10 +736,9 @@ export default function HomePickupPage({ embedded = false }) {
                               </span>
                             </th>
                             {isRahaf ? (
-                              <th>
+                              <th aria-label="تعديل المدفوع" title="تعديل المدفوع">
                                 <span className="homepickup-th-label">
-                                  <img src={priceHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
-                                  <span>تعديل المدفوع</span>
+                                  <img src={editPriceHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
                                 </span>
                               </th>
                             ) : null}
