@@ -4,7 +4,8 @@ const EMAIL_ROLE_FALLBACK = {
   "rahaf@she-store.com": "rahaf",
   "reem@she-store.com": "reem",
   "rawand@she-store.com": "rawand",
-  "laaura@she-store.com": "laaura"
+  "laaura@she-store.com": "laaura",
+  "maryamti@she-store.com": "maryamti"
 };
 
 function normalizeRole(rawRole, email = "") {
@@ -15,6 +16,7 @@ function normalizeRole(rawRole, email = "") {
     if (normalizedEmail.includes("rahaf")) return "rahaf";
     if (normalizedEmail.includes("rawand")) return "rawand";
     if (normalizedEmail.includes("reem")) return "reem";
+    if (normalizedEmail.includes("maryamti")) return "maryamti";
     if (normalizedEmail.includes("laaura") || normalizedEmail.includes("la.aura") || normalizedEmail.includes("aura")) {
       return "laaura";
     }
@@ -22,6 +24,10 @@ function normalizeRole(rawRole, email = "") {
   }
 
   if (role === "rahaf" || role === "owner" || role === "admin") return "rahaf";
+
+  if (role === "maryamti" || role === "maryam") {
+    return "maryamti";
+  }
 
   if (role === "laaura" || role === "pickup" || role === "la aura" || role === "aura") {
     return "laaura";

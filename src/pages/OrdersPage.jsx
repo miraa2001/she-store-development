@@ -49,7 +49,8 @@ import {
 } from "../lib/whatsapp";
 import { exportOrderPdf } from "../lib/pdfExport";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
-import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
+import { getOrdersNavItems, getRoleLandingHref, isNavHrefActive } from "../lib/navigation";
+import { isPickupPointRole } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
 import CommandHeader from "../components/orders/CommandHeader";
@@ -379,6 +380,7 @@ export default function OrdersPage() {
   const isRahaf = profile.role === "rahaf";
   const isReem = profile.role === "reem";
   const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
+  const isPickupOnlyRole = isPickupPointRole(profile.role);
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
   const allowedTabs = useMemo(
     () => (isReem ? ["orders"] : isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
@@ -586,9 +588,9 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!profile.authenticated) return;
-    if (profile.role !== "laaura") return;
-    window.location.hash = "#/pickuppoint";
-  }, [profile.authenticated, profile.role]);
+    if (!isPickupOnlyRole) return;
+    window.location.hash = getRoleLandingHref(profile.role);
+  }, [isPickupOnlyRole, profile.authenticated, profile.role]);
 
   useEffect(() => {
     if (activeTab !== "orders") return;
@@ -1635,7 +1637,7 @@ export default function OrdersPage() {
             هذا الحساب لا يملك صلاحية صفحة الطلبات. سيتم تحويلك للصفحة المناسبة حسب الدور.
           </p>
           <a
-            href={profile.role === "laaura" ? "#/pickuppoint" : "#/login"}
+            href={isPickupOnlyRole ? getRoleLandingHref(profile.role) : "#/login"}
             className="mode auth-link"
           >
             متابعة
