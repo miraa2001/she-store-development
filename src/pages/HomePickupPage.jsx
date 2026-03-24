@@ -14,7 +14,6 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
-import editPriceHeaderIcon from "../assets/icons/actions/edit-price.png";
 import imagesHeaderIcon from "../assets/icons/pickup/images.png";
 import customerHeaderIcon from "../assets/icons/pickup/customer.png";
 import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
@@ -736,13 +735,12 @@ export default function HomePickupPage({ embedded = false }) {
                               </span>
                             </th>
                             {isRahaf ? (
-                              <th aria-label="تعديل المدفوع" title="تعديل المدفوع">
+                              <th className="homepickup-edit-col">
                                 <span className="homepickup-th-label">
-                                  <img src={editPriceHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
+                                  <span>تعديل المدفوع</span>
                                 </span>
                               </th>
                             ) : null}
-                            {isRahaf ? <th className="homepickup-edit-col" /> : null}
                             <th>
                               <span className="homepickup-th-label">
                                 <img src={imagesHeaderIcon} alt="" className="homepickup-th-icon" aria-hidden="true" />
@@ -778,27 +776,23 @@ export default function HomePickupPage({ embedded = false }) {
 
                                   {isRahaf ? (
                                     <>
-                                      <td>
-                                        {isEditing ? (
-                                          <input
-                                            type="number"
-                                            min="0"
-                                            step="0.01"
-                                            value={paidEditor.value}
-                                            onChange={(event) =>
-                                              setPaidEditor((prev) => ({ ...prev, value: event.target.value }))
-                                            }
-                                            className="homepickup-paid-input pickup-input mini"
-                                          />
-                                        ) : (
-                                          purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
-                                            ? "—"
-                                            : `${formatILS(purchase.paid_price)} ₪`
-                                        )}
-                                      </td>
                                       <td className="homepickup-edit-col">
                                         {isEditing ? (
                                           <div className="homepickup-edit-actions pickup-edit-actions">
+                                            <input
+                                              type="number"
+                                              min="0"
+                                              step="0.01"
+                                              value={paidEditor.value}
+                                              onChange={(event) =>
+                                                setPaidEditor((prev) => ({ ...prev, value: event.target.value }))
+                                              }
+                                              className="homepickup-paid-input pickup-input mini"
+                                              onKeyDown={(event) => {
+                                                if (event.key === "Enter") savePaidPrice();
+                                                if (event.key === "Escape") cancelEditPaid();
+                                              }}
+                                            />
                                             <button
                                               type="button"
                                               className="homepickup-btn mini"

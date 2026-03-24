@@ -15,7 +15,6 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import SheStoreLogo from "../components/common/SheStoreLogo";
-import editPriceHeaderIcon from "../assets/icons/actions/edit-price.png";
 import customerHeaderIcon from "../assets/icons/pickup/customer.png";
 import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
 import bagHeaderIcon from "../assets/icons/pickup/bag-size.png";
@@ -834,13 +833,12 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                             </span>
                           </th>
                           {isRahaf ? (
-                            <th aria-label="تعديل المدفوع" title="تعديل المدفوع">
+                            <th className="pickuppoint-edit-col">
                               <span className="pickuppoint-th-label">
-                                <img src={editPriceHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
+                                <span>تعديل المدفوع</span>
                               </span>
                             </th>
                           ) : null}
-                          {isRahaf ? <th className="pickuppoint-edit-col" /> : null}
                           <th>
                             <span className="pickuppoint-th-label">
                               <img src={bagHeaderIcon} alt="" className="pickuppoint-th-icon" aria-hidden="true" />
@@ -878,9 +876,9 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                                 <td>{purchase.customer_name || ""}</td>
                                 <td>{formatILS(purchase.paid_price ?? purchase.price)}</td>
                                 {isRahaf ? (
-                                  <>
-                                    <td>
-                                      {isEditing ? (
+                                  <td className="pickuppoint-edit-col">
+                                    {isEditing ? (
+                                      <div className="pickuppoint-edit-actions pickup-edit-actions">
                                         <input
                                           type="number"
                                           min="0"
@@ -895,43 +893,33 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                                             if (event.key === "Escape") cancelEditPaid();
                                           }}
                                         />
-                                      ) : (
-                                        purchase.paid_price === null || purchase.paid_price === undefined || purchase.paid_price === ""
-                                          ? "—"
-                                          : `${formatILS(purchase.paid_price)} ₪`
-                                      )}
-                                    </td>
-                                    <td className="pickuppoint-edit-col">
-                                      {isEditing ? (
-                                        <div className="pickuppoint-edit-actions pickup-edit-actions">
-                                          <button
-                                            type="button"
-                                            className="pickuppoint-btn mini"
-                                            onClick={savePaidPrice}
-                                            disabled={paidEditor.saving}
-                                          >
-                                            ✅
-                                          </button>
-                                          <button
-                                            type="button"
-                                            className="pickuppoint-btn mini"
-                                            onClick={cancelEditPaid}
-                                            disabled={paidEditor.saving}
-                                          >
-                                            ✖
-                                          </button>
-                                        </div>
-                                      ) : (
                                         <button
                                           type="button"
                                           className="pickuppoint-btn mini"
-                                          onClick={() => startEditPaid(purchase)}
+                                          onClick={savePaidPrice}
+                                          disabled={paidEditor.saving}
                                         >
-                                          ✏️
+                                          ✅
                                         </button>
-                                      )}
-                                    </td>
-                                  </>
+                                        <button
+                                          type="button"
+                                          className="pickuppoint-btn mini"
+                                          onClick={cancelEditPaid}
+                                          disabled={paidEditor.saving}
+                                        >
+                                          ✖
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="pickuppoint-btn mini"
+                                        onClick={() => startEditPaid(purchase)}
+                                      >
+                                        ✏️
+                                      </button>
+                                    )}
+                                  </td>
                                 ) : null}
                                 <td>{purchase.bag_size || "—"}</td>
                                 <td>
