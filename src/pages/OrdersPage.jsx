@@ -24,6 +24,7 @@ import {
   deletePurchaseById,
   fetchPurchasesByOrder,
   markPurchasePaidPrice,
+  movePurchasesToOrder,
   restoreDeletedPurchase,
   sanitizeLinks,
   searchPurchasesByCustomerName,
@@ -323,6 +324,8 @@ export default function OrdersPage() {
   const [confirmDeleteBusy, setConfirmDeleteBusy] = useState(false);
   const [paidPriceDialog, setPaidPriceDialog] = useState(null);
   const [paidPriceDialogBusy, setPaidPriceDialogBusy] = useState(false);
+  const [movePurchasesDialog, setMovePurchasesDialog] = useState(null);
+  const [movePurchasesDialogBusy, setMovePurchasesDialogBusy] = useState(false);
   const [orderDialog, setOrderDialog] = useState(null);
   const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
@@ -405,6 +408,22 @@ export default function OrdersPage() {
     [orders, selectedOrderId]
   );
 
+  const moveTargetOrders = useMemo(() => {
+    if (!selectedOrder?.id) return [];
+    return orders.filter((order) => !order.arrived && String(order.id) !== String(selectedOrder.id));
+  }, [orders, selectedOrder]);
+
+  const moveSelectedPurchases = useMemo(() => {
+    if (!movePurchasesDialog?.purchaseIds?.length) return [];
+    const selectedIds = new Set(movePurchasesDialog.purchaseIds.map((id) => String(id)));
+    return purchases.filter((purchase) => selectedIds.has(String(purchase.id)));
+  }, [movePurchasesDialog, purchases]);
+
+  const moveTargetOrder = useMemo(() => {
+    if (!movePurchasesDialog?.targetOrderId) return null;
+    return moveTargetOrders.find((order) => String(order.id) === String(movePurchasesDialog.targetOrderId)) || null;
+  }, [movePurchasesDialog, moveTargetOrders]);
+
   const selectedOrderIsFullyCollected = useMemo(
     () => isOrderFullyCollected(purchases),
     [purchases]
@@ -442,6 +461,14 @@ export default function OrdersPage() {
       customer.city
     ]);
   }, [customerSearch, customers]);
+
+  useEffect(() => {
+    setMovePurchasesDialog((prev) => {
+      if (!prev) return prev;
+      if (!selectedOrder?.id) return null;
+      return String(prev.sourceOrderId) === String(selectedOrder.id) ? prev : null;
+    });
+  }, [selectedOrder?.id]);
 
   const refreshOrders = useCallback(async (preferredId = "") => {
     setOrdersLoading(true);
@@ -1297,6 +1324,106 @@ export default function OrdersPage() {
     }
   };
 
+  const openMovePurchasesDialog = () => {
+    if (!isRahaf || !selectedOrder) return;
+    setMenuPurchaseId("");
+    setMovePurchasesDialog({
+      step: "select-purchases",
+      sourceOrderId: selectedOrder.id,
+      sourceOrderName: selectedOrder.name || "",
+      purchaseIds: [],
+      targetOrderId: ""
+    });
+  };
+
+  const closeMovePurchasesDialog = () => {
+    if (movePurchasesDialogBusy) return;
+    setMovePurchasesDialog(null);
+  };
+
+  const toggleMovePurchaseSelection = (purchaseId) => {
+    if (!purchaseId || movePurchasesDialogBusy) return;
+    setMovePurchasesDialog((prev) => {
+      if (!prev) return prev;
+      const currentIds = new Set((prev.purchaseIds || []).map((id) => String(id)));
+      const normalizedId = String(purchaseId);
+      if (currentIds.has(normalizedId)) {
+        currentIds.delete(normalizedId);
+      } else {
+        currentIds.add(normalizedId);
+      }
+      return {
+        ...prev,
+        purchaseIds: Array.from(currentIds)
+      };
+    });
+  };
+
+  const toggleMovePurchaseSelectionAll = () => {
+    if (movePurchasesDialogBusy) return;
+    const allIds = purchases.map((purchase) => String(purchase.id));
+    setMovePurchasesDialog((prev) => {
+      if (!prev) return prev;
+      const hasAllSelected = allIds.length > 0 && allIds.every((id) => prev.purchaseIds.includes(id));
+      return {
+        ...prev,
+        purchaseIds: hasAllSelected ? [] : allIds
+      };
+    });
+  };
+
+  const goToMovePurchaseTargetsStep = () => {
+    if (!movePurchasesDialog) return;
+    if (!movePurchasesDialog.purchaseIds?.length) {
+      setToast({ type: "warn", text: "اختاري مشتريات للنقل أولًا." });
+      return;
+    }
+    setMovePurchasesDialog((prev) => (prev ? { ...prev, step: "select-target", targetOrderId: "" } : prev));
+  };
+
+  const goBackMovePurchasesStep = () => {
+    if (movePurchasesDialogBusy) return;
+    setMovePurchasesDialog((prev) => (prev ? { ...prev, step: "select-purchases", targetOrderId: "" } : prev));
+  };
+
+  const submitMovePurchasesDialog = async () => {
+    if (!movePurchasesDialog || movePurchasesDialogBusy) return;
+    if (!moveSelectedPurchases.length) {
+      setToast({ type: "warn", text: "اختاري مشتريات للنقل." });
+      return;
+    }
+    if (!moveTargetOrder) {
+      setToast({ type: "warn", text: "اختاري الطلب الذي تريدين النقل إليه." });
+      return;
+    }
+
+    const purchaseCount = moveSelectedPurchases.length;
+    const confirmText = `تأكيد نقل ${purchaseCount} مشتريات من "${movePurchasesDialog.sourceOrderName}" إلى "${moveTargetOrder.name}"؟`;
+    if (!window.confirm(confirmText)) return;
+
+    setMovePurchasesDialogBusy(true);
+    try {
+      await movePurchasesToOrder(
+        moveSelectedPurchases.map((purchase) => purchase.id),
+        moveTargetOrder.id
+      );
+      setToast({
+        type: "success",
+        text: `تم نقل ${purchaseCount} مشتريات إلى ${moveTargetOrder.name}.`
+      });
+      setMovePurchasesDialog(null);
+      if (selectedOrder?.id) {
+        await refreshPurchases(selectedOrder.id);
+        await refreshOrders(selectedOrder.id);
+      }
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "فشل نقل المشتريات." });
+    } finally {
+      setMovePurchasesDialogBusy(false);
+    }
+  };
+
   const handleUpdateOrderStatus = async (nextStatus) => {
     if (!selectedOrder || !isRahaf || !editMode) return;
     if (!nextStatus) return;
@@ -1788,6 +1915,7 @@ export default function OrdersPage() {
                 editMode={editMode}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenAddModal={openAddModal}
+                onOpenMoveDialog={openMovePurchasesDialog}
                 onExportPdf={exportPdfNative}
                 canExportPdf={!isReem}
                 pdfExporting={pdfExporting}
@@ -2155,6 +2283,192 @@ export default function OrdersPage() {
                   إلغاء
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {movePurchasesDialog ? (
+        <div className="purchase-modal-backdrop" onClick={closeMovePurchasesDialog}>
+          <div
+            className="purchase-modal-card purchase-modal-card-move"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="purchase-modal-head">
+              <h3>نقل مشتريات</h3>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={closeMovePurchasesDialog}
+                disabled={movePurchasesDialogBusy}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="purchase-modal-body">
+              <div className="move-purchases-steps">
+                <span className={movePurchasesDialog.step === "select-purchases" ? "active" : ""}>1. اختيار المشتريات</span>
+                <span className={movePurchasesDialog.step === "select-target" ? "active" : ""}>2. اختيار الطلب</span>
+              </div>
+
+              <div className="move-purchases-summary">
+                <div>
+                  <strong>الطلب الحالي:</strong> {movePurchasesDialog.sourceOrderName || selectedOrder?.name || "طلب"}
+                </div>
+                <div>
+                  <strong>المحدد:</strong> {moveSelectedPurchases.length}
+                </div>
+              </div>
+
+              {movePurchasesDialog.step === "select-purchases" ? (
+                <>
+                  <div className="move-purchases-toolbar">
+                    <div className="modal-help">اختاري المشتريات التي تريدين نقلها، ثم اضغطي التالي.</div>
+                    {purchases.length ? (
+                      <button
+                        type="button"
+                        className="btn-ghost-light"
+                        onClick={toggleMovePurchaseSelectionAll}
+                        disabled={movePurchasesDialogBusy}
+                      >
+                        {purchases.length > 0 &&
+                        purchases.every((purchase) =>
+                          (movePurchasesDialog.purchaseIds || []).includes(String(purchase.id))
+                        )
+                          ? "إلغاء تحديد الكل"
+                          : "تحديد الكل"}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  {purchases.length ? (
+                    <div className="move-purchases-list">
+                      {purchases.map((purchase) => {
+                        const checked = (movePurchasesDialog.purchaseIds || []).includes(String(purchase.id));
+                        return (
+                          <label
+                            key={purchase.id}
+                            className={`move-purchase-item ${checked ? "is-selected" : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleMovePurchaseSelection(purchase.id)}
+                              disabled={movePurchasesDialogBusy}
+                            />
+                            <div className="move-purchase-item-body">
+                              <strong>{purchase.customer_name || "بدون اسم"}</strong>
+                              <span>
+                                {purchase.qty || 0} قطع • المدفوع: {formatILS(purchase.paid_price ?? purchase.price)} ₪
+                              </span>
+                              <span>{purchase.pickup_point || "بدون مكان استلام"}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="workspace-empty">لا توجد مشتريات في هذا الطلب.</div>
+                  )}
+
+                  <div className="purchase-modal-foot">
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={goToMovePurchaseTargetsStep}
+                      disabled={movePurchasesDialogBusy || !movePurchasesDialog.purchaseIds?.length}
+                    >
+                      التالي
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={closeMovePurchasesDialog}
+                      disabled={movePurchasesDialogBusy}
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="move-purchases-picked">
+                    {moveSelectedPurchases.map((purchase) => (
+                      <span key={purchase.id} className="move-purchase-chip">
+                        {purchase.customer_name || "بدون اسم"}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="modal-help">اختاري الطلب الهدف من الطلبات غير الواصلة فقط.</div>
+
+                  {moveTargetOrders.length ? (
+                    <div className="move-target-orders">
+                      {moveTargetOrders.map((order) => {
+                        const checked = String(movePurchasesDialog.targetOrderId || "") === String(order.id);
+                        return (
+                          <label
+                            key={order.id}
+                            className={`move-target-order ${checked ? "is-selected" : ""}`}
+                          >
+                            <input
+                              type="radio"
+                              name="move-target-order"
+                              checked={checked}
+                              onChange={() =>
+                                setMovePurchasesDialog((prev) =>
+                                  prev ? { ...prev, targetOrderId: order.id } : prev
+                                )
+                              }
+                              disabled={movePurchasesDialogBusy}
+                            />
+                            <div className="move-target-order-body">
+                              <strong>{order.name || "طلب بدون اسم"}</strong>
+                              <span>
+                                {order.purchaseCount || 0} مشتريات • {order.amountLabel || `${formatILS(order.amountRaw || 0)} ₪`}
+                              </span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="workspace-empty">لا توجد طلبات غير واصلة متاحة للنقل إليها.</div>
+                  )}
+
+                  <div className="purchase-modal-foot">
+                    <button
+                      type="button"
+                      className="btn-primary"
+                      onClick={submitMovePurchasesDialog}
+                      disabled={
+                        movePurchasesDialogBusy ||
+                        !moveTargetOrders.length ||
+                        !movePurchasesDialog.targetOrderId
+                      }
+                    >
+                      {movePurchasesDialogBusy ? "جاري النقل..." : "تأكيد النقل"}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={goBackMovePurchasesStep}
+                      disabled={movePurchasesDialogBusy}
+                    >
+                      رجوع
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-light"
+                      onClick={closeMovePurchasesDialog}
+                      disabled={movePurchasesDialogBusy}
+                    >
+                      إلغاء
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

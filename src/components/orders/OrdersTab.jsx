@@ -27,6 +27,7 @@ export default function OrdersTab({
   editMode,
   onUpdateOrderStatus,
   onOpenAddModal,
+  onOpenMoveDialog,
   onExportPdf,
   canExportPdf = true,
   pdfExporting,
@@ -48,6 +49,8 @@ export default function OrdersTab({
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
   const highlightRef = useRef(null);
   const canEditOrderStatus = isRahaf && editMode && !!selectedOrder;
+  const canMovePurchases = isRahaf && editMode && !!selectedOrder;
+  const moveDisabled = !filteredPurchases.length;
   const canShowPurchaseNotes = isRahaf || isReem;
   const pdfExportIcon = useMemo(() => {
     if (typeof navigator === "undefined") return pdfExportIconWeb;
@@ -102,6 +105,12 @@ export default function OrdersTab({
             </button>
           ) : null}
 
+          {!isMobile && canMovePurchases ? (
+            <button className="btn-ghost-light" type="button" onClick={onOpenMoveDialog} disabled={moveDisabled}>
+              نقل مشتريات
+            </button>
+          ) : null}
+
           {canExportPdf && !isMobile ? (
             <button
               className="btn-ghost-light"
@@ -135,6 +144,16 @@ export default function OrdersTab({
           <button className="btn-primary mobile-add-purchase-btn" type="button" onClick={onOpenAddModal}>
             + إضافة مشترى
           </button>
+          {canMovePurchases ? (
+            <button
+              className="btn-ghost-light mobile-add-purchase-btn"
+              type="button"
+              onClick={onOpenMoveDialog}
+              disabled={moveDisabled}
+            >
+              نقل مشتريات
+            </button>
+          ) : null}
         </div>
       ) : null}
 
