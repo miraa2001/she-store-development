@@ -26,7 +26,8 @@ export default function CustomersTab({
   cancelEditCustomer,
   handleDeleteCustomer,
   cityOptions,
-  pickupOptions
+  createPickupOptions,
+  editingPickupOptions
 }) {
   const [openCustomerMenuId, setOpenCustomerMenuId] = useState("");
 
@@ -119,7 +120,7 @@ export default function CustomersTab({
                 }
                 disabled={customerFormSaving}
               >
-                {pickupOptions.map((pickup) => (
+                {createPickupOptions.map((pickup) => (
                   <option key={pickup} value={pickup}>
                     {pickup}
                   </option>
@@ -208,7 +209,7 @@ export default function CustomersTab({
                                 setEditingCustomerForm((prev) => ({ ...prev, pickup: event.target.value }))
                               }
                             >
-                              {pickupOptions.map((pickup) => (
+                              {editingPickupOptions.map((pickup) => (
                                 <option key={pickup} value={pickup}>
                                   {pickup}
                                 </option>

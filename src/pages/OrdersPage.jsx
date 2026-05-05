@@ -467,9 +467,14 @@ export default function OrdersPage() {
     ]);
   }, [customerSearch, customers]);
 
-  const customerPickupOptions = useMemo(
-    () => getPickupOptionsWithCurrentValue(editingCustomerForm?.pickup || customerForm.pickup),
-    [customerForm.pickup, editingCustomerForm?.pickup]
+  const customerCreatePickupOptions = useMemo(
+    () => getPickupOptionsWithCurrentValue(customerForm.pickup),
+    [customerForm.pickup]
+  );
+
+  const customerEditPickupOptions = useMemo(
+    () => getPickupOptionsWithCurrentValue(editingCustomerForm?.pickup),
+    [editingCustomerForm?.pickup]
   );
 
   const quickCustomerPickupOptions = useMemo(
@@ -1988,7 +1993,8 @@ export default function OrdersPage() {
               cancelEditCustomer={cancelEditCustomer}
               handleDeleteCustomer={handleDeleteCustomer}
               cityOptions={CUSTOMER_CITIES}
-              pickupOptions={customerPickupOptions}
+              createPickupOptions={customerCreatePickupOptions}
+              editingPickupOptions={customerEditPickupOptions}
             />
           ) : null}
         </section>
