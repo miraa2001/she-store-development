@@ -63,7 +63,7 @@ function buildMergedOrders(orderGroups) {
   }));
 }
 
-export default function PickupPointPage({ embedded = false, locationId = "laaura" }) {
+export default function PickupPointPage({ embedded = false, locationId = "maryamti" }) {
   const { profile } = useAuthProfile();
   const pickupLocation = useMemo(() => getPickupLocationById(locationId), [locationId]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -681,9 +681,9 @@ export default function PickupPointPage({ embedded = false, locationId = "laaura
                 ) : null}
 
                 {!loadingPurchases && pickupOrderSections.length ? (
-                  <div className="pickuppoint-laaura-groups">
+                  <div className="pickuppoint-dropoff-groups">
                     {pickupOrderSections.map((section) => (
-                      <section key={section.id} className="pickuppoint-laaura-group">
+                      <section key={section.id} className="pickuppoint-dropoff-group">
                         <div className="pickuppoint-row">
                           <div>
                             <b>{section.name}</b>

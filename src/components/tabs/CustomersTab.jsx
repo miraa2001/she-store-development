@@ -3,6 +3,7 @@ import actionsMenuIcon from "../../assets/icons/actions/menu-vertical.png";
 import editIcon from "../../assets/icons/actions/edit.png";
 import deleteIcon from "../../assets/icons/actions/delete.png";
 import SessionLoader from "../common/SessionLoader";
+import { formatPickupDisplayLabel } from "../../lib/pickup";
 
 export default function CustomersTab({
   customerSearch,
@@ -236,7 +237,7 @@ export default function CustomersTab({
                         </div>
 
                         <div className="customer-item-meta">
-                          <span>نقطة الاستلام: {customer.usual_pickup_point || "—"}</span>
+                          <span>نقطة الاستلام: {formatPickupDisplayLabel(customer.usual_pickup_point, "—")}</span>
                         </div>
 
                         {isRahaf ? (
