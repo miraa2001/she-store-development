@@ -544,7 +544,9 @@ export default function OrdersPage() {
       const data = await fetchOrdersWithSummary();
       const allOrders = data || [];
       const visibleOrders = isReem
-        ? allOrders.filter((order) => !!order.arrived && !order.placedAtPickup && !order.allCollected)
+        ? allOrders.filter(
+            (order) => !!order.arrived && !order.placedAtPickup && !order.allCollected && !order.hasNablusPickup
+          )
         : allOrders;
       setOrders(visibleOrders);
       setSelectedOrderId((prev) => {

@@ -1,3 +1,4 @@
+import { isNablusPickup } from "./pickup";
 import { sb } from "./supabaseClient";
 
 export const IMAGE_BUCKET = "purchase-images";
@@ -161,7 +162,7 @@ export async function fetchOrdersWithSummary() {
 
   const { data: purchases, error: purchasesError } = await sb
     .from("purchases")
-    .select("order_id, price, paid_price, collected")
+    .select("order_id, price, paid_price, collected, pickup_point")
     .in("order_id", ids);
 
   if (purchasesError) throw purchasesError;
@@ -169,6 +170,7 @@ export async function fetchOrdersWithSummary() {
   const totals = new Map();
   const purchaseCounts = new Map();
   const fullyCollectedByOrder = new Map();
+  const hasNablusPickupByOrder = new Map();
 
   (purchases || []).forEach((purchase) => {
     const id = purchase.order_id;
@@ -180,6 +182,7 @@ export async function fetchOrdersWithSummary() {
 
     const currentAllCollected = fullyCollectedByOrder.has(id) ? fullyCollectedByOrder.get(id) : true;
     fullyCollectedByOrder.set(id, currentAllCollected && isPurchaseFullyCollected(purchase));
+    hasNablusPickupByOrder.set(id, (hasNablusPickupByOrder.get(id) || false) || isNablusPickup(purchase.pickup_point));
   });
 
   return normalizedOrders.map((order) => {
@@ -192,6 +195,7 @@ export async function fetchOrdersWithSummary() {
       amountRaw: total,
       amountLabel: `${formatILS(total)} \u20AA`,
       purchaseCount,
+      hasNablusPickup: hasNablusPickupByOrder.get(order.id) === true,
       allCollected,
       status: deriveOrderStatus({
         arrived: order.arrived,
