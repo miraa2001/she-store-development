@@ -390,6 +390,37 @@ export default function OrdersPage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const groupedOrders = useMemo(() => groupOrdersByMonth(orders), [orders]);
+  const searchCount = useMemo(() => headerSearchResults.length, [headerSearchResults]);
+
+  const totalOrders = orders.length;
+  const isRahaf = profile.role === "rahaf";
+  const isReem = profile.role === "reem";
+  const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
+  const isPickupOnlyRole = isPickupPointRole(profile.role);
+  const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
+  const allowedTabs = useMemo(
+    () => (isReem ? ["orders"] : isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
+    [isRahaf, isReem, isViewOnlyRole]
+  );
+
+  const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
+  const isPurchaseVisibleToCurrentRole = useCallback(
+    (purchase) => !(isReem && isNablusPickup(purchase?.pickup_point)),
+    [isReem]
+  );
+  const isSidebarItemActive = useCallback(
+    (href) => {
+      const customersTabActive = isNavHrefActive("#/orders?tab=customers", location);
+      const isRootOrdersItem = href === "#/orders";
+      if (isRootOrdersItem) {
+        return isNavHrefActive(href, location) && !customersTabActive;
+      }
+      return isNavHrefActive(href, location);
+    },
+    [location]
+  );
+
   useEffect(() => {
     let cancelled = false;
     const needle = String(search || "").trim();
@@ -425,37 +456,6 @@ export default function OrdersPage() {
       window.clearTimeout(timer);
     };
   }, [isPurchaseVisibleToCurrentRole, orders, search]);
-
-  const groupedOrders = useMemo(() => groupOrdersByMonth(orders), [orders]);
-  const searchCount = useMemo(() => headerSearchResults.length, [headerSearchResults]);
-
-  const totalOrders = orders.length;
-  const isRahaf = profile.role === "rahaf";
-  const isReem = profile.role === "reem";
-  const isViewOnlyRole = profile.role === "reem" || profile.role === "rawand";
-  const isPickupOnlyRole = isPickupPointRole(profile.role);
-  const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
-  const allowedTabs = useMemo(
-    () => (isReem ? ["orders"] : isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
-    [isRahaf, isReem, isViewOnlyRole]
-  );
-
-  const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
-  const isPurchaseVisibleToCurrentRole = useCallback(
-    (purchase) => !(isReem && isNablusPickup(purchase?.pickup_point)),
-    [isReem]
-  );
-  const isSidebarItemActive = useCallback(
-    (href) => {
-      const customersTabActive = isNavHrefActive("#/orders?tab=customers", location);
-      const isRootOrdersItem = href === "#/orders";
-      if (isRootOrdersItem) {
-        return isNavHrefActive(href, location) && !customersTabActive;
-      }
-      return isNavHrefActive(href, location);
-    },
-    [location]
-  );
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
