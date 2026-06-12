@@ -46,6 +46,39 @@ export function formatILS(value) {
   return fixed.endsWith(".00") ? String(Math.round(number)) : fixed;
 }
 
+export function parseOptionalPrice(value) {
+  if (value === null || value === undefined || value === "") return null;
+  return parsePrice(value);
+}
+
+export function getOrderProfitFields(order = {}) {
+  return {
+    totalProfit: parseOptionalPrice(order.total_profit),
+    miraProfit: parseOptionalPrice(order.mira_profit),
+    rahafProfit: parseOptionalPrice(order.rahaf_profit)
+  };
+}
+
+export async function selectOrdersWithOptionalProfitFields(selectClause) {
+  const baseSelect = String(selectClause || "").trim();
+  const profitSelect = "total_profit, mira_profit, rahaf_profit";
+  const fullSelect = `${baseSelect}, ${profitSelect}`;
+
+  let result = await sb
+    .from("orders")
+    .select(fullSelect)
+    .order("created_at", { ascending: false });
+
+  if (result.error?.code === "42703") {
+    result = await sb
+      .from("orders")
+      .select(baseSelect)
+      .order("created_at", { ascending: false });
+  }
+
+  return result;
+}
+
 function normalizeOrderType(value) {
   const normalized = String(value || "").trim().toLowerCase();
   if (normalized === ORDER_TYPES.IHERB) return ORDER_TYPES.IHERB;
@@ -104,10 +137,9 @@ function shortOrderNo(id) {
 }
 
 export async function fetchOrdersWithSummary() {
-  const { data: orders, error } = await sb
-    .from("orders")
-    .select("id, order_name, created_at, arrived, placed_at_pickup")
-    .order("created_at", { ascending: false });
+  const { data: orders, error } = await selectOrdersWithOptionalProfitFields(
+    "id, order_name, created_at, arrived, placed_at_pickup"
+  );
 
   if (error) throw error;
 
@@ -117,7 +149,8 @@ export async function fetchOrdersWithSummary() {
     createdAt: order.created_at,
     arrived: !!order.arrived,
     placedAtPickup: !!order.placed_at_pickup,
-    orderNo: shortOrderNo(order.id)
+    orderNo: shortOrderNo(order.id),
+    ...getOrderProfitFields(order)
   }));
 
   if (!normalizedOrders.length) {
@@ -289,6 +322,47 @@ export async function updateOrderName(orderId, orderName) {
 
   if (error) throw error;
   return { id: orderId, name };
+}
+
+function toNullableProfitNumber(value, label) {
+  if (value === null || value === undefined) return null;
+
+  const text = String(value).trim();
+  if (!text) return null;
+
+  const number = Number(text);
+  if (!Number.isFinite(number) || number < 0) {
+    throw new Error(`${label} غير صحيح.`);
+  }
+
+  return number;
+}
+
+export async function updateOrderProfitSettings(orderId, input = {}) {
+  const payload = {
+    total_profit: toNullableProfitNumber(input.totalProfit, "الربح الكلي"),
+    mira_profit: toNullableProfitNumber(input.miraProfit, "ربح ميرا"),
+    rahaf_profit: toNullableProfitNumber(input.rahafProfit, "ربح رهف")
+  };
+
+  const { error } = await sb
+    .from("orders")
+    .update(payload)
+    .eq("id", orderId);
+
+  if (error) {
+    if (error.code === "42703") {
+      throw new Error("يلزم إضافة أعمدة الأرباح إلى جدول الطلبات أولاً.");
+    }
+
+    throw error;
+  }
+
+  return {
+    totalProfit: payload.total_profit,
+    miraProfit: payload.mira_profit,
+    rahafProfit: payload.rahaf_profit
+  };
 }
 
 export async function deleteOrderById(orderId) {
