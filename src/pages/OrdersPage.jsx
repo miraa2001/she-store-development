@@ -59,6 +59,7 @@ import {
   formatPickupDisplayLabel,
   formatPickupFormValue,
   getPickupOptionsWithCurrentValue,
+  isNablusPickup,
   isNablusCity,
   isPickupPointRole
 } from "../lib/pickup";
@@ -406,7 +407,11 @@ export default function OrdersPage() {
         const rows = await searchPurchasesByCustomerName(needle, 100);
         if (cancelled) return;
         const visibleOrderIds = new Set(orders.map((order) => String(order.id)));
-        setHeaderSearchResults((rows || []).filter((row) => visibleOrderIds.has(String(row.order_id))));
+        setHeaderSearchResults(
+          (rows || []).filter(
+            (row) => visibleOrderIds.has(String(row.order_id)) && isPurchaseVisibleToCurrentRole(row)
+          )
+        );
       } catch (error) {
         console.error(error);
         if (!cancelled) setHeaderSearchResults([]);
@@ -419,7 +424,7 @@ export default function OrdersPage() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [orders, search]);
+  }, [isPurchaseVisibleToCurrentRole, orders, search]);
 
   const groupedOrders = useMemo(() => groupOrdersByMonth(orders), [orders]);
   const searchCount = useMemo(() => headerSearchResults.length, [headerSearchResults]);
@@ -436,6 +441,10 @@ export default function OrdersPage() {
   );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
+  const isPurchaseVisibleToCurrentRole = useCallback(
+    (purchase) => !(isReem && isNablusPickup(purchase?.pickup_point)),
+    [isReem]
+  );
   const isSidebarItemActive = useCallback(
     (href) => {
       const customersTabActive = isNavHrefActive("#/orders?tab=customers", location);
@@ -544,9 +553,20 @@ export default function OrdersPage() {
       const data = await fetchOrdersWithSummary();
       const allOrders = data || [];
       const visibleOrders = isReem
-        ? allOrders.filter(
-            (order) => !!order.arrived && !order.placedAtPickup && !order.allCollected && !order.hasNablusPickup
-          )
+        ? allOrders
+            .filter(
+              (order) =>
+                !!order.arrived &&
+                !order.placedAtPickup &&
+                !order.allCollected &&
+                Number(order.reemVisiblePurchaseCount || 0) > 0
+            )
+            .map((order) => ({
+              ...order,
+              amountRaw: Number(order.reemVisibleAmountRaw || 0),
+              amountLabel: `${formatILS(Number(order.reemVisibleAmountRaw || 0))} ₪`,
+              purchaseCount: Number(order.reemVisiblePurchaseCount || 0)
+            }))
         : allOrders;
       setOrders(visibleOrders);
       setSelectedOrderId((prev) => {
@@ -596,14 +616,14 @@ export default function OrdersPage() {
 
     try {
       const list = await fetchPurchasesByOrder(orderId);
-      setPurchases(list || []);
+      setPurchases((list || []).filter(isPurchaseVisibleToCurrentRole));
     } catch (error) {
       console.error(error);
       setPurchasesError("فشل تحميل المشتريات.");
     } finally {
       setPurchasesLoading(false);
     }
-  }, []);
+  }, [isPurchaseVisibleToCurrentRole]);
 
   useEffect(() => {
     if (!profile.authenticated) {

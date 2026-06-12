@@ -171,6 +171,8 @@ export async function fetchOrdersWithSummary() {
   const purchaseCounts = new Map();
   const fullyCollectedByOrder = new Map();
   const hasNablusPickupByOrder = new Map();
+  const reemVisibleTotalsByOrder = new Map();
+  const reemVisiblePurchaseCountByOrder = new Map();
 
   (purchases || []).forEach((purchase) => {
     const id = purchase.order_id;
@@ -182,7 +184,12 @@ export async function fetchOrdersWithSummary() {
 
     const currentAllCollected = fullyCollectedByOrder.has(id) ? fullyCollectedByOrder.get(id) : true;
     fullyCollectedByOrder.set(id, currentAllCollected && isPurchaseFullyCollected(purchase));
-    hasNablusPickupByOrder.set(id, (hasNablusPickupByOrder.get(id) || false) || isNablusPickup(purchase.pickup_point));
+    const isNablusPurchase = isNablusPickup(purchase.pickup_point);
+    hasNablusPickupByOrder.set(id, (hasNablusPickupByOrder.get(id) || false) || isNablusPurchase);
+    if (!isNablusPurchase) {
+      reemVisibleTotalsByOrder.set(id, (reemVisibleTotalsByOrder.get(id) || 0) + parsePrice(purchase.paid_price ?? purchase.price));
+      reemVisiblePurchaseCountByOrder.set(id, (reemVisiblePurchaseCountByOrder.get(id) || 0) + 1);
+    }
   });
 
   return normalizedOrders.map((order) => {
@@ -196,6 +203,8 @@ export async function fetchOrdersWithSummary() {
       amountLabel: `${formatILS(total)} \u20AA`,
       purchaseCount,
       hasNablusPickup: hasNablusPickupByOrder.get(order.id) === true,
+      reemVisibleAmountRaw: reemVisibleTotalsByOrder.get(order.id) || 0,
+      reemVisiblePurchaseCount: reemVisiblePurchaseCountByOrder.get(order.id) || 0,
       allCollected,
       status: deriveOrderStatus({
         arrived: order.arrived,
