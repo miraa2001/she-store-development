@@ -254,6 +254,22 @@ export async function updateOrderPlacedAtPickup(orderId, enabled) {
 
   const { error } = await sb.from("orders").update(payload).eq("id", orderId);
   if (error) throw error;
+
+  if (!enabled) {
+    const { error: resetError } = await sb
+      .from("purchases")
+      .update({
+        assigned_pickup_point: null,
+        assigned_pickup_at: null,
+        ready_for_pickup: false,
+        ready_for_pickup_at: null
+      })
+      .eq("order_id", orderId)
+      .eq("collected", false);
+
+    if (resetError) throw resetError;
+  }
+
   return payload;
 }
 
@@ -272,6 +288,21 @@ export async function updateOrderWorkflowStatus(orderId, nextStatus) {
 
   const { error } = await sb.from("orders").update(payload).eq("id", orderId);
   if (error) throw error;
+
+  if (status === ORDER_STATUS.PENDING || status === ORDER_STATUS.ARRIVED) {
+    const { error: resetError } = await sb
+      .from("purchases")
+      .update({
+        assigned_pickup_point: null,
+        assigned_pickup_at: null,
+        ready_for_pickup: false,
+        ready_for_pickup_at: null
+      })
+      .eq("order_id", orderId)
+      .eq("collected", false);
+
+    if (resetError) throw resetError;
+  }
 
   return {
     status,

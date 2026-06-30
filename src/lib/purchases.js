@@ -44,7 +44,7 @@ export async function fetchPurchasesByOrder(orderId) {
   const { data, error } = await sb
     .from("purchases")
     .select(
-      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, ready_for_pickup, ready_for_pickup_at, note, created_at, collected, picked_up, purchase_links(url), purchase_images(id,storage_path)"
+      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, assigned_pickup_point, assigned_pickup_at, ready_for_pickup, ready_for_pickup_at, note, created_at, collected, picked_up, purchase_links(url), purchase_images(id,storage_path)"
     )
     .eq("order_id", orderId)
     .order("created_at", { ascending: false });
@@ -282,7 +282,8 @@ export async function placePurchasesForPickup(assignments = {}) {
     const { error } = await sb
       .from("purchases")
       .update({
-        pickup_point: pickupPoint,
+        assigned_pickup_point: pickupPoint,
+        assigned_pickup_at: readyAt,
         ready_for_pickup: true,
         ready_for_pickup_at: readyAt
       })

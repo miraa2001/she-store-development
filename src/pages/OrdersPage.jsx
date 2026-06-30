@@ -1268,6 +1268,8 @@ export default function OrdersPage() {
             paid_price: target.paid_price,
             bag_size: target.bag_size,
             pickup_point: target.pickup_point,
+            assigned_pickup_point: target.assigned_pickup_point,
+            assigned_pickup_at: target.assigned_pickup_at,
             ready_for_pickup: target.ready_for_pickup,
             ready_for_pickup_at: target.ready_for_pickup_at,
             note: target.note,
@@ -1724,7 +1726,8 @@ export default function OrdersPage() {
           return nextPickup
             ? {
                 ...purchase,
-                pickup_point: nextPickup,
+                assigned_pickup_point: nextPickup,
+                assigned_pickup_at: new Date().toISOString(),
                 ready_for_pickup: true,
                 ready_for_pickup_at: new Date().toISOString()
               }
@@ -1778,11 +1781,23 @@ export default function OrdersPage() {
                 ...order,
                 arrived: !!payload.arrived,
                 placedAtPickup: !!payload.placed_at_pickup,
+                placedAtPickupAt: payload.placed_at_pickup_at || null,
                 status
               }
             : order
         )
       );
+      if (status === ORDER_STATUS.PENDING || status === ORDER_STATUS.ARRIVED) {
+        setPurchases((prev) =>
+          prev.map((purchase) => ({
+            ...purchase,
+            assigned_pickup_point: null,
+            assigned_pickup_at: null,
+            ready_for_pickup: false,
+            ready_for_pickup_at: null
+          }))
+        );
+      }
       setToast({ type: "success", text: "تم تحديث حالة الطلب." });
     } catch (error) {
       console.error(error);
@@ -1801,7 +1816,7 @@ export default function OrdersPage() {
     try {
       const target = await resolvePurchaseWhatsappTarget(purchase);
       const message = buildArrivalNotifyMessage({
-        pickupPoint: purchase.pickup_point,
+        pickupPoint: purchase.assigned_pickup_point || purchase.pickup_point,
         price: purchase.paid_price ?? purchase.price,
         customerName: target.customerName
       });
@@ -2978,7 +2993,8 @@ export default function OrdersPage() {
                             <div className="pickup-placement-meta">
                               <span>{purchase.qty || 0} قطع</span>
                               <span>المدفوع: {formatILS(purchase.paid_price ?? purchase.price)} ₪</span>
-                              <span>المكان الحالي: {formatPickupDisplayLabel(purchase.pickup_point, "بدون مكان استلام")}</span>
+                              <span>اختيار الزبون: {formatPickupDisplayLabel(purchase.pickup_point, "بدون مكان استلام")}</span>
+                              <span>المكان الفعلي: {formatPickupDisplayLabel(purchase.assigned_pickup_point, "غير موضوع بعد")}</span>
                               <span>{purchase.ready_for_pickup ? "جاهز سابقًا" : "غير موضوع بعد"}</span>
                             </div>
                           </article>
