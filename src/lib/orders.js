@@ -394,6 +394,9 @@ function toNullableProfitNumber(value, label) {
 }
 
 export async function updateOrderProfitSettings(orderId, input = {}) {
+  const id = String(orderId || "").trim();
+  if (!id) throw new Error("تعذر تحديد الطلب لحفظ الأرباح.");
+
   const payload = {
     total_profit: toNullableProfitNumber(input.totalProfit, "الربح الكلي"),
     mira_profit: toNullableProfitNumber(input.miraProfit, "ربح ميرا"),
@@ -403,7 +406,7 @@ export async function updateOrderProfitSettings(orderId, input = {}) {
   const { error } = await sb
     .from("orders")
     .update(payload)
-    .eq("id", orderId);
+    .eq("id", id);
 
   if (error) {
     if (error.code === "42703") {

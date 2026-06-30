@@ -1337,13 +1337,18 @@ export default function OrdersPage() {
   };
 
   const openOrderSettingsDialog = (order = selectedOrder) => {
-    if (!isRahaf || !order) return;
+    const targetOrder = order?.id ? order : selectedOrder;
+    if (!isRahaf || !targetOrder?.id) {
+      setToast({ type: "warn", text: "اختاري طلبًا قبل فتح إعدادات الأرباح." });
+      return;
+    }
+
     setOrderSettingsDialog({
-      orderId: order.id,
-      name: String(order.name || ""),
-      totalProfit: order.totalProfit ?? "",
-      miraProfit: order.miraProfit ?? "",
-      rahafProfit: order.rahafProfit ?? ""
+      orderId: targetOrder.id,
+      name: String(targetOrder.name || ""),
+      totalProfit: targetOrder.totalProfit ?? "",
+      miraProfit: targetOrder.miraProfit ?? "",
+      rahafProfit: targetOrder.rahafProfit ?? ""
     });
   };
 
@@ -1398,6 +1403,10 @@ export default function OrdersPage() {
 
   const submitOrderSettingsDialog = async () => {
     if (!orderSettingsDialog || orderSettingsDialogBusy) return;
+    if (!orderSettingsDialog.orderId) {
+      setToast({ type: "danger", text: "تعذر تحديد الطلب لحفظ الأرباح." });
+      return;
+    }
 
     setOrderSettingsDialogBusy(true);
     try {
