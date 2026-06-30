@@ -279,6 +279,17 @@ export async function updateOrderWorkflowStatus(orderId, nextStatus) {
   };
 }
 
+export async function updateOrderAfterPurchasePlacement(orderId, { placedAtPickup = false } = {}) {
+  const payload = placedAtPickup
+    ? { arrived: true, placed_at_pickup: true, placed_at_pickup_at: new Date().toISOString() }
+    : { arrived: true };
+
+  const { error } = await sb.from("orders").update(payload).eq("id", orderId);
+  if (error) throw error;
+
+  return payload;
+}
+
 export async function createOrder(input) {
   const orderName = typeof input === "string" ? input : input?.orderName;
   const orderType = typeof input === "string" ? "" : input?.orderType;

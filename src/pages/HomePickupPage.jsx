@@ -77,7 +77,7 @@ export default function HomePickupPage({ embedded = false }) {
   const highlightTimeoutRef = useRef(null);
   const lastLoadedOrderKeyRef = useRef("");
   const homeSearchQueryBuilder = useCallback(
-    (request) => request.eq("pickup_point", PICKUP_HOME),
+    (request) => request.eq("pickup_point", PICKUP_HOME).eq("ready_for_pickup", true),
     []
   );
   const { searchResults, searchLoading, clearSearchResults } = usePurchaseCustomerSearch({
@@ -220,8 +220,9 @@ export default function HomePickupPage({ embedded = false }) {
     try {
       const { data: pickupRows, error: pickupError } = await sb
         .from("purchases")
-        .select("order_id, pickup_point, collected")
+        .select("order_id, pickup_point, collected, ready_for_pickup")
         .eq("pickup_point", PICKUP_HOME)
+        .eq("ready_for_pickup", true)
         .eq("collected", false);
 
       if (pickupError) throw pickupError;
@@ -283,9 +284,10 @@ export default function HomePickupPage({ embedded = false }) {
       let purchasesQuery = sb
         .from("purchases")
         .select(
-          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, collected, purchase_images(storage_path)"
+          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, purchase_images(storage_path)"
         )
         .eq("pickup_point", PICKUP_HOME)
+        .eq("ready_for_pickup", true)
         .eq("collected", false)
         .order("created_at", { ascending: true });
 

@@ -44,7 +44,7 @@ export async function fetchPurchasesByOrder(orderId) {
   const { data, error } = await sb
     .from("purchases")
     .select(
-      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, note, created_at, collected, picked_up, purchase_links(url), purchase_images(id,storage_path)"
+      "id, order_id, customer_id, customer_name, qty, price, paid_price, bag_size, pickup_point, ready_for_pickup, ready_for_pickup_at, note, created_at, collected, picked_up, purchase_links(url), purchase_images(id,storage_path)"
     )
     .eq("order_id", orderId)
     .order("created_at", { ascending: false });
@@ -265,8 +265,9 @@ export async function markPurchasePaidPrice(purchaseId, paidPrice) {
   if (error) throw error;
 }
 
-export async function updatePurchasesPickupPoints(assignments = {}) {
+export async function placePurchasesForPickup(assignments = {}) {
   const grouped = new Map();
+  const readyAt = new Date().toISOString();
 
   Object.entries(assignments || {}).forEach(([purchaseId, pickupPoint]) => {
     const id = String(purchaseId || "").trim();
@@ -280,7 +281,11 @@ export async function updatePurchasesPickupPoints(assignments = {}) {
   for (const [pickupPoint, ids] of grouped.entries()) {
     const { error } = await sb
       .from("purchases")
-      .update({ pickup_point: pickupPoint })
+      .update({
+        pickup_point: pickupPoint,
+        ready_for_pickup: true,
+        ready_for_pickup_at: readyAt
+      })
       .in("id", ids);
 
     if (error) throw error;
