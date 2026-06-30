@@ -29,6 +29,7 @@ import {
   restoreDeletedPurchase,
   sanitizeLinks,
   searchPurchasesByCustomerName,
+  updatePurchasesPickupPoints,
   updatePurchaseWithRelations
 } from "../lib/purchases";
 import { searchByName } from "../lib/search";
@@ -59,6 +60,7 @@ import {
   formatPickupDisplayLabel,
   formatPickupFormValue,
   getPickupOptionsWithCurrentValue,
+  isPickupPointPickup,
   isNablusPickup,
   isNablusCity,
   isPickupPointRole
@@ -87,6 +89,10 @@ const SHEIN_TYPE_OPTIONS = [
   { value: SHEIN_ORDER_TYPES.NORMAL, label: "Normal" },
   { value: SHEIN_ORDER_TYPES.MAKEUP, label: "Makeup" },
   { value: SHEIN_ORDER_TYPES.ELECTRONICS, label: "Electronics" }
+];
+const PICKUP_PLACEMENT_OPTIONS = [
+  { value: DEFAULT_PICKUP_OPTION, label: "مريمتي" },
+  { value: PICKUP_POINT_NABLUS, label: "نابلس" }
 ];
 
 function createEmptyForm(orderId, customers) {
@@ -346,6 +352,8 @@ export default function OrdersPage() {
   const [paidPriceDialogBusy, setPaidPriceDialogBusy] = useState(false);
   const [movePurchasesDialog, setMovePurchasesDialog] = useState(null);
   const [movePurchasesDialogBusy, setMovePurchasesDialogBusy] = useState(false);
+  const [pickupPlacementDialog, setPickupPlacementDialog] = useState(null);
+  const [pickupPlacementDialogBusy, setPickupPlacementDialogBusy] = useState(false);
   const [orderDialog, setOrderDialog] = useState(null);
   const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [orderSettingsDialog, setOrderSettingsDialog] = useState(null);
@@ -478,6 +486,12 @@ export default function OrdersPage() {
     return moveTargetOrders.find((order) => String(order.id) === String(movePurchasesDialog.targetOrderId)) || null;
   }, [movePurchasesDialog, moveTargetOrders]);
 
+  const pickupPlacementSelectedPurchases = useMemo(() => {
+    if (!pickupPlacementDialog?.purchaseIds?.length) return [];
+    const selectedIds = new Set(pickupPlacementDialog.purchaseIds.map((id) => String(id)));
+    return purchases.filter((purchase) => selectedIds.has(String(purchase.id)));
+  }, [pickupPlacementDialog, purchases]);
+
   const selectedOrderIsFullyCollected = useMemo(
     () => isOrderFullyCollected(purchases),
     [purchases]
@@ -542,6 +556,14 @@ export default function OrdersPage() {
       if (!prev) return prev;
       if (!selectedOrder?.id) return null;
       return String(prev.sourceOrderId) === String(selectedOrder.id) ? prev : null;
+    });
+  }, [selectedOrder?.id]);
+
+  useEffect(() => {
+    setPickupPlacementDialog((prev) => {
+      if (!prev) return prev;
+      if (!selectedOrder?.id) return null;
+      return String(prev.orderId) === String(selectedOrder.id) ? prev : null;
     });
   }, [selectedOrder?.id]);
 
@@ -1557,6 +1579,153 @@ export default function OrdersPage() {
     }
   };
 
+  const getPickupPlacementValue = (purchase) =>
+    isNablusPickup(purchase?.pickup_point) ? PICKUP_POINT_NABLUS : DEFAULT_PICKUP_OPTION;
+
+  const openPickupPlacementDialog = () => {
+    if (!selectedOrder || !isRahaf || !editMode) return;
+
+    const assignments = {};
+    const purchaseIds = [];
+
+    purchases.forEach((purchase) => {
+      const id = String(purchase.id || "");
+      if (!id) return;
+
+      assignments[id] = getPickupPlacementValue(purchase);
+      if (isPickupPointPickup(purchase.pickup_point)) {
+        purchaseIds.push(id);
+      }
+    });
+
+    setMenuPurchaseId("");
+    setPickupPlacementDialog({
+      orderId: selectedOrder.id,
+      orderName: selectedOrder.name || "",
+      purchaseIds,
+      assignments
+    });
+  };
+
+  const closePickupPlacementDialog = () => {
+    if (pickupPlacementDialogBusy) return;
+    setPickupPlacementDialog(null);
+  };
+
+  const togglePickupPlacementSelection = (purchaseId) => {
+    if (!purchaseId || pickupPlacementDialogBusy) return;
+
+    setPickupPlacementDialog((prev) => {
+      if (!prev) return prev;
+      const currentIds = new Set((prev.purchaseIds || []).map((id) => String(id)));
+      const id = String(purchaseId);
+
+      if (currentIds.has(id)) {
+        currentIds.delete(id);
+      } else {
+        currentIds.add(id);
+      }
+
+      return {
+        ...prev,
+        purchaseIds: Array.from(currentIds)
+      };
+    });
+  };
+
+  const togglePickupPlacementSelectionAll = () => {
+    if (pickupPlacementDialogBusy) return;
+
+    setPickupPlacementDialog((prev) => {
+      if (!prev) return prev;
+      const allIds = purchases.map((purchase) => String(purchase.id));
+      const selectedIds = new Set((prev.purchaseIds || []).map((id) => String(id)));
+      const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+
+      return {
+        ...prev,
+        purchaseIds: allSelected ? [] : allIds
+      };
+    });
+  };
+
+  const setPickupPlacementLocation = (purchaseId, pickupPoint) => {
+    if (!purchaseId || pickupPlacementDialogBusy) return;
+    const valid = PICKUP_PLACEMENT_OPTIONS.some((option) => option.value === pickupPoint);
+    if (!valid) return;
+
+    setPickupPlacementDialog((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        assignments: {
+          ...(prev.assignments || {}),
+          [String(purchaseId)]: pickupPoint
+        }
+      };
+    });
+  };
+
+  const submitPickupPlacementDialog = async () => {
+    if (!pickupPlacementDialog || pickupPlacementDialogBusy) return;
+    if (!pickupPlacementSelectedPurchases.length) {
+      setToast({ type: "warn", text: "اختاري مشتريات لوضعها في نقطة الاستلام." });
+      return;
+    }
+
+    const selectedIds = pickupPlacementSelectedPurchases.map((purchase) => String(purchase.id));
+    const assignments = {};
+
+    selectedIds.forEach((id) => {
+      assignments[id] = pickupPlacementDialog.assignments?.[id] || DEFAULT_PICKUP_OPTION;
+    });
+
+    setPickupPlacementDialogBusy(true);
+    setOrderStatusSaving(true);
+
+    try {
+      await updatePurchasesPickupPoints(assignments);
+      const { status, payload } = await updateOrderWorkflowStatus(
+        pickupPlacementDialog.orderId,
+        ORDER_STATUS.AT_PICKUP
+      );
+
+      setOrders((prev) =>
+        prev.map((order) =>
+          String(order.id) === String(pickupPlacementDialog.orderId)
+            ? {
+                ...order,
+                arrived: !!payload.arrived,
+                placedAtPickup: !!payload.placed_at_pickup,
+                status
+              }
+            : order
+        )
+      );
+
+      setPurchases((prev) =>
+        prev.map((purchase) => {
+          const nextPickup = assignments[String(purchase.id)];
+          return nextPickup ? { ...purchase, pickup_point: nextPickup } : purchase;
+        })
+      );
+
+      setToast({
+        type: "success",
+        text: `تم وضع ${selectedIds.length} مشتريات في نقطة الاستلام.`
+      });
+      setPickupPlacementDialog(null);
+      await refreshPurchases(pickupPlacementDialog.orderId);
+      await refreshOrders(pickupPlacementDialog.orderId);
+    } catch (error) {
+      console.error(error);
+      setToast({ type: "danger", text: error?.message || "فشل حفظ نقاط الاستلام." });
+    } finally {
+      setPickupPlacementDialogBusy(false);
+      setOrderStatusSaving(false);
+    }
+  };
+
   const handleUpdateOrderStatus = async (nextStatus) => {
     if (!selectedOrder || !isRahaf || !editMode) return;
     if (!nextStatus) return;
@@ -1574,6 +1743,16 @@ export default function OrdersPage() {
 
     if (normalizedNext === ORDER_STATUS.COLLECTED && !selectedOrderIsFullyCollected) {
       setToast({ type: "danger", text: "لا يمكن اختيار تم التحصيل قبل اكتمال التحصيل لكل المشتريات." });
+      return;
+    }
+
+    if (normalizedNext === ORDER_STATUS.AT_PICKUP && purchasesLoading) {
+      setToast({ type: "warn", text: "انتظري تحميل المشتريات أولًا." });
+      return;
+    }
+
+    if (normalizedNext === ORDER_STATUS.AT_PICKUP && purchases.length) {
+      openPickupPlacementDialog();
       return;
     }
 
@@ -2698,6 +2877,138 @@ export default function OrdersPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {pickupPlacementDialog ? (
+        <div className="purchase-modal-backdrop" onClick={closePickupPlacementDialog}>
+          <div
+            className="purchase-modal-card purchase-modal-card-placement"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="purchase-modal-head">
+              <h3>وضع الطلب في نقطة الاستلام</h3>
+              <button
+                type="button"
+                className="icon-btn tiny"
+                onClick={closePickupPlacementDialog}
+                disabled={pickupPlacementDialogBusy}
+              >
+                <Icon name="close" className="icon" />
+              </button>
+            </div>
+
+            <div className="purchase-modal-body">
+              <div className="move-purchases-summary">
+                <div>
+                  <strong>الطلب:</strong> {pickupPlacementDialog.orderName || selectedOrder?.name || "طلب"}
+                </div>
+                <div>
+                  <strong>المحدد:</strong> {pickupPlacementSelectedPurchases.length}
+                </div>
+              </div>
+
+              <div className="move-purchases-toolbar">
+                <div className="modal-help">
+                  اختاري المشتريات التي وصلت، ثم حددي نقطة الاستلام لكل مشترى.
+                </div>
+                {purchases.length ? (
+                  <button
+                    type="button"
+                    className="btn-ghost-light"
+                    onClick={togglePickupPlacementSelectionAll}
+                    disabled={pickupPlacementDialogBusy}
+                  >
+                    {purchases.every((purchase) =>
+                      (pickupPlacementDialog.purchaseIds || []).includes(String(purchase.id))
+                    )
+                      ? "إلغاء تحديد الكل"
+                      : "تحديد الكل"}
+                  </button>
+                ) : null}
+              </div>
+
+              {purchases.length ? (
+                <div className="pickup-placement-list">
+                  {purchases.map((purchase) => {
+                    const purchaseId = String(purchase.id);
+                    const checked = (pickupPlacementDialog.purchaseIds || []).includes(purchaseId);
+                    const assignedPickup =
+                      pickupPlacementDialog.assignments?.[purchaseId] || getPickupPlacementValue(purchase);
+
+                    return (
+                      <article
+                        key={purchase.id}
+                        className={`pickup-placement-item ${checked ? "is-selected" : ""}`}
+                      >
+                        <label className="pickup-placement-check">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={() => togglePickupPlacementSelection(purchase.id)}
+                            disabled={pickupPlacementDialogBusy}
+                          />
+                          <span>{purchase.customer_name || "بدون اسم"}</span>
+                        </label>
+
+                        <div className="pickup-placement-meta">
+                          <span>{purchase.qty || 0} قطع</span>
+                          <span>المدفوع: {formatILS(purchase.paid_price ?? purchase.price)} ₪</span>
+                          <span>الحالي: {formatPickupDisplayLabel(purchase.pickup_point, "بدون مكان استلام")}</span>
+                        </div>
+
+                        <div
+                          className="pickup-placement-options"
+                          role="radiogroup"
+                          aria-label={`نقطة استلام ${purchase.customer_name || "مشترى"}`}
+                        >
+                          {PICKUP_PLACEMENT_OPTIONS.map((option) => (
+                            <label
+                              key={`${purchase.id}-${option.value}`}
+                              className={`pickup-placement-option ${
+                                assignedPickup === option.value ? "active" : ""
+                              } ${checked ? "" : "disabled"}`}
+                            >
+                              <input
+                                type="radio"
+                                name={`pickup-placement-${purchase.id}`}
+                                value={option.value}
+                                checked={assignedPickup === option.value}
+                                onChange={() => setPickupPlacementLocation(purchase.id, option.value)}
+                                disabled={!checked || pickupPlacementDialogBusy}
+                              />
+                              <span>{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="workspace-empty">لا توجد مشتريات في هذا الطلب.</div>
+              )}
+
+              <div className="purchase-modal-foot">
+                <button
+                  type="button"
+                  className="btn-primary"
+                  onClick={submitPickupPlacementDialog}
+                  disabled={pickupPlacementDialogBusy || !pickupPlacementDialog.purchaseIds?.length}
+                >
+                  {pickupPlacementDialogBusy ? "جاري الحفظ..." : "حفظ ووضع في نقطة الاستلام"}
+                </button>
+                <button
+                  type="button"
+                  className="btn-ghost-light"
+                  onClick={closePickupPlacementDialog}
+                  disabled={pickupPlacementDialogBusy}
+                >
+                  إلغاء
+                </button>
+              </div>
             </div>
           </div>
         </div>

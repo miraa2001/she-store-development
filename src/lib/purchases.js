@@ -265,6 +265,30 @@ export async function markPurchasePaidPrice(purchaseId, paidPrice) {
   if (error) throw error;
 }
 
+export async function updatePurchasesPickupPoints(assignments = {}) {
+  const grouped = new Map();
+
+  Object.entries(assignments || {}).forEach(([purchaseId, pickupPoint]) => {
+    const id = String(purchaseId || "").trim();
+    const point = String(pickupPoint || "").trim();
+    if (!id || !point) return;
+
+    if (!grouped.has(point)) grouped.set(point, []);
+    grouped.get(point).push(id);
+  });
+
+  for (const [pickupPoint, ids] of grouped.entries()) {
+    const { error } = await sb
+      .from("purchases")
+      .update({ pickup_point: pickupPoint })
+      .in("id", ids);
+
+    if (error) throw error;
+  }
+
+  return Array.from(grouped.values()).reduce((sum, ids) => sum + ids.length, 0);
+}
+
 export async function movePurchasesToOrder(purchaseIds, targetOrderId) {
   const ids = Array.isArray(purchaseIds)
     ? purchaseIds.map((id) => String(id || "").trim()).filter(Boolean)
