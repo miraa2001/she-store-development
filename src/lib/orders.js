@@ -186,10 +186,8 @@ export async function fetchOrdersWithSummary() {
     fullyCollectedByOrder.set(id, currentAllCollected && isPurchaseFullyCollected(purchase));
     const isNablusPurchase = isNablusPickup(purchase.pickup_point);
     hasNablusPickupByOrder.set(id, (hasNablusPickupByOrder.get(id) || false) || isNablusPurchase);
-    if (!isNablusPurchase) {
-      reemVisibleTotalsByOrder.set(id, (reemVisibleTotalsByOrder.get(id) || 0) + parsePrice(purchase.paid_price ?? purchase.price));
-      reemVisiblePurchaseCountByOrder.set(id, (reemVisiblePurchaseCountByOrder.get(id) || 0) + 1);
-    }
+    reemVisibleTotalsByOrder.set(id, (reemVisibleTotalsByOrder.get(id) || 0) + parsePrice(purchase.paid_price ?? purchase.price));
+    reemVisiblePurchaseCountByOrder.set(id, (reemVisiblePurchaseCountByOrder.get(id) || 0) + 1);
   });
 
   return normalizedOrders.map((order) => {

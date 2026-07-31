@@ -62,7 +62,6 @@ import {
   formatPickupDisplayLabel,
   formatPickupFormValue,
   getPickupOptionsWithCurrentValue,
-  isNablusPickup,
   isNablusCity,
   isPickupPointPickup,
   isPickupPointRole
@@ -416,10 +415,7 @@ export default function OrdersPage() {
   );
 
   const visibleNavItems = useMemo(() => getOrdersNavItems(profile.role), [profile.role]);
-  const isPurchaseVisibleToCurrentRole = useCallback(
-    (purchase) => !(isReem && isNablusPickup(purchase?.pickup_point)),
-    [isReem]
-  );
+  const isPurchaseVisibleToCurrentRole = useCallback(() => true, []);
   const isSidebarItemActive = useCallback(
     (href) => {
       const customersTabActive = isNavHrefActive("#/orders?tab=customers", location);
