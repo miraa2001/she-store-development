@@ -872,30 +872,6 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
           </div>
         ) : null}
 
-        <div className="homepickup-search-row pickup-section-header">
-          <button
-            type="button"
-            className="pickup-orders-menu-trigger"
-            onClick={() => setOrdersMenuOpen(true)}
-            aria-label="فتح قائمة الطلبات"
-          >
-            <AppNavIcon name="package" className="icon" />
-            <span>الطلبات</span>
-            <b>{orders.length}</b>
-          </button>
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            className="homepickup-search-box pickup-search-input"
-            placeholder="بحث باسم الزبون..."
-          />
-          {search.trim().length >= 2 ? (
-            <span className="homepickup-pill">
-              {searchLoading ? "..." : `${searchResults.length} نتيجة`}
-            </span>
-          ) : null}
-        </div>
-
         {canToggleAllOrders ? (
           <div className="homepickup-scope-toggle-row">
             <div className="homepickup-scope-toggle" role="tablist" aria-label="طريقة عرض الطلبات">
@@ -910,7 +886,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
               <button
                 type="button"
                 className={`homepickup-scope-toggle-btn ${showAllOrdersMode ? "is-active" : ""}`}
-                onClick={() => setShowAllOrdersMode(true)}
+                onClick={() => { setShowAllOrdersMode(true); setOrdersMenuOpen(false); }}
                 aria-pressed={showAllOrdersMode}
               >
                 كل الطلبات
@@ -918,6 +894,32 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
             </div>
           </div>
         ) : null}
+
+        <div className="homepickup-search-row pickup-section-header">
+          {!shouldShowAllOrders ? (
+          <button
+            type="button"
+            className="pickup-orders-menu-trigger"
+            onClick={() => setOrdersMenuOpen(true)}
+            aria-label="فتح قائمة الطلبات"
+          >
+            <AppNavIcon name="package" className="icon" />
+            <span>الطلبات</span>
+            <b>{orders.length}</b>
+          </button>
+          ) : null}
+          <input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="homepickup-search-box pickup-search-input"
+            placeholder="بحث باسم الزبون..."
+          />
+          {search.trim().length >= 2 ? (
+            <span className="homepickup-pill">
+              {searchLoading ? "..." : `${searchResults.length} نتيجة`}
+            </span>
+          ) : null}
+        </div>
 
         {search.trim().length >= 2 && searchResults.length ? (
           <div className="homepickup-search-results">

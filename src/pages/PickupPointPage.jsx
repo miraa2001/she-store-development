@@ -701,8 +701,31 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
           </div>
         ) : null}
 
+        {canToggleAllOrders ? (
+          <div className="pickuppoint-view-toggle-row">
+            <div className="pickuppoint-view-toggle" role="tablist" aria-label="طريقة عرض الطلبات">
+              <button
+                type="button"
+                className={`pickuppoint-view-toggle-btn ${!showAllOrdersMode ? "is-active" : ""}`}
+                onClick={() => setShowAllOrdersMode(false)}
+                aria-pressed={!showAllOrdersMode}
+              >
+                حسب الطلبات
+              </button>
+              <button
+                type="button"
+                className={`pickuppoint-view-toggle-btn ${showAllOrdersMode ? "is-active" : ""}`}
+                onClick={() => { setShowAllOrdersMode(true); setOrdersMenuOpen(false); }}
+                aria-pressed={showAllOrdersMode}
+              >
+                كل الطلبات
+              </button>
+            </div>
+          </div>
+        ) : null}
+
         <div className="pickuppoint-search-row pickup-section-header">
-          {!isLocationRole ? (
+          {!shouldShowAllOrders ? (
           <button
             type="button"
             className="pickup-orders-menu-trigger"
@@ -726,29 +749,6 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
             </span>
           ) : null}
         </div>
-
-        {canToggleAllOrders ? (
-          <div className="pickuppoint-view-toggle-row">
-            <div className="pickuppoint-view-toggle" role="tablist" aria-label="طريقة عرض الطلبات">
-              <button
-                type="button"
-                className={`pickuppoint-view-toggle-btn ${!showAllOrdersMode ? "is-active" : ""}`}
-                onClick={() => setShowAllOrdersMode(false)}
-                aria-pressed={!showAllOrdersMode}
-              >
-                حسب الطلبات
-              </button>
-              <button
-                type="button"
-                className={`pickuppoint-view-toggle-btn ${showAllOrdersMode ? "is-active" : ""}`}
-                onClick={() => setShowAllOrdersMode(true)}
-                aria-pressed={showAllOrdersMode}
-              >
-                كل الطلبات
-              </button>
-            </div>
-          </div>
-        ) : null}
 
         {search.trim().length >= 2 && searchResults.length ? (
           <div className="pickuppoint-search-results">

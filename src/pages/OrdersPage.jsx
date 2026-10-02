@@ -48,7 +48,7 @@ import {
   buildWhatsappUrl,
   resolvePurchaseWhatsappTarget
 } from "../lib/whatsapp";
-import { exportOrderPdf } from "../lib/pdfExport";
+import { cleanupCollectedOrderImages } from "../lib/imageCleanup";
 import { hasGeminiKey, resolveTotalFromGemini, runGeminiCartAnalysis } from "../lib/gemini";
 import { getOrdersNavItems, getRoleLandingHref, isNavHrefActive } from "../lib/navigation";
 import {
@@ -331,7 +331,8 @@ export default function OrdersPage() {
     city: CUSTOMER_CITIES[0],
     pickup: DEFAULT_PICKUP_OPTION
   });
-  const [pdfExporting, setPdfExporting] = useState(false);
+  const [cleaningImages, setCleaningImages] = useState(false);
+  const imageCleanupRunning = useRef(false);
   const [orderStatusSaving, setOrderStatusSaving] = useState(false);
   const [newFilePreviews, setNewFilePreviews] = useState([]);
 
@@ -687,7 +688,7 @@ export default function OrdersPage() {
 
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(null), 5000);
+    const timer = setTimeout(() => setToast(null), toast.quick ? 2500 : 5000);
     return () => clearTimeout(timer);
   }, [toast]);
 
@@ -1629,22 +1630,21 @@ export default function OrdersPage() {
     }
   };
 
-  const exportPdfNative = async () => {
-    if (!selectedOrder) return;
-    if (pdfExporting) return;
-
-    setPdfExporting(true);
+  const handleCleanupImages = async () => {
+    if (!isRahaf || imageCleanupRunning.current) return;
+    imageCleanupRunning.current = true;
+    setCleaningImages(true);
+    setOrdersMenuOpen(false);
     try {
-      await exportOrderPdf({
-        order: selectedOrder,
-        purchases
-      });
-      setToast({ type: "success", text: "تم تصدير ملف PDF." });
+      const { deleted } = await cleanupCollectedOrderImages(sb);
+      setToast({ type: "success", quick: true, text: deleted ? `تم حذف ${deleted} صورة من الطلبات المحصلة.` : "لا توجد صور منتهية الصلاحية." });
+      if (selectedOrderId) await refreshPurchases(selectedOrderId);
     } catch (error) {
       console.error(error);
-      setToast({ type: "danger", text: error?.message || "فشل تصدير PDF." });
+      setToast({ type: "danger", quick: true, text: `${error.deleted ? `تم حذف ${error.deleted} صورة. ` : ""}${error?.message || "تعذر تنظيف الصور. أعيدي المحاولة."}` });
     } finally {
-      setPdfExporting(false);
+      imageCleanupRunning.current = false;
+      setCleaningImages(false);
     }
   };
 
@@ -1853,6 +1853,8 @@ export default function OrdersPage() {
           onForceOrdersTab={() => setActiveTab("orders")}
           onCreateOrder={openCreateOrderDialog}
           onCreateInstantPickup={openInstantPickup}
+          onCleanupImages={handleCleanupImages}
+          cleaningImages={cleaningImages}
           onRenameOrder={openRenameOrderDialog}
           onDeleteOrder={openDeleteOrderDialog}
           totalOrders={totalOrders}
@@ -1874,6 +1876,8 @@ export default function OrdersPage() {
           onForceOrdersTab={() => setActiveTab("orders")}
           onCreateOrder={openCreateOrderDialog}
           onCreateInstantPickup={openInstantPickup}
+          onCleanupImages={handleCleanupImages}
+          cleaningImages={cleaningImages}
           onRenameOrder={openRenameOrderDialog}
           onDeleteOrder={openDeleteOrderDialog}
         />
@@ -1896,9 +1900,6 @@ export default function OrdersPage() {
                 onUpdateOrderStatus={handleUpdateOrderStatus}
                 onOpenAddModal={openAddModal}
                 onOpenOrderSettings={openOrderSettingsDialog}
-                onExportPdf={exportPdfNative}
-                canExportPdf={!isReem}
-                pdfExporting={pdfExporting}
                 customersError={customersError}
                 purchasesLoading={purchasesLoading}
                 purchasesError={purchasesError}
@@ -2359,7 +2360,7 @@ export default function OrdersPage() {
       />
 
       {toast ? (
-        <div className={`toast toast-${toast.type || "info"}`}>
+        <div role="status" className={`toast toast-${toast.type || "info"}${toast.quick ? " toast-quick" : ""}`}>
           <span>{toast.text}</span>
           {toast.action === "تراجع" ? (
             <button type="button" onClick={undoDeletePurchase}>
