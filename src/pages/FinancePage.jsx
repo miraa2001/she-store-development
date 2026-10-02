@@ -143,7 +143,7 @@ export default function FinancePage({ embedded = false }) {
         const pickup = formatPickupDisplayLabel(purchase.pickup_point, "بدون نقطة");
 
         stat.expected += value;
-        stat.purchaseValue += parsePrice(purchase.price);
+        stat.purchaseValue += value;
         stat.purchaseCount += 1;
 
         stat.pickupTotals.set(pickup, (stat.pickupTotals.get(pickup) || 0) + value);

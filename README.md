@@ -24,7 +24,7 @@ The app is role-aware and route-protected, with different capabilities for each 
 - `#/homepickup` : home pickup processing view
 - `#/pickuppoint` : pickup point processing view
 - `#/finance` : order-level and monthly financial breakdowns
-- The finance ledger stores spending and postal fees per order. Purchase value is the sum of original purchase prices, and profit is `(purchase value + postal fee) - spending`.
+- The finance ledger stores spending and postal fees per order. Purchase value is the sum of paid purchase prices, falling back to the original price when no paid price is set, and profit is `(purchase value + postal fee) - spending`.
 - `#/archive` : historical orders overview
 - `#/collections` : collection tracking view
 - `#/login` : authentication entry
