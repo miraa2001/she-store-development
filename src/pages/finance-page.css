@@ -476,6 +476,214 @@
   background: #fff;
 }
 
+.finance-ledger {
+  min-width: 0;
+}
+
+.finance-ledger-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 0 16px;
+}
+
+.finance-ledger-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(420px, 100%);
+  border: 1px solid #d2dcd7;
+  border-radius: 6px;
+  padding: 0 12px;
+  background: #fff;
+  color: #66756e;
+}
+
+.finance-ledger-search input {
+  min-width: 0;
+  width: 100%;
+  height: 40px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: #172822;
+}
+
+.finance-ledger-search:focus-within {
+  outline: 2px solid #238672;
+  outline-offset: 2px;
+}
+
+.finance-ledger-search input:focus {
+  outline: none;
+}
+
+.finance-ledger-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  direction: rtl;
+  border-block: 1px solid #d2dcd7;
+  scrollbar-width: thin;
+}
+
+.finance-ledger-table {
+  width: 100%;
+  min-width: 1040px;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  background: #fff;
+}
+
+.finance-ledger-table th,
+.finance-ledger-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e3e9e6;
+  text-align: right;
+  vertical-align: top;
+}
+
+.finance-ledger-table thead th {
+  color: #586860;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eef3f0;
+}
+
+.finance-ledger-table thead th:first-child {
+  width: 200px;
+}
+
+.finance-ledger-table thead th:nth-child(2) {
+  width: 108px;
+}
+
+.finance-ledger-table thead th:last-child {
+  width: 180px;
+}
+
+.finance-ledger-order {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  background: #fff;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.finance-ledger-date {
+  white-space: nowrap;
+  color: #66756e;
+  font-size: 13px;
+}
+
+.finance-ledger-input {
+  width: 100%;
+  min-width: 0;
+  height: 38px;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid #d2dcd7;
+  border-radius: 4px;
+  background: #fff;
+  color: #172822;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  direction: ltr;
+  text-align: right;
+}
+
+.finance-ledger-input:focus-visible {
+  outline: 2px solid #238672;
+  outline-offset: 2px;
+}
+
+.finance-ledger-input:disabled {
+  background: #f2f5f3;
+  color: #66756e;
+}
+
+.finance-ledger-row-dirty .finance-ledger-input {
+  border-color: #238672;
+}
+
+.finance-ledger-money {
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.finance-ledger-profit {
+  color: #1e6e54;
+  font-weight: 700;
+}
+
+.finance-ledger-profit.is-negative {
+  color: #b42318;
+}
+
+.finance-ledger-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.finance-ledger-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1px solid #d2dcd7;
+  border-radius: 4px;
+  background: #fff;
+  color: #1e6e54;
+  cursor: pointer;
+}
+
+.finance-ledger-icon-btn:hover:not(:disabled) {
+  background: #e9f4ee;
+}
+
+.finance-ledger-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.finance-ledger-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 6px;
+  color: #1e6e54;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.finance-ledger-message svg {
+  flex-shrink: 0;
+}
+
+.finance-ledger-message.is-error {
+  color: #b42318;
+}
+
+.finance-ledger-table tfoot th,
+.finance-ledger-table tfoot td {
+  background: #eef3f0;
+  font-weight: 700;
+}
+
+.finance-ledger-spinner {
+  animation: finance-ledger-spin 1s linear infinite;
+}
+
+@keyframes finance-ledger-spin {
+  to { transform: rotate(360deg); }
+}
+
 .finance-th-label {
   display: inline-flex;
   align-items: center;
@@ -668,7 +876,13 @@
   .finance-tabs {
     width: 100%;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .finance-tab-btn {
+    padding: 10px 6px;
+    font-size: 13px;
+    overflow-wrap: anywhere;
   }
 
   .finance-kpi-grid {

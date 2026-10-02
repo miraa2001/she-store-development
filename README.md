@@ -24,6 +24,7 @@ The app is role-aware and route-protected, with different capabilities for each 
 - `#/homepickup` : home pickup processing view
 - `#/pickuppoint` : pickup point processing view
 - `#/finance` : order-level and monthly financial breakdowns
+- The finance ledger stores spending and postal fees per order. Purchase value is the sum of original purchase prices, and profit is `(purchase value + postal fee) - spending`.
 - `#/archive` : historical orders overview
 - `#/collections` : collection tracking view
 - `#/login` : authentication entry
@@ -62,6 +63,9 @@ Create `.env` from `.env.example` and set:
 npm run build
 npm run preview
 ```
+
+## Finance Database Setup
+Run `supabase/migrations/20261002000000_add_order_postal_fee.sql` in the Supabase SQL Editor before using the finance ledger. It adds `orders.postal_fee` with a default of zero and reuses the existing `spent_amount` column. Existing orders and manually configured profit shares are preserved.
 
 ## Deployment (GitHub Pages)
 Workflow file: `.github/workflows/deploy-react-pages.yml`

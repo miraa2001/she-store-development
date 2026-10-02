@@ -4,13 +4,15 @@ import { useAuthProfile } from "../hooks/useAuthProfile";
 import { formatDMY } from "../lib/dateFormat";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { setBodyScrollLock } from "../lib/bodyScrollLock";
-import { formatILS, getOrderProfitFields, parsePrice, selectOrdersWithOptionalProfitFields } from "../lib/orders";
+import { formatILS, getOrderProfitFields, parsePrice } from "../lib/orders";
+import { fetchFinanceOrders, fetchFinancePurchases } from "../lib/finance";
 import { formatPickupDisplayLabel } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
+import OrderFinanceTable from "../components/finance/OrderFinanceTable";
 import "./pickup-common.css";
 import "./finance-page.css";
 
@@ -85,8 +87,9 @@ export default function FinancePage({ embedded = false }) {
   const [error, setError] = useState("");
   const [orders, setOrders] = useState([]);
   const [orderStatsMap, setOrderStatsMap] = useState(new Map());
+  const [postalFeeAvailable, setPostalFeeAvailable] = useState(false);
 
-  const [activeTab, setActiveTab] = useState("orders");
+  const [activeTab, setActiveTab] = useState("ledger");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const [spentInput, setSpentInput] = useState("");
   const [spentMessage, setSpentMessage] = useState("");
@@ -103,10 +106,8 @@ export default function FinancePage({ embedded = false }) {
 
     try {
       const [ordersRes, purchasesRes] = await Promise.all([
-        selectOrdersWithOptionalProfitFields("id, order_name, order_date, created_at, spent_amount"),
-        sb
-          .from("purchases")
-          .select("order_id, price, paid_price, pickup_point, collected, picked_up")
+        fetchFinanceOrders(),
+        fetchFinancePurchases()
       ]);
 
       if (ordersRes.error) throw ordersRes.error;
@@ -117,6 +118,7 @@ export default function FinancePage({ embedded = false }) {
         spent_amount: parsePrice(order.spent_amount),
         ...getOrderProfitFields(order)
       }));
+      setPostalFeeAvailable(ordersRes.postalFeeAvailable);
 
       const stats = new Map();
 
@@ -128,6 +130,7 @@ export default function FinancePage({ embedded = false }) {
           stats.set(orderId, {
             collected: 0,
             expected: 0,
+            purchaseValue: 0,
             purchaseCount: 0,
             pickupTotals: new Map(),
             pickupCollectedTotals: new Map(),
@@ -140,6 +143,7 @@ export default function FinancePage({ embedded = false }) {
         const pickup = formatPickupDisplayLabel(purchase.pickup_point, "بدون نقطة");
 
         stat.expected += value;
+        stat.purchaseValue += parsePrice(purchase.price);
         stat.purchaseCount += 1;
 
         stat.pickupTotals.set(pickup, (stat.pickupTotals.get(pickup) || 0) + value);
@@ -157,6 +161,7 @@ export default function FinancePage({ embedded = false }) {
       console.error(err);
       setOrders([]);
       setOrderStatsMap(new Map());
+      setPostalFeeAvailable(false);
       setError("تعذر تحميل بيانات المالية.");
     } finally {
       setLoading(false);
@@ -197,6 +202,7 @@ export default function FinancePage({ embedded = false }) {
       const stats = orderStatsMap.get(order.id) || {
         collected: 0,
         expected: 0,
+        purchaseValue: 0,
         purchaseCount: 0,
         pickupTotals: new Map(),
         pickupCollectedTotals: new Map(),
@@ -210,6 +216,8 @@ export default function FinancePage({ embedded = false }) {
         createdAt: order.created_at,
         orderDate: order.order_date,
         spent,
+        postalFee: postalFeeAvailable ? parsePrice(order.postal_fee) : null,
+        purchaseValue: stats.purchaseValue,
         totalProfit: order.totalProfit ?? null,
         miraProfit: order.miraProfit ?? null,
         rahafProfit: order.rahafProfit ?? null,
@@ -222,7 +230,7 @@ export default function FinancePage({ embedded = false }) {
         pickupCounts: stats.pickupCounts
       };
     });
-  }, [orderStatsMap, orders]);
+  }, [orderStatsMap, orders, postalFeeAvailable]);
 
   const groupedOrders = useMemo(() => buildOrderGroups(orderRows), [orderRows]);
 
@@ -361,6 +369,12 @@ export default function FinancePage({ embedded = false }) {
     await signOutAndRedirect();
   }
 
+  function handleFinanceSaved(savedOrder) {
+    setOrders((previous) => previous.map((order) =>
+      String(order.id) === String(savedOrder.id) ? { ...order, ...savedOrder } : order
+    ));
+  }
+
   if (profile.loading) {
     return (
       <div className="finance-page finance-state" dir="rtl">
@@ -458,6 +472,13 @@ export default function FinancePage({ embedded = false }) {
         <div className="finance-tabs">
           <button
             type="button"
+            className={`finance-tab-btn ${activeTab === "ledger" ? "active" : ""}`}
+            onClick={() => setActiveTab("ledger")}
+          >
+            سجل المالية
+          </button>
+          <button
+            type="button"
             className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`}
             onClick={() => setActiveTab("orders")}
           >
@@ -472,12 +493,27 @@ export default function FinancePage({ embedded = false }) {
           </button>
         </div>
 
-        {error ? <div className="finance-error">{error}</div> : null}
+        {error ? (
+          <div className="finance-error" role="alert">
+            {error}
+            <div className="finance-refresh-row">
+              <button type="button" className="finance-btn" onClick={loadData}>إعادة تحميل</button>
+            </div>
+          </div>
+        ) : null}
 
         {loading ? (
           <div className="finance-loading">
             <SessionLoader label="جاري تحميل البيانات..." />
           </div>
+        ) : null}
+
+        {!loading && !error && activeTab === "ledger" ? (
+          <OrderFinanceTable
+            orders={orderRows}
+            postalFeeAvailable={postalFeeAvailable}
+            onSaved={handleFinanceSaved}
+          />
         ) : null}
 
         {!loading && activeTab === "orders" ? (

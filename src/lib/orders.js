@@ -65,21 +65,22 @@ export function getOrderProfitFields(order = {}) {
   };
 }
 
-export async function selectOrdersWithOptionalProfitFields(selectClause) {
+export async function selectOrdersWithOptionalProfitFields(selectClause, range = null) {
   const baseSelect = String(selectClause || "").trim();
   const profitSelect = "total_profit, mira_profit, rahaf_profit";
   const fullSelect = `${baseSelect}, ${profitSelect}`;
 
-  let result = await sb
-    .from("orders")
-    .select(fullSelect)
-    .order("created_at", { ascending: false });
+  const buildQuery = (columns) => {
+    const query = sb.from("orders").select(columns).order("created_at", { ascending: false });
+    return range
+      ? query.order("id", { ascending: true }).range(range.from, range.to)
+      : query;
+  };
+
+  let result = await buildQuery(fullSelect);
 
   if (result.error?.code === "42703") {
-    result = await sb
-      .from("orders")
-      .select(baseSelect)
-      .order("created_at", { ascending: false });
+    result = await buildQuery(baseSelect);
   }
 
   return result;
