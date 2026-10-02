@@ -81,6 +81,17 @@ Automatic receipts are handled by a database trigger, including staff actions ou
 
 Run `npm run test:home-cash` for isolated PostgreSQL regression tests covering the actual migration, receipt rules, corrections, expense retries, cancellations, pagination, and access policies. Tests do not connect to the live Supabase database.
 
+## Instant Pickup Setup
+After installing Home Cash, run `supabase/migrations/20261002020000_add_instant_pickups.sql` in the Supabase SQL Editor.
+
+Instant pickups are standalone records, with no order or customer-directory relationship. Rahaf adds a name, price, and one of the four pickup locations from the Orders action menu, beside New Order, or from a pickup section. New records are ready for pickup but neither received nor collected.
+
+Rahaf and Reem see the `استلام فوري` section at locations they can access. Pickup-point staff see entries grouped by their creation date in the Asia/Hebron timezone, without the instant-pickup label. Staff receive purchases only at their own location; only Rahaf collects or transfers them. Collected entries cannot be transferred.
+
+Instant receipts feed Home Cash using the same receipt and collection rules as normal purchases, including duplicate protection and audit entries. They never enter order purchase values, spending, or profit calculations. The migration does not change existing orders or purchases.
+
+Run `npm run test:instant-pickups` for isolated PostgreSQL checks of creation, cash timing, transfers, bulk collection, location permissions, and audit preservation.
+
 ## Deployment (GitHub Pages)
 Workflow file: `.github/workflows/deploy-react-pages.yml`
 

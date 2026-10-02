@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
 import "./orders-page.css";
 import {
   ORDER_TYPES,
@@ -73,6 +74,7 @@ import CustomerQuickAddModal from "../components/orders/CustomerQuickAddModal";
 import LightboxModal from "../components/orders/LightboxModal";
 import SessionLoader from "../components/common/SessionLoader";
 import SpeedDial from "../components/common/SpeedDial";
+import InstantPickupDialog from "../components/pickup/InstantPickupDialog";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import AppNavIcon from "../components/common/AppNavIcon";
 import ordersMenuIcon from "../assets/icons/navigation/orders.png";
@@ -342,6 +344,7 @@ export default function OrdersPage() {
   const [paidPriceDialog, setPaidPriceDialog] = useState(null);
   const [paidPriceDialogBusy, setPaidPriceDialogBusy] = useState(false);
   const [orderDialog, setOrderDialog] = useState(null);
+  const [instantPickupOpen, setInstantPickupOpen] = useState(false);
   const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [orderSettingsDialog, setOrderSettingsDialog] = useState(null);
   const [orderSettingsDialogBusy, setOrderSettingsDialogBusy] = useState(false);
@@ -1699,10 +1702,19 @@ export default function OrdersPage() {
     }
   };
 
+  const openInstantPickup = useCallback(() => {
+    if (!isRahaf) return;
+    setOrdersMenuOpen(false);
+    setInstantPickupOpen(true);
+  }, [isRahaf]);
+
   const speedDialActions = useMemo(() => {
     if (!isMobile) return [];
 
     const actions = [];
+    if (isRahaf && activeTab === "orders") {
+      actions.push({ id: "instant-pickup", label: "اضافة مستلم فوري", icon: <UserPlus size={22} />, onClick: openInstantPickup });
+    }
 
     if (allowedTabs.includes("customers")) {
       if (activeTab === "customers") {
@@ -1726,7 +1738,9 @@ export default function OrdersPage() {
   }, [
     activeTab,
     allowedTabs,
-    isMobile
+    isMobile,
+    isRahaf,
+    openInstantPickup
   ]);
 
   const showMobileSpeedDial =
@@ -1734,6 +1748,7 @@ export default function OrdersPage() {
     (isMobile || isTablet) &&
     !globalOpen &&
     !formOpen &&
+    !instantPickupOpen &&
     !lightbox.open &&
     !ordersMenuOpen;
 
@@ -1889,6 +1904,7 @@ export default function OrdersPage() {
           isRahaf={isRahaf}
           onForceOrdersTab={() => setActiveTab("orders")}
           onCreateOrder={openCreateOrderDialog}
+          onCreateInstantPickup={openInstantPickup}
           onRenameOrder={openRenameOrderDialog}
           onDeleteOrder={openDeleteOrderDialog}
           totalOrders={totalOrders}
@@ -1909,6 +1925,7 @@ export default function OrdersPage() {
           isRahaf={isRahaf}
           onForceOrdersTab={() => setActiveTab("orders")}
           onCreateOrder={openCreateOrderDialog}
+          onCreateInstantPickup={openInstantPickup}
           onRenameOrder={openRenameOrderDialog}
           onDeleteOrder={openDeleteOrderDialog}
         />
@@ -1992,6 +2009,10 @@ export default function OrdersPage() {
 
       {showMobileSpeedDial ? (
         <SpeedDial actions={speedDialActions} position="bottom-right" size="large" />
+      ) : null}
+
+      {instantPickupOpen && isRahaf ? (
+        <InstantPickupDialog onClose={() => setInstantPickupOpen(false)} onSaved={() => setToast({ type: "success", text: "تمت إضافة المستلم الفوري." })} />
       ) : null}
 
       <PurchaseFormModal

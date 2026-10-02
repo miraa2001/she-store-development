@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
 import SessionLoader from "../common/SessionLoader";
 import actionsMenuIcon from "../../assets/icons/actions/menu-vertical.png";
 import editIcon from "../../assets/icons/actions/edit.png";
@@ -15,6 +16,7 @@ export default function OrdersBottomSheet({
   isRahaf,
   onForceOrdersTab,
   onCreateOrder,
+  onCreateInstantPickup,
   onRenameOrder,
   onDeleteOrder
 }) {
@@ -62,6 +64,13 @@ export default function OrdersBottomSheet({
         <div className="orders-sheet-head">
           <strong>اختيار الطلب</strong>
           <div className="orders-drawer-actions">
+            {isRahaf ? (
+              <button type="button" className="orders-menu-create-btn" onClick={() => {
+                setOpenActionsOrderId("");
+                onCreateInstantPickup?.();
+                onClose?.();
+              }}><UserPlus size={16} aria-hidden="true" />اضافة مستلم فوري</button>
+            ) : null}
             {isRahaf ? (
               <button
                 type="button"

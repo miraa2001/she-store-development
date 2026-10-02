@@ -16,6 +16,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import PickupTransferDialog from "../components/pickup/PickupTransferDialog";
+import InstantPickupSection from "../components/pickup/InstantPickupSection";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import customerHeaderIcon from "../assets/icons/pickup/customer.png";
 import priceHeaderIcon from "../assets/icons/pickup/price-ils.png";
@@ -1178,6 +1179,7 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
             )}
           </main>
         </div>
+        <InstantPickupSection pickupPoint={pickupLocation.pickupValue} role={profile.role} />
       </div>
 
       {ordersMenuPortalTarget && !isLocationRole

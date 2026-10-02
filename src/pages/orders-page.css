@@ -4259,6 +4259,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
   padding: 14px 14px 12px;
   border-bottom: 1px solid rgba(229, 231, 235, 0.9);
   background: rgba(255, 255, 255, 0.96);
@@ -4268,9 +4269,19 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
+
+.orders-drawer-head .orders-drawer-actions,
+.orders-sheet-head .orders-drawer-actions {
+  width: 100%;
 }
 
 .orders-menu-create-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border: 1px solid rgba(71, 20, 63, 0.24);
   background: rgba(109, 63, 107, 0.12);
   color: #47143F;
@@ -4327,6 +4338,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  flex-wrap: wrap;
   padding: 0 14px 10px;
   border-bottom: 1px solid rgba(229, 231, 235, 0.9);
 }

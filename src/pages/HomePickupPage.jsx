@@ -15,6 +15,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import PickupAnimatedCheckbox from "../components/common/PickupAnimatedCheckbox";
 import PickupTransferDialog from "../components/pickup/PickupTransferDialog";
+import InstantPickupSection from "../components/pickup/InstantPickupSection";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import imagesHeaderIcon from "../assets/icons/pickup/images.png";
 import customerHeaderIcon from "../assets/icons/pickup/customer.png";
@@ -1265,6 +1266,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
             )}
           </main>
         </div>
+        <InstantPickupSection pickupPoint={pickupPoint} role={profile.role} />
       </div>
 
       <div className={`pickup-orders-menu-overlay ${ordersMenuOpen ? "open" : ""}`} onClick={() => setOrdersMenuOpen(false)}>
