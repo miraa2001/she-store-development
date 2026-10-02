@@ -13,6 +13,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import OrderFinanceTable from "../components/finance/OrderFinanceTable";
+import HomeCashPanel from "../components/finance/HomeCashPanel";
 import "./pickup-common.css";
 import "./finance-page.css";
 
@@ -491,9 +492,16 @@ export default function FinancePage({ embedded = false }) {
           >
             حسب الشهر
           </button>
+          <button
+            type="button"
+            className={`finance-tab-btn ${activeTab === "cash" ? "active" : ""}`}
+            onClick={() => setActiveTab("cash")}
+          >
+            مصاري البيت
+          </button>
         </div>
 
-        {error ? (
+        {error && activeTab !== "cash" ? (
           <div className="finance-error" role="alert">
             {error}
             <div className="finance-refresh-row">
@@ -502,11 +510,13 @@ export default function FinancePage({ embedded = false }) {
           </div>
         ) : null}
 
-        {loading ? (
+        {loading && activeTab !== "cash" ? (
           <div className="finance-loading">
             <SessionLoader label="جاري تحميل البيانات..." />
           </div>
         ) : null}
+
+        {activeTab === "cash" ? <HomeCashPanel /> : null}
 
         {!loading && !error && activeTab === "ledger" ? (
           <OrderFinanceTable

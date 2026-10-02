@@ -67,6 +67,20 @@ npm run preview
 ## Finance Database Setup
 Run `supabase/migrations/20261002000000_add_order_postal_fee.sql` in the Supabase SQL Editor before using the finance ledger. It adds `orders.postal_fee` with a default of zero and reuses the existing `spent_amount` column. Existing orders and manually configured profit shares are preserved.
 
+### Home Cash
+Run `supabase/migrations/20261002010000_add_home_cash_ledger.sql` in the Supabase SQL Editor to enable the Home Cash tab in Finance. Tracking begins at zero when the migration runs; previously received Home purchases and previously collected purchases are excluded. Rerunning the migration preserves the balance and history.
+
+- Home purchases add cash when marked received. Collecting those same purchases later does not add cash again.
+- Maryamti, Nablus, and Delivery add cash when marked collected, not when marked received.
+- Receipt amounts use `paid_price`, falling back to `price` only when no paid price is set. Corrections and reversals create adjustment entries; parcel transfers do not move cash already received.
+- Expenses record a category, total paid amount, quantity, and optional note. The amount is the total cost, not a unit price. Categories include bags, pins, name stickers, postal delivery, and ATM deposits. Depositing money at an ATM reduces cash held at home.
+- Expenses cannot exceed available cash. Cancelling an expense restores its amount and adds a reversal without deleting the original entry.
+- The activity log records amounts, running balances, dates, customer/order details, and the acting user. Deleting an order or purchase does not erase cash already recorded.
+
+Automatic receipts are handled by a database trigger, including staff actions outside Finance. Cash history and expense RPCs are restricted to database admins; the Finance UI retains its existing Rahaf-only access.
+
+Run `npm run test:home-cash` for isolated PostgreSQL regression tests covering the actual migration, receipt rules, corrections, expense retries, cancellations, pagination, and access policies. Tests do not connect to the live Supabase database.
+
 ## Deployment (GitHub Pages)
 Workflow file: `.github/workflows/deploy-react-pages.yml`
 
