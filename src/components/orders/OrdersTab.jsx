@@ -54,7 +54,6 @@ export default function OrdersTab({
   onInquireWhatsapp,
   onNotifyWhatsapp,
   highlightPurchaseId = "",
-  hidePurchaseGrid = false
 }) {
   const [cardSlideIndexes, setCardSlideIndexes] = useState({});
   const highlightRef = useRef(null);
@@ -179,7 +178,7 @@ export default function OrdersTab({
         <div className="workspace-empty">لا توجد مشتريات مطابقة.</div>
       ) : null}
 
-      {!purchasesLoading && !purchasesError && filteredPurchases.length && !hidePurchaseGrid ? (
+      {!purchasesLoading && !purchasesError && filteredPurchases.length ? (
         <div className="purchase-cards-grid">
           {filteredPurchases.map((purchase) => {
             const canShowWhatsapp = isRahaf && !!selectedOrder?.arrived;

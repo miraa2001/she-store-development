@@ -69,7 +69,6 @@ import CommandHeader from "../components/orders/CommandHeader";
 import OrdersBottomSheet from "../components/orders/OrdersBottomSheet";
 import OrdersDrawer from "../components/orders/OrdersDrawer";
 import OrdersTab from "../components/orders/OrdersTab";
-import KanbanView from "../components/orders/KanbanView";
 import PurchaseFormModal from "../components/orders/PurchaseFormModal";
 import CustomerQuickAddModal from "../components/orders/CustomerQuickAddModal";
 import LightboxModal from "../components/orders/LightboxModal";
@@ -280,11 +279,10 @@ export default function OrdersPage() {
     typeof window === "undefined" ? 1280 : window.innerWidth
   );
   const [globalOpen, setGlobalOpen] = useState(false);
-  const [ordersMenuOpen, setOrdersMenuOpen] = useState(false);
+  const [ordersMenuOpen, setOrdersMenuOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("orders");
   const [search, setSearch] = useState("");
   const [editMode, setEditMode] = useState(true);
-  const [desktopOrdersView, setDesktopOrdersView] = useState("list");
   const [selectedOrderId, setSelectedOrderId] = useState("");
   const { profile } = useAuthProfile();
 
@@ -335,7 +333,6 @@ export default function OrdersPage() {
   });
   const [pdfExporting, setPdfExporting] = useState(false);
   const [orderStatusSaving, setOrderStatusSaving] = useState(false);
-  const [kanbanMovingPurchaseId, setKanbanMovingPurchaseId] = useState("");
   const [newFilePreviews, setNewFilePreviews] = useState([]);
 
   const [toast, setToast] = useState(null);
@@ -360,7 +357,6 @@ export default function OrdersPage() {
 
   const isMobile = viewportWidth < 768;
   const isTablet = viewportWidth >= 768 && viewportWidth < 1024;
-  const isDesktop = viewportWidth >= 1024;
 
   const setCreateCustomerForm = useCallback((updater) => {
     setCustomerForm((prev) => {
@@ -548,7 +544,7 @@ export default function OrdersPage() {
         if (candidate && visibleOrders.some((order) => String(order.id) === String(candidate))) {
           return candidate;
         }
-        return visibleOrders[0]?.id || "";
+        return "";
       });
     } catch (error) {
       console.error(error);
@@ -631,10 +627,6 @@ export default function OrdersPage() {
     setEditMode(true);
   }, [isRahaf, profile.authenticated]);
 
-  useEffect(() => {
-    if (!isReem) return;
-    setDesktopOrdersView("list");
-  }, [isReem]);
 
 
   useEffect(() => {
@@ -689,9 +681,9 @@ export default function OrdersPage() {
   }, [activeTab, refreshPurchases, selectedOrderId]);
 
   useEffect(() => {
-    if (activeTab === "orders") return;
-    setOrdersMenuOpen(false);
-  }, [activeTab]);
+    if (activeTab !== "orders") setOrdersMenuOpen(false);
+    else if (!selectedOrderId) setOrdersMenuOpen(true);
+  }, [activeTab, selectedOrderId]);
 
   useEffect(() => {
     if (!toast) return;
@@ -1668,51 +1660,6 @@ export default function OrdersPage() {
     setHighlightPurchaseId(String(row.id));
   };
 
-  const handleMovePurchaseKanban = async (purchase, targetColumn) => {
-    if (!purchase?.id || !selectedOrder) return;
-
-    let patch = {};
-    let successText = "";
-
-    if (targetColumn === "pending") {
-      patch = { picked_up: false, collected: false };
-      successText = "تم نقل المشترى إلى قيد الانتظار.";
-    } else if (targetColumn === "received") {
-      patch = { picked_up: true, collected: false };
-      successText = "تم نقل المشترى إلى تم الاستلام.";
-    } else if (targetColumn === "collected") {
-      patch = { picked_up: true, collected: true };
-      successText = "تم نقل المشترى إلى تم التحصيل.";
-    } else {
-      return;
-    }
-
-    setKanbanMovingPurchaseId(String(purchase.id));
-    try {
-      const { error } = await sb.from("purchases").update(patch).eq("id", purchase.id);
-      if (error) throw error;
-
-      setPurchases((prev) =>
-        prev.map((item) =>
-          String(item.id) === String(purchase.id)
-            ? {
-                ...item,
-                ...patch
-              }
-            : item
-        )
-      );
-
-      setToast({ type: "success", text: successText });
-      await refreshOrders(selectedOrder.id);
-    } catch (error) {
-      console.error(error);
-      setToast({ type: "danger", text: "فشل نقل المشترى بين الأعمدة." });
-    } finally {
-      setKanbanMovingPurchaseId("");
-    }
-  };
-
   const openInstantPickup = useCallback(() => {
     if (!isRahaf) return;
     setOrdersMenuOpen(false);
@@ -1861,9 +1808,6 @@ export default function OrdersPage() {
         showOrdersMenuTrigger={activeTab === "orders"}
         onOpenOrdersMenu={() => setOrdersMenuOpen(true)}
         totalOrders={totalOrders}
-        showDesktopOrdersViewToggle={isDesktop && activeTab === "orders" && !isReem}
-        desktopOrdersView={desktopOrdersView}
-        onDesktopOrdersViewChange={setDesktopOrdersView}
         Icon={Icon}
       />
 
@@ -1970,17 +1914,8 @@ export default function OrdersPage() {
                 onInquireWhatsapp={inquirePickupViaWhatsapp}
                 onNotifyWhatsapp={notifyViaWhatsapp}
                 highlightPurchaseId={highlightPurchaseId}
-                hidePurchaseGrid={isDesktop && desktopOrdersView === "kanban" && !isReem}
               />
 
-              {isDesktop && desktopOrdersView === "kanban" && !isReem ? (
-                <KanbanView
-                  purchases={filteredPurchases}
-                  movingPurchaseId={kanbanMovingPurchaseId}
-                  onMovePurchase={handleMovePurchaseKanban}
-                  onOpenLightbox={(images, index, title) => setLightbox({ open: true, images, index, title })}
-                />
-              ) : null}
             </>
           ) : activeTab === "customers" ? (
             <CustomersTab

@@ -11,29 +11,6 @@ function getViewport() {
   return "desktop";
 }
 
-function ListIcon({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="8" y1="6" x2="21" y2="6" />
-      <line x1="8" y1="12" x2="21" y2="12" />
-      <line x1="8" y1="18" x2="21" y2="18" />
-      <circle cx="4" cy="6" r="1" />
-      <circle cx="4" cy="12" r="1" />
-      <circle cx="4" cy="18" r="1" />
-    </svg>
-  );
-}
-
-function ColumnsIcon({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="5" height="16" rx="1.5" />
-      <rect x="10" y="4" width="5" height="16" rx="1.5" />
-      <rect x="17" y="4" width="4" height="16" rx="1.5" />
-    </svg>
-  );
-}
-
 export default function CommandHeader({
   isRahaf,
   canAccessCustomers = false,
@@ -47,9 +24,6 @@ export default function CommandHeader({
   showOrdersMenuTrigger = false,
   onOpenOrdersMenu,
   totalOrders,
-  showDesktopOrdersViewToggle = false,
-  desktopOrdersView = "list",
-  onDesktopOrdersViewChange,
   Icon
 }) {
   const [viewport, setViewport] = useState(() => getViewport());
@@ -226,30 +200,6 @@ export default function CommandHeader({
       </div>
 
       <div className="command-actions command-action-group" role="toolbar" aria-label="شريط أدوات الطلبات">
-        {showDesktopOrdersViewToggle ? (
-          <div className="view-controls-group">
-            <span className="control-label">العرض:</span>
-            <div className="orders-view-toggle" role="tablist" aria-label="طريقة عرض المشتريات">
-              <button
-                type="button"
-                className={`orders-view-btn ${desktopOrdersView === "list" ? "active" : ""}`}
-                onClick={() => onDesktopOrdersViewChange?.("list")}
-              >
-                <ListIcon className="icon-sm" />
-                قائمة
-              </button>
-              <button
-                type="button"
-                className={`orders-view-btn ${desktopOrdersView === "kanban" ? "active" : ""}`}
-                onClick={() => onDesktopOrdersViewChange?.("kanban")}
-              >
-                <ColumnsIcon className="icon-sm" />
-                كانبان
-              </button>
-            </div>
-          </div>
-        ) : null}
-
         <div className="quick-actions-group">
           {showOrdersMenuTrigger ? (
             <button type="button" className="icon-btn orders-menu-trigger-btn" onClick={onOpenOrdersMenu} aria-label="فتح قائمة الطلبات">
