@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRightLeft, Banknote, LoaderCircle, RefreshCw, UserPlus } from "lucide-react";
+import { ArrowRightLeft, Banknote, LoaderCircle, RefreshCw, Trash2, UserPlus } from "lucide-react";
 import { formatDateTime } from "../../lib/dateFormat";
 import { formatILS } from "../../lib/orders";
 import { isPickupPointRole } from "../../lib/pickup";
 import { searchByName } from "../../lib/search";
-import { collectInstantPickups, fetchInstantPickups, INSTANT_PICKUPS_CHANGED, updateInstantPickup } from "../../lib/instantPickups";
+import { collectInstantPickups, deleteInstantPickup, fetchInstantPickups, INSTANT_PICKUPS_CHANGED, updateInstantPickup } from "../../lib/instantPickups";
 import PickupAnimatedCheckbox from "../common/PickupAnimatedCheckbox";
 import PickupTransferDialog from "./PickupTransferDialog";
 import InstantPickupDialog from "./InstantPickupDialog";
@@ -100,6 +100,16 @@ export default function InstantPickupSection({ pickupPoint, role, title = "", se
     finally { setBusy(""); }
   }
 
+  async function remove(row) {
+    if (!isRahaf || row.picked_up || row.collected || busy || loading) return;
+    if (!window.confirm(`حذف المستلم الفوري ${row.customer_name}؟ لا يمكن التراجع عن الحذف.`)) return;
+    setBusy(row.id);
+    setError("");
+    try { await deleteInstantPickup(row.id); }
+    catch (deleteError) { setError(deleteError?.message || "تعذر حذف المستلم."); }
+    finally { setBusy(""); }
+  }
+
   if (!namedSection && !rows.length && !error) return null;
   return (
     <section className="instant-pickup-section" aria-label={title || (namedSection ? "استلام فوري" : "المشتريات")} aria-busy={loading}>
@@ -131,6 +141,7 @@ export default function InstantPickupSection({ pickupPoint, role, title = "", se
                   <span>{row.collected ? "محصّل" : row.picked_up ? "تم الاستلام" : "غير مستلم"}</span></div></td>
                 <td className="instant-pickup-date">{formatDateTime(row.picked_up_at || row.created_at)}</td>
                 {isRahaf ? <td><div className="instant-pickup-row-actions">
+                  <button type="button" className="instant-pickup-icon-btn danger" title={row.collected ? "لا يمكن حذف مستلم تم تحصيله" : row.picked_up ? "ألغِ الاستلام قبل الحذف" : "حذف المستلم"} aria-label={`حذف ${row.customer_name}`} disabled={row.picked_up || row.collected || !!busy || loading} onClick={() => remove(row)}><Trash2 size={18} /></button>
                   <button type="button" className="instant-pickup-icon-btn" title="تحصيل" aria-label={`تحصيل ${row.customer_name}`} disabled={!row.picked_up || row.collected || !!busy || loading} onClick={() => collect([row])}><Banknote size={18} /></button>
                   <button type="button" className="instant-pickup-icon-btn" title="نقل المشترى" aria-label={`نقل ${row.customer_name}`} disabled={row.collected || !!busy || loading} onClick={() => setTransfer(row)}><ArrowRightLeft size={18} /></button>
                 </div></td> : null}

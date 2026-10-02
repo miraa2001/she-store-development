@@ -62,3 +62,10 @@ export async function collectInstantPickups(ids) {
   notifyChanged();
   return data;
 }
+
+export async function deleteInstantPickup(id) {
+  const { data, error } = await sb.rpc("delete_instant_pickup", { p_id: id });
+  if (error) throw instantError(error);
+  notifyChanged();
+  return data;
+}

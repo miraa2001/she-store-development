@@ -92,7 +92,9 @@ Instant receipts feed Home Cash using the same receipt and collection rules as n
 
 The Orders page also has an Instant Pickup tab for Rahaf and Reem. On desktop it appears beside Customers (where permitted); on mobile it is available in the floating actions. This view supports name search, location filtering, receipt and collection controls, and transfers while preserving existing location permissions. It uses the same instant-pickup migration, with no additional database setup.
 
-Run `npm run test:instant-pickups` for isolated PostgreSQL checks of creation, cash timing, transfers, bulk collection, location permissions, and audit preservation.
+Run `supabase/migrations/20261002030000_add_instant_pickup_delete.sql` to enable Rahaf's instant-pickup delete buttons in the Orders tab and pickup dashboards. Deletion requires confirmation and is blocked after receipt or collection. Undo receipt first for an uncollected entry so its cash adjustment is logged; existing cash history is retained after deletion.
+
+Run `npm run test:instant-pickups` for isolated PostgreSQL checks of creation, cash timing, transfers, bulk collection, deletion, location permissions, and audit preservation.
 
 ## Deployment (GitHub Pages)
 Workflow file: `.github/workflows/deploy-react-pages.yml`

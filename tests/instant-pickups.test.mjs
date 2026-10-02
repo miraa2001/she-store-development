@@ -43,6 +43,8 @@ test("Standalone instant pickups and Home Cash", async (t) => {
   const instantMigration = await readFile(new URL("../supabase/migrations/20261002020000_add_instant_pickups.sql", import.meta.url), "utf8");
   await db.exec(cashMigration);
   await db.exec(instantMigration);
+  const deleteMigration = await readFile(new URL("../supabase/migrations/20261002030000_add_instant_pickup_delete.sql", import.meta.url), "utf8");
+  await db.exec(deleteMigration);
   const summary = async () => (await db.query("select public.get_home_cash_summary() as value")).rows[0].value;
   const create = (n, location, price = 10, name = `Instant ${n}`) => db.query(
     "select * from public.create_instant_pickup($1,$2,$3,$4)", [uuid(n), name, price, location]);
@@ -181,6 +183,46 @@ test("Standalone instant pickups and Home Cash", async (t) => {
     assert.equal((await db.query("select * from public.instant_pickups")).rows.length, 0);
     await assert.rejects(act(26, "receive"));
     await identity(1);
+  });
+
+  await t.test("only admins delete pending entries; retries are safe and received cash is protected", async () => {
+    const remove = (n) => db.query("select public.delete_instant_pickup($1) as deleted", [uuid(n)]);
+    await identity(1);
+    for (const [n, point] of [[80, HOME], [81, MARYAMTI], [82, NABLUS], [83, DELIVERY]]) {
+      await create(n, point);
+    }
+    for (const n of [2, 3, 4, 5, 6]) {
+      await identity(n);
+      await assert.rejects(remove(80), /صلاحية/);
+      await assert.rejects(remove(999), /صلاحية/);
+    }
+    await db.exec("reset role; set role anon;");
+    await assert.rejects(remove(80));
+    await identity(1);
+    await assert.rejects(db.query("delete from public.instant_pickups where id = $1", [uuid(80)]));
+    await assert.rejects(db.query("select public.delete_instant_pickup(null)"));
+    await act(80, "receive");
+    assert.equal((await summary()).balance, 82);
+    await assert.rejects(remove(80), /استلامه/);
+    await act(81, "receive");
+    await assert.rejects(remove(81), /استلامه/);
+    await assert.rejects(remove(21), /استلامه/);
+    await act(80, "undo_receive");
+    await act(81, "undo_receive");
+    assert.equal((await summary()).balance, 72);
+    for (const n of [80, 81, 82, 83]) {
+      assert.equal((await remove(n)).rows[0].deleted, true);
+      assert.equal((await remove(n)).rows[0].deleted, false);
+      assert.equal((await db.query("select * from public.instant_pickups where id = $1", [uuid(n)])).rows.length, 0);
+    }
+    const history = (await db.query("select * from public.home_cash_transactions where customer_name = 'Instant 80'")).rows;
+    assert.equal(history.length, 2);
+    assert(history.every((row) => row.instant_pickup_id === null));
+    assert.equal((await summary()).balance, 72);
+    await db.exec("reset role;");
+    await db.exec(deleteMigration);
+    await identity(1);
+    assert.equal((await remove(80)).rows[0].deleted, false);
   });
 
   await t.test("cash audit entries identify instant pickups and survive migration reruns and deletion", async () => {
