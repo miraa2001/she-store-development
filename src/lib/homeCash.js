@@ -40,7 +40,7 @@ export async function fetchHomeCash(offset = 0) {
   };
 }
 
-export async function recordHomeCashExpense({ requestId, category, amount, quantity, note }) {
+export async function recordHomeCashExpense({ requestId, category, amount, quantity = 1, note }) {
   const total = parseFinanceAmount(amount);
   const count = Number(quantity);
   if (total <= 0) throw new Error("أدخلي مبلغاً أكبر من صفر.");

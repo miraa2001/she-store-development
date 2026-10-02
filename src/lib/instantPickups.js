@@ -64,8 +64,14 @@ export async function collectInstantPickups(ids) {
 }
 
 export async function deleteInstantPickup(id) {
+  if (!id) throw new Error("تعذر تحديد المستلم للحذف.");
   const { data, error } = await sb.rpc("delete_instant_pickup", { p_id: id });
-  if (error) throw instantError(error);
+  if (error) {
+    if (["PGRST202", "42883"].includes(error.code)) {
+      throw new Error("الحذف غير متاح: يلزم تشغيل تحديث حذف الاستلام الفوري في قاعدة البيانات.");
+    }
+    throw instantError(error);
+  }
   notifyChanged();
   return data;
 }

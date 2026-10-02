@@ -749,7 +749,7 @@
 
 .home-cash-summary {
   display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr 1.2fr;
+  grid-template-columns: 1fr;
   gap: 20px;
   margin: 0;
   padding-block: 20px;
@@ -796,7 +796,7 @@
 
 .home-cash-expense-form fieldset {
   display: grid;
-  grid-template-columns: minmax(210px, 1.3fr) minmax(130px, 0.7fr) 88px minmax(180px, 1fr) auto;
+  grid-template-columns: minmax(210px, 1.3fr) minmax(130px, 0.7fr) minmax(180px, 1fr) auto;
   align-items: end;
   gap: 12px;
   border: 0;
@@ -1117,15 +1117,12 @@
 
 @media (max-width: 900px) {
   .home-cash-expense-form fieldset {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 88px;
-  }
-
-  .home-cash-note-field {
-    grid-column: span 2;
-  }
-
-  .home-cash-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-cash-note-field,
+  .home-cash-save-btn {
+    grid-column: span 2;
   }
 
   .finance-wrap {
@@ -1174,7 +1171,7 @@
   }
 
   .home-cash-expense-form fieldset {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .home-cash-expense-form label:first-child,

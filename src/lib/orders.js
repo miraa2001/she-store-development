@@ -76,6 +76,7 @@ export async function selectOrdersWithOptionalProfitFields(selectClause, range =
 
   const buildQuery = (columns) => {
     const query = sb.from("orders").select(columns).order("created_at", { ascending: false });
+    if (range?.createdFrom) query.gte("created_at", range.createdFrom);
     return range
       ? query.order("id", { ascending: true }).range(range.from, range.to)
       : query;

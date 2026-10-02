@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Banknote, Check, LoaderCircle, RefreshCw } from "lucide-react";
 import { formatDateTime } from "../../lib/dateFormat";
 import { formatILS } from "../../lib/orders";
@@ -7,7 +7,7 @@ import { fetchProfitData, PROFIT_PAGE_SIZE, PROFIT_PARTIES, recordProfitPayout }
 
 const partyLabel = (party) => PROFIT_PARTIES.find((item) => item.value === party)?.label || party;
 
-export default function ProfitDistributionPanel() {
+export default function ProfitDistributionPanel({ orders = [] }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -62,7 +62,20 @@ export default function ProfitDistributionPanel() {
     } finally { setSaving(false); }
   }
 
-  const visibleOrders = (data?.orders || []).filter((order) => order.order_name.toLowerCase().includes(search.trim().toLowerCase()));
+  const visibleOrders = useMemo(() => {
+    const dates = new Map(orders.map((order) => {
+      const created = Date.parse(order.createdAt) || 0;
+      const date = Date.parse(order.orderDate);
+      return [order.id, { date: Number.isFinite(date) ? date : created, created }];
+    }));
+    return (data?.orders || [])
+      .filter((order) => dates.has(order.order_id) && order.order_name.toLowerCase().includes(search.trim().toLowerCase()))
+      .sort((a, b) => {
+        const left = dates.get(a.order_id);
+        const right = dates.get(b.order_id);
+        return right.date - left.date || right.created - left.created || b.order_id.localeCompare(a.order_id);
+      });
+  }, [data?.orders, orders, search]);
   return <section className="profit-distribution" aria-label="توزيع الأرباح" aria-busy={loading}>
     <div className="home-cash-heading"><h2><Banknote size={20} />توزيع الأرباح</h2>
       <button type="button" className="finance-ledger-icon-btn" title="تحديث" aria-label="تحديث الأرباح" disabled={loading || saving} onClick={reload}><RefreshCw size={18} /></button>

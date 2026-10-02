@@ -1,5 +1,6 @@
 import { selectOrdersWithOptionalProfitFields } from "./orders";
 import { sb } from "./supabaseClient";
+import { FINANCE_START_AT, isFinanceOrderInPeriod } from "./financePeriod";
 
 const PAGE_SIZE = 1000;
 const ORDER_COLUMNS = "id, order_name, order_date, created_at, spent_amount";
@@ -31,7 +32,7 @@ export async function fetchFinanceOrders() {
   let postalFeeAvailable = true;
 
   for (let offset = 0; ; offset += PAGE_SIZE) {
-    const range = { from: offset, to: offset + PAGE_SIZE - 1 };
+    const range = { from: offset, to: offset + PAGE_SIZE - 1, createdFrom: FINANCE_START_AT };
     let result = await selectOrdersWithOptionalProfitFields(
       postalFeeAvailable ? `${ORDER_COLUMNS}, postal_fee` : ORDER_COLUMNS,
       range
@@ -45,7 +46,7 @@ export async function fetchFinanceOrders() {
     if ((result.data || []).length < PAGE_SIZE) break;
   }
 
-  return { data: orders, postalFeeAvailable };
+  return { data: orders.filter(isFinanceOrderInPeriod), postalFeeAvailable };
 }
 
 export async function fetchFinancePurchases() {

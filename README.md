@@ -73,7 +73,7 @@ Run `supabase/migrations/20261002010000_add_home_cash_ledger.sql` in the Supabas
 - Home purchases add cash when marked received. Collecting those same purchases later does not add cash again.
 - Maryamti, Nablus, and Delivery add cash when marked collected, not when marked received.
 - Receipt amounts use `paid_price`, falling back to `price` only when no paid price is set. Corrections and reversals create adjustment entries; parcel transfers do not move cash already received.
-- Expenses record a category, total paid amount, quantity, and optional note. The amount is the total cost, not a unit price. Categories include bags, pins, name stickers, postal delivery, and ATM deposits. Depositing money at an ATM reduces cash held at home.
+- Expenses record a category, total paid amount, and optional note. New entries use an internal quantity of one for compatibility with the existing database. Categories include bags, pins, name stickers, postal delivery, and ATM deposits. Depositing money at an ATM reduces cash held at home.
 - Expenses cannot exceed available cash. Cancelling an expense restores its amount and adds a reversal without deleting the original entry.
 - The activity log records amounts, running balances, dates, customer/order details, and the acting user. Deleting an order or purchase does not erase cash already recorded.
 
@@ -82,6 +82,8 @@ Automatic receipts are handled by a database trigger, including staff actions ou
 Run `npm run test:home-cash` for isolated PostgreSQL regression tests covering the actual migration, receipt rules, corrections, expense retries, cancellations, pagination, and access policies. Tests do not connect to the live Supabase database.
 
 ## Profit Distribution Setup
+Finance shows only orders created on or after October 1, 2026 in Asia/Hebron, in the finance ledger and per-order profit table. This is a display cutoff: historical cash, accrued profit balances, and payment records are not deleted or reset. The Finance tabs are Finance Ledger, Profit Distribution, and Home Cash; Home Cash shows only the cash balance summary, with expenses and activity history below.
+
 After the postal-fee and Home Cash migrations, run `supabase/migrations/20261002040000_add_profit_distribution.sql` in Supabase SQL Editor.
 
 On first installation, old manually entered `total_profit`, `mira_profit`, and `rahaf_profit` values are zeroed as requested. Spending, purchase prices, receipts, and cash history are preserved. New percentages are blank for every order, and marketing defaults to zero. Rerunning the migration does not repeat this reset.

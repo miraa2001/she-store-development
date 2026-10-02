@@ -8,7 +8,7 @@ import {
 } from "../../lib/homeCash";
 import SessionLoader from "../common/SessionLoader";
 
-const EMPTY_EXPENSE = { category: "bags", amount: "", quantity: "1", note: "" };
+const EMPTY_EXPENSE = { category: "bags", amount: "", note: "" };
 const ACTION_LABELS = {
   tracking_started: "بدء التتبع", receipt: "دخل", receipt_adjustment: "تعديل دخل",
   expense: "مصروف / إيداع", expense_reversal: "إلغاء مصروف / إيداع", profit_payout: "تسليم أرباح"
@@ -107,9 +107,6 @@ export default function HomeCashPanel() {
               <dt>الرصيد في البيت</dt>
               <dd className={data.summary.balance < 0 ? "is-negative" : ""}>{formatILS(data.summary.balance)} <small>₪</small></dd>
             </div>
-            <div><dt>الدخل</dt><dd>{formatILS(data.summary.income)} ₪</dd></div>
-            <div><dt>المصاريف والإيداعات</dt><dd>{formatILS(data.summary.expenses)} ₪</dd></div>
-            <div><dt>تاريخ البدء</dt><dd className="home-cash-start-date">{formatDateTime(data.summary.started_at)}</dd></div>
           </dl>
 
           <form className="home-cash-expense-form" onSubmit={saveExpense}>
@@ -123,10 +120,6 @@ export default function HomeCashPanel() {
               <label>المبلغ المدفوع (₪)
                 <input type="number" min="0.01" step="0.01" inputMode="decimal" required value={expense.amount}
                   onChange={(event) => changeField("amount", event.target.value)} />
-              </label>
-              <label>الكمية
-                <input type="number" min="1" step="1" inputMode="numeric" required value={expense.quantity}
-                  onChange={(event) => changeField("quantity", event.target.value)} />
               </label>
               <label className="home-cash-note-field">ملاحظة
                 <input type="text" maxLength={500} value={expense.note}
@@ -166,7 +159,7 @@ export default function HomeCashPanel() {
                       <td className="home-cash-log-date">{formatDateTime(entry.created_at)}</td>
                       <td>
                         <strong>{ACTION_LABELS[entry.kind] || entry.kind}{entry.is_voided ? " · ملغى" : ""}</strong>
-                        <div className="finance-muted">{[category?.label, entry.quantity ? `الكمية: ${entry.quantity}` : "", HOME_CASH_SOURCE_LABELS[entry.source], entry.customer_name, entry.order_name].filter(Boolean).join(" · ")}</div>
+                        <div className="finance-muted">{[category?.label, entry.quantity > 1 ? `الكمية: ${entry.quantity}` : "", HOME_CASH_SOURCE_LABELS[entry.source], entry.customer_name, entry.order_name].filter(Boolean).join(" · ")}</div>
                         {entry.note ? <div className="finance-muted">{entry.note}</div> : null}
                       </td>
                       <td className={`home-cash-log-amount ${Number(entry.amount) < 0 ? "is-negative" : ""}`}>

@@ -489,20 +489,6 @@ export default function FinancePage({ embedded = false }) {
           </button>
           <button
             type="button"
-            className={`finance-tab-btn ${activeTab === "orders" ? "active" : ""}`}
-            onClick={() => setActiveTab("orders")}
-          >
-            حسب الطلبية
-          </button>
-          <button
-            type="button"
-            className={`finance-tab-btn ${activeTab === "months" ? "active" : ""}`}
-            onClick={() => setActiveTab("months")}
-          >
-            حسب الشهر
-          </button>
-          <button
-            type="button"
             className={`finance-tab-btn ${activeTab === "cash" ? "active" : ""}`}
             onClick={() => setActiveTab("cash")}
           >
@@ -526,7 +512,7 @@ export default function FinancePage({ embedded = false }) {
         ) : null}
 
         {activeTab === "cash" ? <HomeCashPanel /> : null}
-        {activeTab === "profits" ? <ProfitDistributionPanel /> : null}
+        {activeTab === "profits" ? <ProfitDistributionPanel orders={orderRows} /> : null}
 
         {!loading && !error && activeTab === "ledger" ? (
           <OrderFinanceTable
