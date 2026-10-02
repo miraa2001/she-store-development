@@ -37,6 +37,7 @@ function ColumnsIcon({ className = "" }) {
 export default function CommandHeader({
   isRahaf,
   canAccessCustomers = false,
+  canAccessInstantPickups = false,
   activeTab,
   onActiveTabChange,
   search,
@@ -55,7 +56,7 @@ export default function CommandHeader({
 
   const isMobile = viewport === "mobile";
   const isTablet = viewport === "tablet";
-  const showOrdersCustomersTabs = isRahaf || canAccessCustomers;
+  const showOrdersCustomersTabs = isRahaf || canAccessCustomers || canAccessInstantPickups;
 
   useEffect(() => {
     const onResize = () => setViewport(getViewport());
@@ -87,6 +88,11 @@ export default function CommandHeader({
             العملاء
           </button>
         ) : null}
+        {canAccessInstantPickups ? (
+          <button type="button" className={`tab ${activeTab === "instant" ? "active" : ""}`} onClick={() => onActiveTabChange("instant")}>
+            استلام فوري
+          </button>
+        ) : null}
       </div>
     );
   };
@@ -108,8 +114,8 @@ export default function CommandHeader({
           </button>
 
           <div className="command-mobile-title">
-            <strong>الطلبات</strong>
-            <small>{totalOrders} طلب</small>
+            <strong>{activeTab === "instant" ? "استلام فوري" : activeTab === "customers" ? "العملاء" : "الطلبات"}</strong>
+            {activeTab === "orders" ? <small>{totalOrders} طلب</small> : null}
           </div>
 
           <div className="command-mobile-search-inline">
@@ -134,7 +140,7 @@ export default function CommandHeader({
                   >
                     <Icon name="close" className="icon-sm" />
                   </button>
-                  <span className="search-pill-count">{searchCount}</span>
+                  {searchCount !== null ? <span className="search-pill-count">{searchCount}</span> : null}
                 </>
               ) : null}
             </form>
@@ -176,7 +182,7 @@ export default function CommandHeader({
           <div className="search-shell command-tablet-search">
             <Icon name="search" className="search-icon" />
             <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث..." />
-            {search ? (
+            {search && searchCount !== null ? (
               <span className="search-count">
                 <b>{searchCount}</b>
                 <small>نتيجة</small>
@@ -210,7 +216,7 @@ export default function CommandHeader({
         <div className="search-shell command-search-group">
           <Icon name="search" className="search-icon" />
           <input value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="بحث..." />
-          {search ? (
+          {search && searchCount !== null ? (
             <span className="search-count">
               <b>{searchCount}</b>
               <small>نتيجة</small>

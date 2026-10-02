@@ -90,6 +90,8 @@ Rahaf and Reem see the `استلام فوري` section at locations they can acc
 
 Instant receipts feed Home Cash using the same receipt and collection rules as normal purchases, including duplicate protection and audit entries. They never enter order purchase values, spending, or profit calculations. The migration does not change existing orders or purchases.
 
+The Orders page also has an Instant Pickup tab for Rahaf and Reem. On desktop it appears beside Customers (where permitted); on mobile it is available in the floating actions. This view supports name search, location filtering, receipt and collection controls, and transfers while preserving existing location permissions. It uses the same instant-pickup migration, with no additional database setup.
+
 Run `npm run test:instant-pickups` for isolated PostgreSQL checks of creation, cash timing, transfers, bulk collection, location permissions, and audit preservation.
 
 ## Deployment (GitHub Pages)

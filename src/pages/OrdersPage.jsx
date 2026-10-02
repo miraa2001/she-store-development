@@ -1,6 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { UserPlus } from "lucide-react";
+import { Package, ShoppingBag, UserPlus, Users } from "lucide-react";
 import "./orders-page.css";
 import {
   ORDER_TYPES,
@@ -64,6 +64,7 @@ import {
 } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import CustomersTab from "../components/tabs/CustomersTab";
+import InstantPickupsTab from "../components/tabs/InstantPickupsTab";
 import CommandHeader from "../components/orders/CommandHeader";
 import OrdersBottomSheet from "../components/orders/OrdersBottomSheet";
 import OrdersDrawer from "../components/orders/OrdersDrawer";
@@ -345,12 +346,14 @@ export default function OrdersPage() {
   const [paidPriceDialogBusy, setPaidPriceDialogBusy] = useState(false);
   const [orderDialog, setOrderDialog] = useState(null);
   const [instantPickupOpen, setInstantPickupOpen] = useState(false);
+  const [instantTabDialogOpen, setInstantTabDialogOpen] = useState(false);
   const [orderDialogBusy, setOrderDialogBusy] = useState(false);
   const [orderSettingsDialog, setOrderSettingsDialog] = useState(null);
   const [orderSettingsDialogBusy, setOrderSettingsDialogBusy] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const hasInitializedUrlState = useRef(false);
+  const pendingUrlTab = useRef(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -398,7 +401,7 @@ export default function OrdersPage() {
   const isPickupOnlyRole = isPickupPointRole(profile.role);
   const canUseOrdersWorkbench = isRahaf || isViewOnlyRole;
   const allowedTabs = useMemo(
-    () => (isReem ? ["orders"] : isRahaf || isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
+    () => (isReem ? ["orders", "instant"] : isRahaf ? ["orders", "customers", "instant"] : isViewOnlyRole ? ["orders", "customers"] : ["orders"]),
     [isRahaf, isReem, isViewOnlyRole]
   );
 
@@ -420,7 +423,7 @@ export default function OrdersPage() {
     let cancelled = false;
     const needle = String(search || "").trim();
 
-    if (!needle) {
+    if (!needle || activeTab === "instant") {
       setHeaderSearchLoading(false);
       setHeaderSearchResults([]);
       return undefined;
@@ -450,7 +453,7 @@ export default function OrdersPage() {
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [isPurchaseVisibleToCurrentRole, orders, search]);
+  }, [activeTab, isPurchaseVisibleToCurrentRole, orders, search]);
 
   const selectedOrder = useMemo(
     () => orders.find((order) => String(order.id) === String(selectedOrderId)) || null,
@@ -635,19 +638,21 @@ export default function OrdersPage() {
 
 
   useEffect(() => {
+    if (profile.loading) return;
     const params = new URLSearchParams(location.search);
     const tabFromUrl = params.get("tab");
-
-    if (tabFromUrl && allowedTabs.includes(tabFromUrl)) {
-      setActiveTab((prev) => (prev === tabFromUrl ? prev : tabFromUrl));
-    }
-
+    const nextTab = allowedTabs.includes(tabFromUrl) ? tabFromUrl : "orders";
+    pendingUrlTab.current = nextTab;
+    setActiveTab((prev) => (prev === nextTab ? prev : nextTab));
     hasInitializedUrlState.current = true;
-  }, [allowedTabs, location.search]);
+  }, [allowedTabs, location.search, profile.loading]);
 
   useEffect(() => {
     if (!profile.authenticated) return;
     if (!hasInitializedUrlState.current) return;
+    // Let an incoming URL update the tab before writing local state back to it.
+    if (pendingUrlTab.current !== null && pendingUrlTab.current !== activeTab) return;
+    pendingUrlTab.current = null;
 
     const params = new URLSearchParams(location.search);
     let changed = false;
@@ -665,7 +670,7 @@ export default function OrdersPage() {
     if (!changed) return;
     const query = params.toString();
     navigate(query ? `${location.pathname}?${query}` : location.pathname, { replace: true });
-  }, [activeTab, location.pathname, navigate, profile.authenticated]);
+  }, [activeTab, location.pathname, location.search, navigate, profile.authenticated]);
 
   useEffect(() => {
     if (allowedTabs.includes(activeTab)) return;
@@ -1712,27 +1717,18 @@ export default function OrdersPage() {
     if (!isMobile) return [];
 
     const actions = [];
-    if (isRahaf && activeTab === "orders") {
+    if (isRahaf && (activeTab === "orders" || activeTab === "instant")) {
       actions.push({ id: "instant-pickup", label: "اضافة مستلم فوري", icon: <UserPlus size={22} />, onClick: openInstantPickup });
     }
 
-    if (allowedTabs.includes("customers")) {
-      if (activeTab === "customers") {
-        actions.push({
-          id: "tab-orders",
-          label: "الطلبات",
-          icon: "📦",
-          onClick: () => setActiveTab("orders")
-        });
-      } else {
-        actions.push({
-          id: "tab-customers",
-          label: "العملاء",
-          icon: "👥",
-          onClick: () => setActiveTab("customers")
-        });
-      }
-    }
+    const tabs = [
+      { id: "orders", label: "الطلبات", Icon: Package },
+      { id: "customers", label: "العملاء", Icon: Users },
+      { id: "instant", label: "استلام فوري", Icon: ShoppingBag }
+    ];
+    tabs.filter((tab) => tab.id !== activeTab && allowedTabs.includes(tab.id)).forEach((tab) => {
+      actions.push({ id: `tab-${tab.id}`, label: tab.label, icon: <tab.Icon size={22} />, onClick: () => setActiveTab(tab.id) });
+    });
 
     return actions;
   }, [
@@ -1749,6 +1745,7 @@ export default function OrdersPage() {
     !globalOpen &&
     !formOpen &&
     !instantPickupOpen &&
+    !instantTabDialogOpen &&
     !lightbox.open &&
     !ordersMenuOpen;
 
@@ -1846,11 +1843,12 @@ export default function OrdersPage() {
       <CommandHeader
         isRahaf={isRahaf}
         canAccessCustomers={allowedTabs.includes("customers")}
+        canAccessInstantPickups={allowedTabs.includes("instant")}
         activeTab={activeTab}
         onActiveTabChange={setActiveTab}
         search={search}
         onSearchChange={setSearch}
-        searchCount={searchCount}
+        searchCount={activeTab === "instant" ? null : searchCount}
         editMode={editMode}
         onEditModeChange={setEditMode}
         onOpenSidebar={() => setGlobalOpen(true)}
@@ -1863,7 +1861,7 @@ export default function OrdersPage() {
         Icon={Icon}
       />
 
-      {String(search || "").trim() ? (
+      {activeTab !== "instant" && String(search || "").trim() ? (
         <div className="orders-header-search-results">
           {headerSearchLoading ? (
             <div className="orders-search-hint workspace-loader">
@@ -2003,6 +2001,8 @@ export default function OrdersPage() {
               createPickupOptions={customerCreatePickupOptions}
               editingPickupOptions={customerEditPickupOptions}
             />
+          ) : activeTab === "instant" ? (
+            <InstantPickupsTab role={profile.role} search={search} onAdd={openInstantPickup} onDialogChange={setInstantTabDialogOpen} />
           ) : null}
         </section>
       </div>

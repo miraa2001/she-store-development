@@ -62,7 +62,17 @@
 .instant-pickup-command:focus-visible,
 .instant-pickup-icon-btn:focus-visible { outline: 2px solid var(--instant-accent); outline-offset: 2px; }
 
+.instant-pickups-tab { min-width: 0; }
+.instant-pickups-tab-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.instant-pickups-tab-head h2 { margin: 0; font-size: 20px; color: #47143f; }
+.instant-pickups-tab-tools { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.instant-pickups-tab-tools label { display: grid; gap: 6px; font-size: 13px; color: #64748b; }
+.instant-pickups-tab-tools select { min-height: 38px; max-width: 100%; border: 1px solid #e7dfeb; border-radius: 4px; background: #fff; font: inherit; color: #47143f; padding: 6px 10px; }
+.instant-pickups-tab-head .instant-pickup-command { --instant-border: #e7dfeb; --instant-accent: #6d3f6b; --instant-soft: #f2ebf4; }
+
 @media (max-width: 640px) {
+  .instant-pickups-tab { padding-bottom: 90px; }
+  .instant-pickups-tab-tools { width: 100%; }
   .instant-pickup-tools { width: 100%; }
   .instant-pickup-section-head { align-items: stretch; }
   .instant-pickup-section h3 { font-size: 16px; }

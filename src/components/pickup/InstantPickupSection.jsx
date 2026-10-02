@@ -3,6 +3,7 @@ import { ArrowRightLeft, Banknote, LoaderCircle, RefreshCw, UserPlus } from "luc
 import { formatDateTime } from "../../lib/dateFormat";
 import { formatILS } from "../../lib/orders";
 import { isPickupPointRole } from "../../lib/pickup";
+import { searchByName } from "../../lib/search";
 import { collectInstantPickups, fetchInstantPickups, INSTANT_PICKUPS_CHANGED, updateInstantPickup } from "../../lib/instantPickups";
 import PickupAnimatedCheckbox from "../common/PickupAnimatedCheckbox";
 import PickupTransferDialog from "./PickupTransferDialog";
@@ -13,7 +14,7 @@ const pickupDate = (value) => new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Hebron", day: "numeric", month: "numeric", year: "numeric"
 }).format(new Date(value));
 
-export default function InstantPickupSection({ pickupPoint, role }) {
+export default function InstantPickupSection({ pickupPoint, role, title = "", search = "", showCreateAction = true, onDialogChange }) {
   const isRahaf = role === "rahaf";
   const namedSection = isRahaf || role === "reem";
   const canReceive = isRahaf || isPickupPointRole(role);
@@ -25,6 +26,13 @@ export default function InstantPickupSection({ pickupPoint, role }) {
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState("");
   const [transfer, setTransfer] = useState(null);
+  const dialogOpen = creating || !!transfer;
+
+  useEffect(() => {
+    if (!dialogOpen) return undefined;
+    onDialogChange?.(true);
+    return () => onDialogChange?.(false);
+  }, [dialogOpen, onDialogChange]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,15 +57,16 @@ export default function InstantPickupSection({ pickupPoint, role }) {
   }, []);
 
   const groups = useMemo(() => {
-    if (namedSection) return [{ id: "instant", label: "استلام فوري", rows }];
+    const filteredRows = searchByName(rows, search, (row) => row.customer_name);
+    if (namedSection) return [{ id: "instant", label: title || "استلام فوري", rows: filteredRows }];
     const byDate = new Map();
-    rows.forEach((row) => {
+    filteredRows.forEach((row) => {
       const date = pickupDate(row.created_at);
       if (!byDate.has(date)) byDate.set(date, { id: date, label: date, rows: [] });
       byDate.get(date).rows.push(row);
     });
     return [...byDate.values()];
-  }, [namedSection, rows]);
+  }, [namedSection, rows, search, title]);
 
   async function act(id, action, destination) {
     if (busy || loading) return;
@@ -93,7 +102,7 @@ export default function InstantPickupSection({ pickupPoint, role }) {
 
   if (!namedSection && !rows.length && !error) return null;
   return (
-    <section className="instant-pickup-section" aria-label={namedSection ? "استلام فوري" : "المشتريات"} aria-busy={loading}>
+    <section className="instant-pickup-section" aria-label={title || (namedSection ? "استلام فوري" : "المشتريات")} aria-busy={loading}>
       {error ? <div className="instant-pickup-error" role="alert">{error}</div> : null}
       {groups.map((group) => (
         <div key={group.id} className="instant-pickup-group">
@@ -104,7 +113,7 @@ export default function InstantPickupSection({ pickupPoint, role }) {
                 <button type="button" aria-pressed={!showCollected} onClick={() => setShowCollected(false)} disabled={!!busy}>بانتظار التحصيل</button>
                 <button type="button" aria-pressed={showCollected} onClick={() => setShowCollected(true)} disabled={!!busy}>محصّل</button>
               </div> : null}
-              {isRahaf ? <button type="button" className="instant-pickup-command" onClick={() => setCreating(true)} disabled={!!busy}><UserPlus size={16} />اضافة مستلم فوري</button> : null}
+              {isRahaf && showCreateAction ? <button type="button" className="instant-pickup-command" onClick={() => setCreating(true)} disabled={!!busy}><UserPlus size={16} />اضافة مستلم فوري</button> : null}
               <button type="button" className="instant-pickup-icon-btn" title="تحديث" aria-label="تحديث المشتريات" disabled={loading || !!busy} onClick={() => setRevision((value) => value + 1)}>
                 {loading ? <LoaderCircle size={18} className="instant-pickup-spinner" /> : <RefreshCw size={18} />}
               </button>
