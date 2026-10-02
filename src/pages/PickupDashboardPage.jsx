@@ -9,20 +9,17 @@ import AppNavIcon from "../components/common/AppNavIcon";
 import SessionLoader from "../components/common/SessionLoader";
 import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
-import CollectionsPage from "./CollectionsPage";
 import { PICKUP_DELIVERY, isPickupPointRole } from "../lib/pickup";
 import "./pickup-dashboard-page.css";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import homePickupsIcon from "../assets/icons/pickup-dashboard/home-pickups.png";
 import pickupPointIcon from "../assets/icons/pickup-dashboard/pickup-point.png";
-import moneyCollectionsIcon from "../assets/icons/pickup-dashboard/money-collections.png";
 
 const TAB_CONFIG = {
   home: { id: "home", label: "مستلمو البيت", icon: homePickupsIcon },
   pickup: { id: "pickup", label: "مريمتي", icon: pickupPointIcon },
   nablus: { id: "nablus", label: "الشخشير للأدوات المنزلية", icon: pickupPointIcon },
-  delivery: { id: "delivery", label: "توصيل", Icon: Truck },
-  collections: { id: "collections", label: "تحصيل المبالغ", icon: moneyCollectionsIcon }
+  delivery: { id: "delivery", label: "توصيل", Icon: Truck }
 };
 
 export default function PickupDashboardPage() {
@@ -69,7 +66,6 @@ export default function PickupDashboardPage() {
     if (tabId === "pickup") return <PickupPointPage key="pickup" embedded locationId="maryamti" />;
     if (tabId === "nablus") return <PickupPointPage key="nablus" embedded locationId="nablus" />;
     if (tabId === "delivery") return <HomePickupPage key="delivery" embedded pickupPoint={PICKUP_DELIVERY} />;
-    if (tabId === "collections") return <CollectionsPage embedded />;
     return null;
   }
 

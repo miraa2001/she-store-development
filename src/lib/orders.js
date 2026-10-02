@@ -65,14 +65,17 @@ export function getOrderProfitFields(order = {}) {
     homeProfitPercent: parseOptionalPrice(order.home_profit_percent),
     rahafProfitPercent: parseOptionalPrice(order.rahaf_profit_percent),
     miraProfitPercent: parseOptionalPrice(order.mira_profit_percent),
-    marketingFee: parsePrice(order.marketing_fee)
+    marketingFee: parsePrice(order.marketing_fee),
+    homeProfitDeduction: parsePrice(order.home_profit_deduction),
+    rahafProfitDeduction: parsePrice(order.rahaf_profit_deduction),
+    miraProfitDeduction: parsePrice(order.mira_profit_deduction)
   };
 }
 
 export async function selectOrdersWithOptionalProfitFields(selectClause, range = null) {
   const baseSelect = String(selectClause || "").trim();
   const profitSelect = "total_profit, mira_profit, rahaf_profit, home_profit_percent, rahaf_profit_percent, mira_profit_percent, marketing_fee";
-  const fullSelect = `${baseSelect}, ${profitSelect}`;
+  const fullSelect = `${baseSelect}, ${profitSelect}, home_profit_deduction, rahaf_profit_deduction, mira_profit_deduction`;
 
   const buildQuery = (columns) => {
     const query = sb.from("orders").select(columns).order("created_at", { ascending: false });
@@ -84,6 +87,9 @@ export async function selectOrdersWithOptionalProfitFields(selectClause, range =
 
   let result = await buildQuery(fullSelect);
 
+  if (["42703", "PGRST204"].includes(result.error?.code)) {
+    result = await buildQuery(`${baseSelect}, ${profitSelect}`);
+  }
   if (["42703", "PGRST204"].includes(result.error?.code)) {
     result = await buildQuery(`${baseSelect}, total_profit, mira_profit, rahaf_profit`);
     if (["42703", "PGRST204"].includes(result.error?.code)) result = await buildQuery(baseSelect);
@@ -459,22 +465,28 @@ export async function updateOrderProfitSettings(orderId, input = {}) {
     return Math.round(number * 100);
   });
   if (percentages.reduce((sum, value) => sum + value, 0) !== 10000) throw new Error("يجب أن يكون مجموع نسب الأرباح 100%.");
-  const marketing = toNullableProfitNumber(input.marketingFee, "مصاريف التسويق") ?? 0;
-  if (!Number.isSafeInteger(Math.round(marketing * 100)) || Math.abs(marketing * 100 - Math.round(marketing * 100)) > 0.000001) {
-    throw new Error("أدخلي مصاريف التسويق بمنزلتين عشريتين كحد أقصى.");
-  }
+  const moneyAmount = (value, label) => {
+    const number = toNullableProfitNumber(value, label) ?? 0;
+    if (!Number.isSafeInteger(Math.round(number * 100)) || Math.abs(number * 100 - Math.round(number * 100)) > 0.000001) {
+      throw new Error(`أدخلي ${label} بمنزلتين عشريتين كحد أقصى.`);
+    }
+    return Math.round(number * 100) / 100;
+  };
   const payload = {
     home_profit_percent: percentages[0] / 100,
     rahaf_profit_percent: percentages[1] / 100,
     mira_profit_percent: percentages[2] / 100,
-    marketing_fee: Math.round(marketing * 100) / 100
+    marketing_fee: moneyAmount(input.marketingFee, "مصاريف التسويق"),
+    home_profit_deduction: moneyAmount(input.homeProfitDeduction, "مخصومات البيت"),
+    rahaf_profit_deduction: moneyAmount(input.rahafProfitDeduction, "مخصومات رهف"),
+    mira_profit_deduction: moneyAmount(input.miraProfitDeduction, "مخصومات ميرا")
   };
 
   const { data, error } = await sb
     .from("orders")
     .update(payload)
     .eq("id", id)
-    .select("id, home_profit_percent, rahaf_profit_percent, mira_profit_percent, marketing_fee")
+    .select("id, home_profit_percent, rahaf_profit_percent, mira_profit_percent, marketing_fee, home_profit_deduction, rahaf_profit_deduction, mira_profit_deduction")
     .single();
 
   if (error) {

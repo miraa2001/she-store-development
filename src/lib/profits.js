@@ -6,7 +6,7 @@ export const PROFIT_PARTIES = [
 ];
 export const PROFIT_PAGE_SIZE = 25;
 
-export function calculateProfitShares(profit, percentages) {
+export function calculateProfitShares(profit, percentages, deductions = [0, 0, 0]) {
   if (percentages.some((value) => value === null || value === undefined)) return [null, null, null];
   const cents = Math.max(0, Math.round(profit * 100));
   const shares = percentages.map((percent, index) => {
@@ -16,7 +16,9 @@ export function calculateProfitShares(profit, percentages) {
   const remaining = cents - shares.reduce((sum, share) => sum + share.base, 0);
   shares.sort((a, b) => b.remainder - a.remainder || a.index - b.index);
   const result = [];
-  shares.forEach((share, rank) => { result[share.index] = (share.base + (rank < remaining ? 1 : 0)) / 100; });
+  shares.forEach((share, rank) => {
+    result[share.index] = Math.max(0, share.base + (rank < remaining ? 1 : 0) - Math.round((deductions[share.index] ?? 0) * 100)) / 100;
+  });
   return result;
 }
 

@@ -1298,7 +1298,10 @@ export default function OrdersPage() {
       homeProfitPercent: targetOrder.homeProfitPercent ?? "",
       miraProfitPercent: targetOrder.miraProfitPercent ?? "",
       rahafProfitPercent: targetOrder.rahafProfitPercent ?? "",
-      marketingFee: targetOrder.marketingFee ?? 0
+      marketingFee: targetOrder.marketingFee ?? 0,
+      homeProfitDeduction: targetOrder.homeProfitDeduction ?? 0,
+      rahafProfitDeduction: targetOrder.rahafProfitDeduction ?? 0,
+      miraProfitDeduction: targetOrder.miraProfitDeduction ?? 0
     });
   };
 
@@ -1364,7 +1367,10 @@ export default function OrdersPage() {
         homeProfitPercent: orderSettingsDialog.homeProfitPercent,
         miraProfitPercent: orderSettingsDialog.miraProfitPercent,
         rahafProfitPercent: orderSettingsDialog.rahafProfitPercent,
-        marketingFee: orderSettingsDialog.marketingFee
+        marketingFee: orderSettingsDialog.marketingFee,
+        homeProfitDeduction: orderSettingsDialog.homeProfitDeduction,
+        rahafProfitDeduction: orderSettingsDialog.rahafProfitDeduction,
+        miraProfitDeduction: orderSettingsDialog.miraProfitDeduction
       });
 
       setOrders((prev) =>
@@ -2276,57 +2282,24 @@ export default function OrdersPage() {
                 <div className="delete-confirm-target">{orderSettingsDialog.name}</div>
               ) : null}
 
-              <label>
-                <span>نسبة البيت (%)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={orderSettingsDialog.homeProfitPercent}
-                  onChange={(event) =>
-                    setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, homeProfitPercent: event.target.value } : prev
-                    )
-                  }
-                  disabled={orderSettingsDialogBusy}
-                  autoFocus
-                />
-              </label>
-
-              <label>
-                <span>نسبة ميرا (%)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={orderSettingsDialog.miraProfitPercent}
-                  onChange={(event) =>
-                    setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, miraProfitPercent: event.target.value } : prev
-                    )
-                  }
-                  disabled={orderSettingsDialogBusy}
-                />
-              </label>
-
-              <label>
-                <span>نسبة رهف (%)</span>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={orderSettingsDialog.rahafProfitPercent}
-                  onChange={(event) =>
-                    setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, rahafProfitPercent: event.target.value } : prev
-                    )
-                  }
-                  disabled={orderSettingsDialogBusy}
-                />
-              </label>
+              {[["home", "البيت"], ["mira", "ميرا"], ["rahaf", "رهف"]].map(([party, label]) => (
+                <div className="order-profit-party-fields" key={party}>
+                  <label>
+                    <span>نسبة {label} (%)</span>
+                    <input type="number" step="0.01" min="0" max="100"
+                      value={orderSettingsDialog[`${party}ProfitPercent`]}
+                      onChange={(event) => setOrderSettingsDialog((prev) => prev ? { ...prev, [`${party}ProfitPercent`]: event.target.value } : prev)}
+                      disabled={orderSettingsDialogBusy} autoFocus={party === "home"} />
+                  </label>
+                  <label>
+                    <span>مخصومات {label} (₪)</span>
+                    <input type="number" step="0.01" min="0"
+                      value={orderSettingsDialog[`${party}ProfitDeduction`]}
+                      onChange={(event) => setOrderSettingsDialog((prev) => prev ? { ...prev, [`${party}ProfitDeduction`]: event.target.value } : prev)}
+                      disabled={orderSettingsDialogBusy} />
+                  </label>
+                </div>
+              ))}
 
               <label>
                 <span>مصاريف التسويق (₪)</span>

@@ -96,6 +96,8 @@ Editing order finance or purchase prices automatically recalculates earnings wit
 
 Run `npm run test:profits` for isolated PostgreSQL checks of percentages, marketing, paid prices, immediate earnings, partial payouts, optional cash deductions, access controls, rounding, and migration reruns.
 
+For per-party deductions, run `supabase/migrations/20261003000000_add_party_profit_deductions.sql` after the profit-distribution migration. Each order has three NIS deduction fields defaulting to zero. A party's earnings are `max(0, rounded percentage share - party deduction)`; deductions do not increase another party's earnings or change Home Cash. Payout history is preserved, and Finance shows the deduction beneath each affected share. The pickup dashboard now contains only the four pickup locations; individual and location collection controls remain available.
+
 ## Instant Pickup Setup
 After installing Home Cash, run `supabase/migrations/20261002020000_add_instant_pickups.sql` in the Supabase SQL Editor.
 

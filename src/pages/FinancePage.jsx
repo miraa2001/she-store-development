@@ -214,7 +214,9 @@ export default function FinancePage({ embedded = false }) {
       const spent = parsePrice(order.spent_amount);
       const pending = Math.max(0, stats.expected - stats.collected);
       const netProfit = postalFeeAvailable ? Math.max(0, calculateOrderFinanceProfit(stats.purchaseValue, parsePrice(order.postal_fee), spent) - order.marketingFee) : null;
-      const [homeProfit, rahafProfit, miraProfit] = netProfit === null ? [null, null, null] : calculateProfitShares(netProfit, [order.homeProfitPercent, order.rahafProfitPercent, order.miraProfitPercent]);
+      const [homeProfit, rahafProfit, miraProfit] = netProfit === null ? [null, null, null] : calculateProfitShares(netProfit,
+        [order.homeProfitPercent, order.rahafProfitPercent, order.miraProfitPercent],
+        [order.homeProfitDeduction, order.rahafProfitDeduction, order.miraProfitDeduction]);
       return {
         id: order.id,
         name: order.order_name || "طلبية",

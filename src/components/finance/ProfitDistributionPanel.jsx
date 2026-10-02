@@ -108,7 +108,7 @@ export default function ProfitDistributionPanel({ orders = [] }) {
       <div className="profit-orders-heading"><h3>أرباح الطلبيات</h3><input type="search" aria-label="بحث في أرباح الطلبيات" placeholder="بحث عن طلبية..." value={search} onChange={(event) => setSearch(event.target.value)} /></div>
       <div className="finance-ledger-scroll" tabIndex={0} role="region" aria-label="أرباح الطلبيات">
         <table className="profit-table"><thead><tr><th>الطلبية</th><th>التسويق (₪)</th><th>الربح للتوزيع (₪)</th>{PROFIT_PARTIES.map((party) => <th key={party.value}>{party.label} (₪)</th>)}</tr></thead>
-          <tbody>{visibleOrders.map((order) => <tr key={order.order_id}><th scope="row">{order.order_name}</th><td>{formatILS(order.marketing_fee)}</td><td>{formatILS(order.distributable_profit)}</td>{PROFIT_PARTIES.map((party) => <td key={party.value}>{order.configured ? <>{formatILS(order[`${party.value}_profit`])}<small>{formatILS(order[`${party.value}_percent`])}%</small></> : "غير محدد"}</td>)}</tr>)}
+          <tbody>{visibleOrders.map((order) => <tr key={order.order_id}><th scope="row">{order.order_name}</th><td>{formatILS(order.marketing_fee)}</td><td>{formatILS(order.distributable_profit)}</td>{PROFIT_PARTIES.map((party) => <td key={party.value}>{order.configured ? <>{formatILS(order[`${party.value}_profit`])}<small>{formatILS(order[`${party.value}_percent`])}%</small>{Number(order[`${party.value}_deduction`]) > 0 ? <small>مخصومات: {formatILS(order[`${party.value}_deduction`])} ₪</small> : null}</> : "غير محدد"}</td>)}</tr>)}
             {!visibleOrders.length ? <tr><td colSpan={6} className="finance-muted">لا توجد طلبيات</td></tr> : null}</tbody>
         </table>
       </div>
