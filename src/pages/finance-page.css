@@ -1,7 +1,11 @@
 .finance-page {
   min-height: 100dvh;
-  background: #f6f8f7;
+  background: #fff9fb;
   color: #0f172a;
+  --finance-primary: #47143F;
+  --finance-accent: #6D3F6B;
+  --finance-border: #e7dfeb;
+  --finance-soft: #f2ebf4;
 }
 
 .finance-page.embedded {
@@ -40,7 +44,7 @@
 .finance-tabs {
   display: inline-flex;
   gap: 8px;
-  border: 1px solid #d8e3de;
+  border: 1px solid var(--finance-border);
   border-radius: 16px;
   background: #fff;
   padding: 6px;
@@ -60,9 +64,9 @@
 }
 
 .finance-tab-btn.active {
-  background: #f2ebf4;
-  color: #25584c;
-  box-shadow: inset 0 0 0 1px #b9d5cc;
+  background: var(--finance-soft);
+  color: var(--finance-primary);
+  box-shadow: inset 0 0 0 1px #d8c7dc;
 }
 
 .finance-menu-btn,
@@ -222,9 +226,9 @@
 .finance-pill {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #d8e3de;
+  border: 1px solid var(--finance-border);
   border-radius: 999px;
-  background: #f1f4f2;
+  background: #fcf9fd;
   padding: 6px 10px;
   font-size: 12px;
 }
@@ -294,7 +298,7 @@
 }
 
 .finance-kpi {
-  border: 1px solid #d8e3de;
+  border: 1px solid var(--finance-border);
   border-radius: 14px;
   background: linear-gradient(180deg, #fff 0%, #fcf9fd 100%);
   padding: 12px;
@@ -331,8 +335,8 @@
 
 .finance-progress {
   height: 10px;
-  background: #e8efec;
-  border: 1px solid #d4dfda;
+  background: var(--finance-soft);
+  border: 1px solid var(--finance-border);
   border-radius: 999px;
   overflow: hidden;
   margin-top: 6px;
@@ -395,7 +399,7 @@
 
 .finance-month-picker {
   margin-top: 10px;
-  border: 1px solid #d8e3de;
+  border: 1px solid var(--finance-border);
   border-radius: 18px;
   background: linear-gradient(180deg, #fff 0%, #fbf9fc 100%);
   padding: 12px;
@@ -426,9 +430,9 @@
 }
 
 .finance-month-btn.active {
-  background: #f2ebf4;
-  color: #25584c;
-  border-color: #b9d5cc;
+  background: var(--finance-soft);
+  color: var(--finance-primary);
+  border-color: #d8c7dc;
 }
 
 .finance-month-btn:disabled {
@@ -464,7 +468,7 @@
 
 .finance-table th,
 .finance-table td {
-  border-bottom: 1px solid #e5ece9;
+  border-bottom: 1px solid var(--finance-border);
   padding: 10px;
   text-align: right;
   vertical-align: middle;
@@ -494,11 +498,11 @@
   align-items: center;
   gap: 8px;
   width: min(420px, 100%);
-  border: 1px solid #d2dcd7;
+  border: 1px solid var(--finance-border);
   border-radius: 6px;
   padding: 0 12px;
   background: #fff;
-  color: #66756e;
+  color: #64748b;
 }
 
 .finance-ledger-search input {
@@ -508,11 +512,11 @@
   border: 0;
   background: transparent;
   font: inherit;
-  color: #172822;
+  color: #111827;
 }
 
 .finance-ledger-search:focus-within {
-  outline: 2px solid #238672;
+  outline: 2px solid var(--finance-accent);
   outline-offset: 2px;
 }
 
@@ -524,7 +528,7 @@
   max-width: 100%;
   overflow-x: auto;
   direction: rtl;
-  border-block: 1px solid #d2dcd7;
+  border-block: 1px solid var(--finance-border);
   scrollbar-width: thin;
 }
 
@@ -541,16 +545,16 @@
 .finance-ledger-table th,
 .finance-ledger-table td {
   padding: 12px;
-  border-bottom: 1px solid #e3e9e6;
+  border-bottom: 1px solid var(--finance-border);
   text-align: right;
   vertical-align: top;
 }
 
 .finance-ledger-table thead th {
-  color: #586860;
+  color: var(--finance-primary);
   font-size: 13px;
   font-weight: 600;
-  background: #eef3f0;
+  background: var(--finance-soft);
 }
 
 .finance-ledger-table thead th:first-child {
@@ -576,7 +580,7 @@
 
 .finance-ledger-date {
   white-space: nowrap;
-  color: #66756e;
+  color: #64748b;
   font-size: 13px;
 }
 
@@ -586,10 +590,10 @@
   height: 38px;
   box-sizing: border-box;
   padding: 6px 8px;
-  border: 1px solid #d2dcd7;
+  border: 1px solid var(--finance-border);
   border-radius: 4px;
   background: #fff;
-  color: #172822;
+  color: #111827;
   font: inherit;
   font-variant-numeric: tabular-nums;
   direction: ltr;
@@ -597,17 +601,17 @@
 }
 
 .finance-ledger-input:focus-visible {
-  outline: 2px solid #238672;
+  outline: 2px solid var(--finance-accent);
   outline-offset: 2px;
 }
 
 .finance-ledger-input:disabled {
-  background: #f2f5f3;
-  color: #66756e;
+  background: #fcf9fd;
+  color: #64748b;
 }
 
 .finance-ledger-row-dirty .finance-ledger-input {
-  border-color: #238672;
+  border-color: var(--finance-accent);
 }
 
 .finance-ledger-money {
@@ -617,7 +621,7 @@
 }
 
 .finance-ledger-profit {
-  color: #1e6e54;
+  color: var(--finance-primary);
   font-weight: 700;
 }
 
@@ -636,15 +640,15 @@
   width: 38px;
   height: 38px;
   padding: 0;
-  border: 1px solid #d2dcd7;
+  border: 1px solid var(--finance-border);
   border-radius: 4px;
   background: #fff;
-  color: #1e6e54;
+  color: var(--finance-accent);
   cursor: pointer;
 }
 
 .finance-ledger-icon-btn:hover:not(:disabled) {
-  background: #e9f4ee;
+  background: var(--finance-soft);
 }
 
 .finance-ledger-icon-btn:disabled {
@@ -657,7 +661,7 @@
   align-items: flex-start;
   gap: 4px;
   margin-top: 6px;
-  color: #1e6e54;
+  color: var(--finance-primary);
   font-size: 12px;
   overflow-wrap: anywhere;
 }
@@ -672,7 +676,7 @@
 
 .finance-ledger-table tfoot th,
 .finance-ledger-table tfoot td {
-  background: #eef3f0;
+  background: var(--finance-soft);
   font-weight: 700;
 }
 
@@ -707,7 +711,7 @@
 .finance-segmented {
   display: inline-flex;
   border-radius: 999px;
-  border: 1px solid #d2dfda;
+  border: 1px solid var(--finance-border);
   background: #fff;
   padding: 4px;
   box-shadow: 0 6px 10px rgba(15, 23, 42, 0.06);
@@ -719,21 +723,21 @@
   background: transparent;
   padding: 8px 14px;
   font-family: inherit;
-  color: #5c6964;
+  color: #64748b;
   cursor: pointer;
 }
 
 .finance-segmented button.active {
-  background: #f2ebf4;
-  color: #25584c;
-  box-shadow: inset 0 0 0 1px #b9d5cc;
+  background: var(--finance-soft);
+  color: var(--finance-primary);
+  box-shadow: inset 0 0 0 1px #d8c7dc;
 }
 
 .finance-chart-card {
-  border: 1px solid #d9e3de;
+  border: 1px solid var(--finance-border);
   border-radius: 14px;
   background: #fff;
-  box-shadow: inset 0 0 0 1px #eef4f1;
+  box-shadow: inset 0 0 0 1px #fcf9fd;
   min-height: 180px;
   padding: 12px;
   display: grid;
@@ -777,7 +781,7 @@
 .finance-empty,
 .finance-loading,
 .finance-error {
-  border: 1px dashed #d8e3de;
+  border: 1px dashed var(--finance-border);
   border-radius: 14px;
   background: #fff;
   padding: 14px;
