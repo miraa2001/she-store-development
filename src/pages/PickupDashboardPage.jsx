@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { Truck } from "lucide-react";
 import { useAuthProfile } from "../hooks/useAuthProfile";
 import { getOrdersNavItems, getPickupDashboardTabs, getRoleLabel, isNavHrefActive } from "../lib/navigation";
 import { setBodyScrollLock } from "../lib/bodyScrollLock";
@@ -9,7 +10,7 @@ import SessionLoader from "../components/common/SessionLoader";
 import HomePickupPage from "./HomePickupPage";
 import PickupPointPage from "./PickupPointPage";
 import CollectionsPage from "./CollectionsPage";
-import { isPickupPointRole } from "../lib/pickup";
+import { PICKUP_DELIVERY, isPickupPointRole } from "../lib/pickup";
 import "./pickup-dashboard-page.css";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import homePickupsIcon from "../assets/icons/pickup-dashboard/home-pickups.png";
@@ -20,6 +21,7 @@ const TAB_CONFIG = {
   home: { id: "home", label: "مستلمو البيت", icon: homePickupsIcon },
   pickup: { id: "pickup", label: "مريمتي", icon: pickupPointIcon },
   nablus: { id: "nablus", label: "الشخشير للأدوات المنزلية", icon: pickupPointIcon },
+  delivery: { id: "delivery", label: "توصيل", Icon: Truck },
   collections: { id: "collections", label: "تحصيل المبالغ", icon: moneyCollectionsIcon }
 };
 
@@ -63,9 +65,10 @@ export default function PickupDashboardPage() {
   }
 
   function renderPanel(tabId) {
-    if (tabId === "home") return <HomePickupPage embedded />;
+    if (tabId === "home") return <HomePickupPage key="home" embedded />;
     if (tabId === "pickup") return <PickupPointPage key="pickup" embedded locationId="maryamti" />;
     if (tabId === "nablus") return <PickupPointPage key="nablus" embedded locationId="nablus" />;
+    if (tabId === "delivery") return <HomePickupPage key="delivery" embedded pickupPoint={PICKUP_DELIVERY} />;
     if (tabId === "collections") return <CollectionsPage embedded />;
     return null;
   }
@@ -200,6 +203,7 @@ export default function PickupDashboardPage() {
               return (
                 <button
                   key={tabId}
+                  id={`tab-${tabId}`}
                   type="button"
                   role="tab"
                   aria-selected={activeTab === tabId}
@@ -207,7 +211,11 @@ export default function PickupDashboardPage() {
                   className={`pickup-tab-btn ${activeTab === tabId ? "active" : ""}`}
                   onClick={() => setActiveTab(tabId)}
                 >
-                  <img src={config.icon} alt="" className="pickup-tab-icon" aria-hidden="true" />
+                  {config.Icon ? (
+                    <config.Icon className="pickup-tab-icon" aria-hidden="true" />
+                  ) : (
+                    <img src={config.icon} alt="" className="pickup-tab-icon" aria-hidden="true" />
+                  )}
                   <span>{config.label}</span>
                 </button>
               );

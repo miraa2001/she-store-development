@@ -1,5 +1,4 @@
 import {
-  PICKUP_DELIVERY,
   PICKUP_HOME,
   formatPickupFormValue,
   getPreferredPickupForCustomer,
@@ -144,9 +143,7 @@ function shortOrderNo(id) {
 }
 
 function normalizeReadyPickupPoint(value) {
-  const normalized = formatPickupFormValue(value, PICKUP_HOME);
-  if (!normalized || normalized === PICKUP_DELIVERY) return PICKUP_HOME;
-  return normalized;
+  return formatPickupFormValue(value, PICKUP_HOME);
 }
 
 async function prepareOrderPurchasesForPickup(orderId, readyAt = new Date().toISOString()) {
