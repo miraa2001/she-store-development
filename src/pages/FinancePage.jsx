@@ -5,7 +5,8 @@ import { formatDMY } from "../lib/dateFormat";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { setBodyScrollLock } from "../lib/bodyScrollLock";
 import { formatILS, getOrderProfitFields, parsePrice } from "../lib/orders";
-import { fetchFinanceOrders, fetchFinancePurchases } from "../lib/finance";
+import { calculateOrderFinanceProfit, fetchFinanceOrders, fetchFinancePurchases } from "../lib/finance";
+import { calculateProfitShares } from "../lib/profits";
 import { formatPickupDisplayLabel } from "../lib/pickup";
 import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
@@ -14,6 +15,7 @@ import AppNavIcon from "../components/common/AppNavIcon";
 import SheStoreLogo from "../components/common/SheStoreLogo";
 import OrderFinanceTable from "../components/finance/OrderFinanceTable";
 import HomeCashPanel from "../components/finance/HomeCashPanel";
+import ProfitDistributionPanel from "../components/finance/ProfitDistributionPanel";
 import "./pickup-common.css";
 import "./finance-page.css";
 
@@ -211,6 +213,8 @@ export default function FinancePage({ embedded = false }) {
       };
       const spent = parsePrice(order.spent_amount);
       const pending = Math.max(0, stats.expected - stats.collected);
+      const netProfit = postalFeeAvailable ? Math.max(0, calculateOrderFinanceProfit(stats.purchaseValue, parsePrice(order.postal_fee), spent) - order.marketingFee) : null;
+      const [homeProfit, rahafProfit, miraProfit] = netProfit === null ? [null, null, null] : calculateProfitShares(netProfit, [order.homeProfitPercent, order.rahafProfitPercent, order.miraProfitPercent]);
       return {
         id: order.id,
         name: order.order_name || "طلبية",
@@ -219,9 +223,11 @@ export default function FinancePage({ embedded = false }) {
         spent,
         postalFee: postalFeeAvailable ? parsePrice(order.postal_fee) : null,
         purchaseValue: stats.purchaseValue,
-        totalProfit: order.totalProfit ?? null,
-        miraProfit: order.miraProfit ?? null,
-        rahafProfit: order.rahafProfit ?? null,
+        totalProfit: netProfit,
+        marketingFee: order.marketingFee,
+        homeProfit,
+        miraProfit,
+        rahafProfit,
         collected: stats.collected,
         expected: stats.expected,
         pending,
@@ -471,6 +477,9 @@ export default function FinancePage({ embedded = false }) {
         ) : null}
 
         <div className="finance-tabs">
+          <button type="button" className={`finance-tab-btn ${activeTab === "profits" ? "active" : ""}`} onClick={() => setActiveTab("profits")}>
+            توزيع الأرباح
+          </button>
           <button
             type="button"
             className={`finance-tab-btn ${activeTab === "ledger" ? "active" : ""}`}
@@ -501,7 +510,7 @@ export default function FinancePage({ embedded = false }) {
           </button>
         </div>
 
-        {error && activeTab !== "cash" ? (
+        {error && !["cash", "profits"].includes(activeTab) ? (
           <div className="finance-error" role="alert">
             {error}
             <div className="finance-refresh-row">
@@ -510,13 +519,14 @@ export default function FinancePage({ embedded = false }) {
           </div>
         ) : null}
 
-        {loading && activeTab !== "cash" ? (
+        {loading && !["cash", "profits"].includes(activeTab) ? (
           <div className="finance-loading">
             <SessionLoader label="جاري تحميل البيانات..." />
           </div>
         ) : null}
 
         {activeTab === "cash" ? <HomeCashPanel /> : null}
+        {activeTab === "profits" ? <ProfitDistributionPanel /> : null}
 
         {!loading && !error && activeTab === "ledger" ? (
           <OrderFinanceTable
@@ -675,10 +685,14 @@ export default function FinancePage({ embedded = false }) {
 
                     <div className="finance-kpi-grid compact">
                       <div className="finance-kpi">
-                        <div className="label">الربح الكلي</div>
+                        <div className="label">الربح بعد التسويق</div>
                         <div className={`value ${selectedOrder.totalProfit < 0 ? "neg" : ""}`}>
                           {formatOptionalMoney(selectedOrder.totalProfit)}
                         </div>
+                      </div>
+                      <div className="finance-kpi">
+                        <div className="label">ربح البيت</div>
+                        <div className="value">{formatOptionalMoney(selectedOrder.homeProfit)}</div>
                       </div>
                       <div className="finance-kpi">
                         <div className="label">ربح ميرا</div>

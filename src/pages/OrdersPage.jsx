@@ -1295,9 +1295,10 @@ export default function OrdersPage() {
     setOrderSettingsDialog({
       orderId: targetOrder.id,
       name: String(targetOrder.name || ""),
-      totalProfit: targetOrder.totalProfit ?? "",
-      miraProfit: targetOrder.miraProfit ?? "",
-      rahafProfit: targetOrder.rahafProfit ?? ""
+      homeProfitPercent: targetOrder.homeProfitPercent ?? "",
+      miraProfitPercent: targetOrder.miraProfitPercent ?? "",
+      rahafProfitPercent: targetOrder.rahafProfitPercent ?? "",
+      marketingFee: targetOrder.marketingFee ?? 0
     });
   };
 
@@ -1360,9 +1361,10 @@ export default function OrdersPage() {
     setOrderSettingsDialogBusy(true);
     try {
       const nextValues = await updateOrderProfitSettings(orderSettingsDialog.orderId, {
-        totalProfit: orderSettingsDialog.totalProfit,
-        miraProfit: orderSettingsDialog.miraProfit,
-        rahafProfit: orderSettingsDialog.rahafProfit
+        homeProfitPercent: orderSettingsDialog.homeProfitPercent,
+        miraProfitPercent: orderSettingsDialog.miraProfitPercent,
+        rahafProfitPercent: orderSettingsDialog.rahafProfitPercent,
+        marketingFee: orderSettingsDialog.marketingFee
       });
 
       setOrders((prev) =>
@@ -1370,9 +1372,7 @@ export default function OrdersPage() {
           String(order.id) === String(orderSettingsDialog.orderId)
             ? {
                 ...order,
-                totalProfit: nextValues.totalProfit,
-                miraProfit: nextValues.miraProfit,
-                rahafProfit: nextValues.rahafProfit
+                ...nextValues
               }
             : order
         )
@@ -2277,15 +2277,16 @@ export default function OrdersPage() {
               ) : null}
 
               <label>
-                <span>الربح الكلي</span>
+                <span>نسبة البيت (%)</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={orderSettingsDialog.totalProfit}
+                  max="100"
+                  value={orderSettingsDialog.homeProfitPercent}
                   onChange={(event) =>
                     setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, totalProfit: event.target.value } : prev
+                      prev ? { ...prev, homeProfitPercent: event.target.value } : prev
                     )
                   }
                   disabled={orderSettingsDialogBusy}
@@ -2294,15 +2295,16 @@ export default function OrdersPage() {
               </label>
 
               <label>
-                <span>ربح ميرا</span>
+                <span>نسبة ميرا (%)</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={orderSettingsDialog.miraProfit}
+                  max="100"
+                  value={orderSettingsDialog.miraProfitPercent}
                   onChange={(event) =>
                     setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, miraProfit: event.target.value } : prev
+                      prev ? { ...prev, miraProfitPercent: event.target.value } : prev
                     )
                   }
                   disabled={orderSettingsDialogBusy}
@@ -2310,20 +2312,31 @@ export default function OrdersPage() {
               </label>
 
               <label>
-                <span>ربح رهف</span>
+                <span>نسبة رهف (%)</span>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
-                  value={orderSettingsDialog.rahafProfit}
+                  max="100"
+                  value={orderSettingsDialog.rahafProfitPercent}
                   onChange={(event) =>
                     setOrderSettingsDialog((prev) =>
-                      prev ? { ...prev, rahafProfit: event.target.value } : prev
+                      prev ? { ...prev, rahafProfitPercent: event.target.value } : prev
                     )
                   }
                   disabled={orderSettingsDialogBusy}
                 />
               </label>
+
+              <label>
+                <span>مصاريف التسويق (₪)</span>
+                <input type="number" step="0.01" min="0" value={orderSettingsDialog.marketingFee}
+                  onChange={(event) => setOrderSettingsDialog((prev) => prev ? { ...prev, marketingFee: event.target.value } : prev)}
+                  disabled={orderSettingsDialogBusy} />
+              </label>
+              <div className="order-profit-percent-total">
+                مجموع النسب: {formatILS(Number(orderSettingsDialog.homeProfitPercent || 0) + Number(orderSettingsDialog.miraProfitPercent || 0) + Number(orderSettingsDialog.rahafProfitPercent || 0))}%
+              </div>
 
               <div className="purchase-modal-foot">
                 <button

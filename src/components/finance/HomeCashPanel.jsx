@@ -11,7 +11,7 @@ import SessionLoader from "../common/SessionLoader";
 const EMPTY_EXPENSE = { category: "bags", amount: "", quantity: "1", note: "" };
 const ACTION_LABELS = {
   tracking_started: "بدء التتبع", receipt: "دخل", receipt_adjustment: "تعديل دخل",
-  expense: "مصروف / إيداع", expense_reversal: "إلغاء مصروف / إيداع"
+  expense: "مصروف / إيداع", expense_reversal: "إلغاء مصروف / إيداع", profit_payout: "تسليم أرباح"
 };
 
 export default function HomeCashPanel() {

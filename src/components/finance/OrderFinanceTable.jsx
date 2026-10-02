@@ -90,6 +90,8 @@ function OrderFinanceRow({ order, postalFeeAvailable, onSaved }) {
       <td className={`finance-ledger-money finance-ledger-profit ${profit < 0 ? "is-negative" : ""}`}>
         {profit === null ? "—" : formatILS(profit)}
       </td>
+      <td className="finance-ledger-money">{formatILS(order.marketingFee)}</td>
+      <td className="finance-ledger-money">{profit === null ? "—" : formatILS(Math.max(0, Math.round((profit - order.marketingFee) * 100) / 100))}</td>
       <td className="finance-ledger-actions-cell">
         <div className="finance-ledger-actions">
           <button
@@ -133,8 +135,10 @@ export default function OrderFinanceTable({ orders, postalFeeAvailable, onSaved 
   const totals = useMemo(() => visibleOrders.reduce((sum, order) => ({
     spent: sum.spent + order.spent,
     purchaseValue: sum.purchaseValue + order.purchaseValue,
-    postalFee: sum.postalFee + (order.postalFee ?? 0)
-  }), { spent: 0, purchaseValue: 0, postalFee: 0 }), [visibleOrders]);
+    postalFee: sum.postalFee + (order.postalFee ?? 0),
+    marketingFee: sum.marketingFee + order.marketingFee,
+    distributable: sum.distributable + Math.max(0, calculateOrderFinanceProfit(order.purchaseValue, order.postalFee ?? 0, order.spent) - order.marketingFee)
+  }), { spent: 0, purchaseValue: 0, postalFee: 0, marketingFee: 0, distributable: 0 }), [visibleOrders]);
   const totalProfit = calculateOrderFinanceProfit(totals.purchaseValue, totals.postalFee, totals.spent);
 
   return (
@@ -165,6 +169,8 @@ export default function OrderFinanceTable({ orders, postalFeeAvailable, onSaved 
               <th scope="col">قيمة المشتريات</th>
               <th scope="col">رسوم البريد</th>
               <th scope="col">ربح الطلبية</th>
+              <th scope="col">التسويق</th>
+              <th scope="col">الربح للتوزيع</th>
               <th scope="col">حفظ</th>
             </tr>
           </thead>
@@ -173,7 +179,7 @@ export default function OrderFinanceTable({ orders, postalFeeAvailable, onSaved 
               <OrderFinanceRow key={order.id} order={order} postalFeeAvailable={postalFeeAvailable} onSaved={onSaved} />
             ))}
             {!visibleOrders.length ? (
-              <tr><td colSpan={7} className="finance-muted">{search ? "لا توجد نتائج" : "لا توجد طلبيات"}</td></tr>
+              <tr><td colSpan={9} className="finance-muted">{search ? "لا توجد نتائج" : "لا توجد طلبيات"}</td></tr>
             ) : null}
           </tbody>
           {visibleOrders.length ? (
@@ -186,6 +192,8 @@ export default function OrderFinanceTable({ orders, postalFeeAvailable, onSaved 
                 <td className={`finance-ledger-money finance-ledger-profit ${totalProfit < 0 ? "is-negative" : ""}`}>
                   {postalFeeAvailable ? formatILS(totalProfit) : "—"}
                 </td>
+                <td className="finance-ledger-money">{formatILS(totals.marketingFee)}</td>
+                <td className="finance-ledger-money">{postalFeeAvailable ? formatILS(totals.distributable) : "—"}</td>
                 <td />
               </tr>
             </tfoot>

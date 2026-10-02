@@ -81,6 +81,19 @@ Automatic receipts are handled by a database trigger, including staff actions ou
 
 Run `npm run test:home-cash` for isolated PostgreSQL regression tests covering the actual migration, receipt rules, corrections, expense retries, cancellations, pagination, and access policies. Tests do not connect to the live Supabase database.
 
+## Profit Distribution Setup
+After the postal-fee and Home Cash migrations, run `supabase/migrations/20261002040000_add_profit_distribution.sql` in Supabase SQL Editor.
+
+On first installation, old manually entered `total_profit`, `mira_profit`, and `rahaf_profit` values are zeroed as requested. Spending, purchase prices, receipts, and cash history are preserved. New percentages are blank for every order, and marketing defaults to zero. Rerunning the migration does not repeat this reset.
+
+Order Settings accepts Home, Rahaf, and Mira percentages totaling 100%, plus a marketing amount. Distributable profit is `max(0, sum(paid_price ?? price) + postal_fee - spent_amount - marketing_fee)`. Percentages must be configured before an order contributes to party balances. Earnings count immediately, without waiting for collections; cents are allocated deterministically so the three shares sum to the distributable profit.
+
+The Finance Profit Distribution tab shows per-order shares, accumulated balances, total paid, and a paginated payout log. A partial payout subtracts only that amount: 400 earned minus 250 paid leaves 150. Each payout requires an explicit Yes/No choice for deduction from Home Cash; the Home party is independent of the cash account. Deductions and payouts are atomic, checked against both balances, and safe to retry after a lost response. Only Rahaf/database admins can record payouts.
+
+Editing order finance or purchase prices automatically recalculates earnings without deleting payout history. If earnings fall below amounts already paid, the negative remaining balance represents overpayment and further payouts are blocked. Deleting an order preserves its last earnings snapshot and payout history rather than erasing paid obligations. Instant pickups never enter order profit.
+
+Run `npm run test:profits` for isolated PostgreSQL checks of percentages, marketing, paid prices, immediate earnings, partial payouts, optional cash deductions, access controls, rounding, and migration reruns.
+
 ## Instant Pickup Setup
 After installing Home Cash, run `supabase/migrations/20261002020000_add_instant_pickups.sql` in the Supabase SQL Editor.
 

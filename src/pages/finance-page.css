@@ -43,6 +43,9 @@
 
 .finance-tabs {
   display: inline-flex;
+  box-sizing: border-box;
+  max-width: 100%;
+  flex-wrap: wrap;
   gap: 8px;
   border: 1px solid var(--finance-border);
   border-radius: 16px;
@@ -682,6 +685,35 @@
 
 .finance-ledger-spinner {
   animation: finance-ledger-spin 1s linear infinite;
+}
+
+.profit-distribution h2 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 20px; color: var(--finance-primary); }
+.profit-distribution h3 { margin: 0; font-size: 16px; color: var(--finance-primary); }
+.profit-balances { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding-block: 20px; border-block: 1px solid var(--finance-border); }
+.profit-balances dl { margin-bottom: 0; }
+.profit-balances dl > div { display: flex; justify-content: space-between; gap: 8px; margin-top: 10px; }
+.profit-balances dl > div:first-child { display: block; }
+.profit-balances dt { font-size: 13px; color: #64748b; }
+.profit-balances dd { margin: 0; font-variant-numeric: tabular-nums; color: var(--finance-primary); overflow-wrap: anywhere; }
+.profit-balances dl > div:first-child dd { font-size: 26px; font-weight: 600; margin-top: 6px; }
+.profit-balances .is-negative { color: #b42318; }
+.profit-payout-form { padding-block: 24px; border-bottom: 1px solid var(--finance-border); }
+.profit-payout-form fieldset { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; border: 0; padding: 0; margin: 16px 0; min-width: 0; }
+.profit-payout-form label { display: grid; gap: 6px; min-width: 0; font-size: 13px; color: #64748b; }
+.profit-payout-form input, .profit-payout-form select, .profit-orders-heading input { width: 100%; min-width: 0; height: 42px; box-sizing: border-box; border: 1px solid var(--finance-border); border-radius: 4px; padding: 8px 10px; font: inherit; background: #fff; }
+.profit-payout-submit, .profit-orders-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.profit-payout-submit button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.profit-orders-heading { padding-block: 24px 12px; }
+.profit-orders-heading input { max-width: 280px; font-size: 14px; }
+.profit-table { width: 100%; min-width: 720px; border-collapse: collapse; background: #fff; font-size: 14px; }
+.profit-table th, .profit-table td { text-align: right; padding: 12px; border-bottom: 1px solid var(--finance-border); overflow-wrap: anywhere; }
+.profit-table thead th { background: var(--finance-soft); color: var(--finance-primary); font-size: 13px; }
+.profit-table small { display: block; margin-top: 4px; color: #64748b; }
+@media (max-width: 640px) {
+  .profit-balances { grid-template-columns: 1fr; gap: 16px; }
+  .profit-balances > section + section { border-top: 1px solid var(--finance-border); padding-top: 16px; }
+  .profit-payout-form fieldset { grid-template-columns: 1fr; }
+  .profit-orders-heading input { max-width: none; }
 }
 
 .home-cash {
