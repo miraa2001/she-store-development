@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import vm from "node:vm";
 import { PGlite } from "@electric-sql/pglite";
 import { savePurchaseReceipt } from "../src/lib/purchaseReceipt.js";
 
@@ -139,37 +138,10 @@ test("client rejects missing, mismatched and unverified RPC results", async () =
   await assert.rejects(savePurchaseReceipt({ rpc: async () => ({ error: { code: "PGRST202" } }) }, id(100), true), /Supabase/);
 });
 
-for (const page of ["HomePickupPage", "PickupPointPage"]) {
-  test(`${page}: notifications follow confirmed saves only; failures roll back`, async () => {
-    const source = await readFile(new URL(`../src/pages/${page}.jsx`, import.meta.url), "utf8");
-    const start = source.indexOf("  async function togglePicked(");
-    const end = source.indexOf("\n  async function collect", start);
-    assert(start > 0 && end > start);
-    for (const mode of ["success", "error", "unchanged"]) {
-      let purchases = [{ id: id(100), picked_up: false, picked_up_at: null, collected: false, price: 42 }];
-      const notifications = [];
-      let error = "", busy = "";
-      const context = {
-        purchases, profile: { role: "reem" }, receiptSavingRef: { current: false }, sb: {},
-        pickupPoint: "من البيت", pickupLocation: { pickupLabel: "Nablus" },
-        setPurchases: update => { purchases = update(purchases); },
-        setSavingReceiptId: value => { busy = value; }, setError: value => { error = value; },
-        savePurchaseReceipt: async () => {
-          assert.equal(notifications.length, 0);
-          if (mode === "error") throw Error("Save failed");
-          return { id: id(100), picked_up: true, picked_up_at: "server-timestamp", changed: mode !== "unchanged" };
-        },
-        buildPickupStatusMessage: data => data,
-        notifyPickupStatus: async message => { notifications.push(message); }, loadAllOrdersTotal: async () => {}
-      };
-      const toggle = vm.runInNewContext(`${source.slice(start, end)}; togglePicked`, context);
-      await toggle(id(100), true);
-      assert.equal(notifications.length, mode === "success" ? 1 : 0);
-      assert.equal(purchases[0].picked_up, mode !== "error");
-      assert.equal(purchases[0].picked_up_at, mode === "error" ? null : "server-timestamp");
-      assert.equal(error, mode === "error" ? "Save failed" : "");
-      assert.equal(busy, "");
-      assert.equal(context.receiptSavingRef.current, false);
-    }
-  });
-}
+test("pickup pages use the shared payment control for receipt changes",async()=>{
+  for(const page of ["HomePickupPage","PickupPointPage"]) {
+    const source=await readFile(new URL(`../src/pages/${page}.jsx`,import.meta.url),"utf8");
+    assert(source.includes("<PurchasePaymentControl"));
+    assert(!source.includes("async function togglePicked("));
+  }
+});
