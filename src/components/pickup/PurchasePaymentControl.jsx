@@ -4,7 +4,7 @@ import { Banknote, History, X } from "lucide-react";
 import { sb } from "../../lib/supabaseClient";
 import { formatILS } from "../../lib/orders";
 import { formatDateTime } from "../../lib/dateFormat";
-import { agreedAmount, paidAmount, remainingAmount, collectibleAmount, canRecordPayment, paymentRpc, recordPayment } from "../../lib/payments";
+import { agreedAmount, paidAmount, remainingAmount, collectibleAmount, canRecordPayment, canConfirmStaffPickup, confirmStaffPickup, paymentRpc, recordPayment } from "../../lib/payments";
 import { buildPickupStatusMessage, notifyPickupStatus } from "../../lib/pickupNotifications";
 import { setBodyScrollLock } from "../../lib/bodyScrollLock";
 import PickupAnimatedCheckbox from "../common/PickupAnimatedCheckbox";
@@ -24,6 +24,7 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
   const busyRef = useRef(false);
   const active = state?.purchase || purchase;
   const canPay = canRecordPayment(role);
+  const canConfirmPickup = canConfirmStaffPickup(role);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -73,6 +74,20 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
     finally { busyRef.current = false; setBusy(false); }
   }
 
+  async function saveStaffPickup() {
+    if (!state || busyRef.current || !canConfirmPickup || active.picked_up) return;
+    busyRef.current = true; setBusy(true); setError("");
+    try {
+      const result = await confirmStaffPickup(sb, { requestId: requestRef.current, purchase: active, instant });
+      if (result.changed_receipt) await notifyPickupStatus(buildPickupStatusMessage({
+        picked: true, customerName: active.customer_name, price: agreedAmount(result.purchase), pickupLabel: active.pickup_point
+      }));
+      setOpen(false);
+      await onSaved?.(result.purchase);
+    } catch (e) { setError(e.message || "تعذر تأكيد الاستلام."); }
+    finally { busyRef.current = false; setBusy(false); }
+  }
+
   async function cancelPayment() {
     if (!cancelId || !reason.trim() || busyRef.current) return;
     busyRef.current = true; setBusy(true); setError("");
@@ -86,7 +101,7 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
   }
 
   return <div className="purchase-payment-control">
-    {!compact ? <PickupAnimatedCheckbox checked={purchase.picked_up} disabled={!canPay || busy}
+    {!compact ? <PickupAnimatedCheckbox checked={purchase.picked_up} disabled={busy || (!canPay && (!canConfirmPickup || purchase.picked_up))}
       ariaLabel={`استلام ${purchase.customer_name}`} onChange={() => setOpen(true)} /> : null}
     <div className="purchase-payment-summary">
       <span>المدفوع {formatILS(paidAmount(purchase))} ₪ · المتبقي {formatILS(remainingAmount(purchase))} ₪</span>
@@ -108,6 +123,9 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
             onChange={(event) => { setAmount(event.target.value); requestRef.current = crypto.randomUUID(); }} /></label>
           <button className="payment-primary" type="submit" disabled={busy}>{busy ? "جاري الحفظ..." : active.picked_up ? "حفظ الدفعة" : "تأكيد الاستلام والدفعة"}</button>
         </form> : null}
+        {state && canConfirmPickup && !active.picked_up ? <button className="payment-primary" type="button" disabled={busy} onClick={saveStaffPickup}>
+          {busy ? "جاري الحفظ..." : `تأكيد الاستلام واستلام كامل المبلغ (${formatILS(remainingAmount(active))} ₪)`}
+        </button> : null}
         <h4>سجل الدفعات</h4>
         <div className="purchase-payment-history">{state?.payments.map((entry) => <div key={entry.id} className={`purchase-payment-entry${entry.cancelled_at ? " cancelled" : ""}`}>
           <div><strong>{formatILS(entry.amount)} ₪</strong><small>{formatDateTime(entry.created_at)}</small></div>

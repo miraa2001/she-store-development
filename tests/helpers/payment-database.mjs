@@ -49,6 +49,8 @@ export async function paymentDatabase({ trackedBeforeUpgrade = false } = {}) {
     select public.update_instant_pickup('${id(200)}','receive');`);
   const migration=await sqlFile('20261021010000_add_purchase_payments.sql');
   await db.exec(migration);
+  const staffMigration=await sqlFile('20261022000000_restore_pickup_staff_receipts.sql');
+  await db.exec(staffMigration);
   const identity=(n)=>db.exec(`reset role; select set_config('request.jwt.claim.sub','${id(n)}',false); set role authenticated;`);
-  return {db,migration,identity};
+  return {db,migration,staffMigration,identity};
 }
