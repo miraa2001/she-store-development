@@ -18,6 +18,12 @@ export function priceCents(value) {
   return Math.round(amount * 100);
 }
 
+export function selectedComparisonTotal(purchases) {
+  const cents = purchases.reduce((sum, purchase) => sum + priceCents(purchase.price), 0);
+  if (!Number.isSafeInteger(cents)) throw new Error("مجموع الأسعار أكبر من الحد المدعوم");
+  return cents / 100;
+}
+
 export function validateComparison(purchases, groups) {
   if (!purchases.length) throw new Error("اختاري مشتريات للمقارنة");
   if (purchases.length > 2000) throw new Error("اختاري 2000 مشترى كحد أقصى في المقارنة الواحدة");

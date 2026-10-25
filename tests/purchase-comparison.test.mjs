@@ -1,10 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { comparisonCategory, generateComparisons, summarizeComparison, buildComparisonPayload, priceCents } from "../src/lib/purchaseComparison.js";
+import { comparisonCategory, generateComparisons, selectedComparisonTotal, summarizeComparison, buildComparisonPayload, priceCents } from "../src/lib/purchaseComparison.js";
 
 const purchase = (id, price, qty = 1, category = "fast") => ({ id, price, qty, paid_price: 9999,
   purchase_categories: [category], comparison_category: category, order_id: null });
 const group = (key, target, category = "fast") => ({ key, target, category, name: `Order ${key}`, mode: "new" });
+
+test("selection total uses only selected original prices and updates down to zero", () => {
+  const rows = [purchase("a", 9.76, 8), purchase("b", 0.24, 5)];
+  assert.equal(selectedComparisonTotal(rows), 10);
+  assert.equal(selectedComparisonTotal(rows.filter((p) => p.id === "a")), 9.76);
+  assert.equal(selectedComparisonTotal([]), 0);
+});
 
 test("comparison uses original price once per purchase, not paid price or price times qty", () => {
   const rows = [purchase("a", 9.76, 8), purchase("b", 0.24, 2)];

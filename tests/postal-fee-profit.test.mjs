@@ -10,6 +10,8 @@ test("Finance display subtracts postal fees with cent precision", async () => {
   assert.equal(profit(1000, 20, 200), 780);
   assert.equal(profit(9.76, 0.25, 1.01), 8.5);
   assert.equal(profit(10, 20, 0), -10);
+  assert.equal(profit(1000, 20, 200, 50), 730);
+  assert.equal(profit(9.76, 0.25, 1.01, 0.15), 8.35);
 });
 
 test("Postal correction recalculates shares without changing cash or payouts", async (t) => {

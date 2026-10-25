@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, LoaderCircle, RefreshCw, Scale, X } from "lucide-react";
 import { formatILS } from "../../lib/orders";
 import { PURCHASE_CATEGORIES, normalizePurchaseCategories } from "../../lib/purchaseCategories";
-import { buildComparisonPayload, comparisonCategory, summarizeComparison, validateComparison } from "../../lib/purchaseComparison";
+import { buildComparisonPayload, comparisonCategory, selectedComparisonTotal, summarizeComparison, validateComparison } from "../../lib/purchaseComparison";
 import { confirmPurchaseComparison, fetchEmptyComparisonOrders } from "../../lib/purchaseComparisonApi";
 import PurchaseCategoryLabels from "./PurchaseCategoryLabels";
 import "./purchase-comparison.css";
@@ -35,6 +35,9 @@ export default function PurchaseComparisonDialog({ purchases, onClose, onSaved }
   const busy = running || saving || retrying;
   const rows = useMemo(() => source.filter((p) => selected.has(p.id)).map((p) => ({ ...p,
     comparison_category: comparisonCategory(p, choices[p.id]) })), [source, selected, choices]);
+  const selectedTotal = useMemo(() => {
+    try { return selectedComparisonTotal(rows); } catch { return null; }
+  }, [rows]);
   const summary = useMemo(() => step === 2 ? summarizeComparison(rows, groups, assignments)
     : { groups: [], leftovers: [], included: 0, deviation: 0, valid: false }, [rows, groups, assignments, step]);
   const displayed = source.filter((p) => p.customer_name.toLowerCase().includes(search.trim().toLowerCase()));
@@ -255,7 +258,10 @@ export default function PurchaseComparisonDialog({ purchases, onClose, onSaved }
       </div>
       <footer className="comparison-footer">
         {step > 0 ? <button type="button" className="btn-ghost" disabled={busy} onClick={() => { setStep((current) => current - 1); setError(""); }}><ArrowLeft size={18} /> السابق</button> : <span />}
-        {step === 0 ? <button type="button" className="btn-primary" disabled={!rows.length} onClick={() => { setStep(1); setError(""); }}>التالي ({rows.length})</button> : null}
+        {step === 0 ? <div className="comparison-footer-actions comparison-next">
+          <output aria-label="مجموع الأسعار المحددة">المجموع: <strong><bdi dir="ltr">{selectedTotal === null ? "—" : formatILS(selectedTotal)} ₪</bdi></strong></output>
+          <button type="button" className="btn-primary" disabled={!rows.length} onClick={() => { setStep(1); setError(""); }}>التالي ({rows.length})</button>
+        </div> : null}
         {step === 1 ? <div className="comparison-footer-actions">{running ? <button type="button" className="btn-ghost" onClick={stopWorker}>إلغاء المقارنة</button> : null}<button type="button" className="btn-primary" disabled={running || saving} onClick={runComparison}>{running ? <LoaderCircle size={18} className="comparison-spinner" /> : <Scale size={18} />} {running ? "جارٍ المقارنة..." : "مقارنة التقسيم"}</button></div> : null}
         {step === 2 ? <button type="button" className="btn-primary" disabled={saving || (!retrying && !summary.valid)} onClick={confirm}>{saving ? <LoaderCircle size={18} className="comparison-spinner" /> : <Check size={18} />} {retrying ? "إعادة محاولة الحفظ" : "تأكيد التوزيع"}</button> : null}
       </footer>

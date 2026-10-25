@@ -42,6 +42,8 @@
 .comparison-leftovers h3 { margin-bottom: 12px; }
 .comparison-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 20px; background: #fff; border-top: 1px solid #e4d7e7; }
 .comparison-footer-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.comparison-next { justify-content: flex-end; }
+.comparison-next output { font-size: 14px; overflow-wrap: anywhere; }
 .comparison-footer button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font: inherit; }
 .comparison-spinner { animation: comparison-spin 1s linear infinite; }
 @keyframes comparison-spin { to { transform: rotate(360deg); } }
