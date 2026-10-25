@@ -32,6 +32,7 @@ import {
   updatePurchaseWithRelations
 } from "../lib/purchases";
 import { searchByName } from "../lib/search";
+import { normalizePurchaseCategories } from "../lib/purchaseCategories";
 import {
   CUSTOMER_CITIES,
   createCustomer,
@@ -93,6 +94,7 @@ function createEmptyForm(orderId, customers) {
   return {
     purchaseId: "",
     orderId: orderId || "",
+    purchaseCategories: [],
     customerId: "",
     customerName: "",
     qty: "1",
@@ -954,6 +956,7 @@ export default function OrdersPage() {
     setFormState({
       purchaseId: purchase.id,
       orderId: purchase.order_id,
+      purchaseCategories: normalizePurchaseCategories(purchase.purchase_categories),
       customerId: purchase.customer_id || "",
       customerName: purchase.customer_name || "",
       qty: purchase.qty ?? 1,
@@ -1118,6 +1121,7 @@ export default function OrdersPage() {
         const result = await createPurchaseWithRelations({
           purchase: {
             order_id: formState.orderId || null,
+            purchase_categories: normalizePurchaseCategories(formState.purchaseCategories),
             ...(!formState.orderId ? { ready_for_pickup: false, ready_for_pickup_at: null } : {}),
             customer_id: formState.customerId,
             customer_name: formState.customerName,
@@ -1149,6 +1153,7 @@ export default function OrdersPage() {
           purchaseId: formState.purchaseId,
           purchasePatch: {
             order_id: formState.orderId || null,
+            purchase_categories: normalizePurchaseCategories(formState.purchaseCategories),
             customer_id: formState.customerId,
             customer_name: formState.customerName,
             qty,
@@ -1217,6 +1222,7 @@ export default function OrdersPage() {
           purchase: {
             id: target.id,
             order_id: target.order_id,
+            purchase_categories: normalizePurchaseCategories(target.purchase_categories),
             customer_id: target.customer_id,
             customer_name: target.customer_name,
             qty: target.qty,

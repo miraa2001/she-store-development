@@ -4,6 +4,7 @@ import { formatILS } from "../../lib/orders";
 import { formatPickupDisplayLabel } from "../../lib/pickup";
 import SessionLoader from "../common/SessionLoader";
 import OrderStatusDropdown from "./OrderStatusDropdown";
+import PurchaseCategoryLabels from "./PurchaseCategoryLabels";
 import actionsMenuIcon from "../../assets/icons/actions/menu-vertical.png";
 import editIcon from "../../assets/icons/actions/edit.png";
 import editPriceIcon from "../../assets/icons/actions/edit-price.png";
@@ -279,6 +280,7 @@ export default function OrdersTab({
                     </div>
 
                     <div className="purchaseVBody" dir="rtl">
+                      {isUnassigned ? <PurchaseCategoryLabels categories={purchase.purchase_categories} /> : null}
                       <div className="purchaseVField purchaseVField-primary">
                         <p className="purchaseVLabel">الاسم</p>
                         <p className="purchaseVValue purchaseVValue-primary">{purchase.customer_name || "—"}</p>
@@ -341,6 +343,7 @@ export default function OrdersTab({
                   <div className="purchase-mobile-head">
                     <strong>{purchase.customer_name || "—"}</strong>
                   </div>
+                  {isUnassigned ? <PurchaseCategoryLabels categories={purchase.purchase_categories} /> : null}
 
                   <div className="purchase-mobile-bubble">
                     <div className="purchase-mobile-images" dir="ltr">
