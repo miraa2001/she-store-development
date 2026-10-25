@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowRightLeft } from "lucide-react";
+import { ArrowRightLeft, Scale } from "lucide-react";
 import { formatILS } from "../../lib/orders";
 import { formatPickupDisplayLabel } from "../../lib/pickup";
 import SessionLoader from "../common/SessionLoader";
@@ -39,6 +39,7 @@ export default function OrdersTab({
   onOpenAddModal,
   onOpenOrderSettings,
   onOpenOrderTransfer,
+  onOpenComparison,
   customersError,
   purchasesLoading,
   purchasesError,
@@ -91,6 +92,9 @@ export default function OrdersTab({
         </div>
 
         <div className="order-detail-actions">
+          {isUnassigned && isRahaf && editMode ? (
+            <button type="button" className="icon-btn" disabled={purchasesLoading || !!purchasesError || !purchaseStats.count} title="مقارنة التقسيم" aria-label="مقارنة التقسيم" onClick={onOpenComparison}><Scale size={20} /></button>
+          ) : null}
           {isRahaf && editMode && selectedOrder ? (
             <button type="button" className="icon-btn" disabled={purchasesLoading || !!purchasesError || (!isUnassigned && (selectedOrder.arrived || selectedOrder.placedAtPickup || selectedOrder.allCollected))} onClick={onOpenOrderTransfer} title="نقل المشتريات" aria-label="نقل المشتريات">
               <ArrowRightLeft size={20} />

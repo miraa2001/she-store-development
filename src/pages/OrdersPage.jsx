@@ -1,5 +1,6 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { Package, ShoppingBag, UserPlus, Users } from "lucide-react";
 import "./orders-page.css";
 import {
@@ -81,6 +82,7 @@ import SheStoreLogo from "../components/common/SheStoreLogo";
 import AppNavIcon from "../components/common/AppNavIcon";
 import ordersMenuIcon from "../assets/icons/navigation/orders.png";
 const MAX_IMAGES = 10;
+const PurchaseComparisonDialog = lazy(() => import("../components/orders/PurchaseComparisonDialog"));
 const ORDER_TYPE_OPTIONS = [
   { value: ORDER_TYPES.IHERB, label: "iHerb" },
   { value: ORDER_TYPES.SHEIN, label: "Shein" }
@@ -353,6 +355,7 @@ export default function OrdersPage() {
   const [orderSettingsDialog, setOrderSettingsDialog] = useState(null);
   const [orderSettingsDialogBusy, setOrderSettingsDialogBusy] = useState(false);
   const [orderTransferDialog, setOrderTransferDialog] = useState(null);
+  const [comparisonOpen, setComparisonOpen] = useState(false);
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, title: "" });
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const hasInitializedUrlState = useRef(false);
@@ -1724,6 +1727,7 @@ export default function OrdersPage() {
     !globalOpen &&
     !formOpen &&
     !orderTransferDialog &&
+    !comparisonOpen &&
     !instantPickupOpen &&
     !instantTabDialogOpen &&
     !lightbox.open &&
@@ -1929,6 +1933,7 @@ export default function OrdersPage() {
                 onOpenAddModal={openAddModal}
                 onOpenOrderSettings={openOrderSettingsDialog}
                 onOpenOrderTransfer={() => setOrderTransferDialog(activeTab === "unassigned" ? { id: null, name: "مشتريات غير معيّنة" } : selectedOrder)}
+                onOpenComparison={() => { if (isRahaf) setComparisonOpen(true); }}
                 customersError={customersError}
                 purchasesLoading={purchasesLoading}
                 purchasesError={purchasesError}
@@ -2388,6 +2393,19 @@ export default function OrdersPage() {
         Icon={Icon}
       />
 
+      {comparisonOpen && isRahaf ? (
+        <Suspense fallback={<div className="purchase-modal-backdrop"><SessionLoader /></div>}>
+          <PurchaseComparisonDialog purchases={purchases} onClose={(reload) => {
+            setComparisonOpen(false);
+            if (reload) { refreshPurchases(null, true); refreshOrders(selectedOrderId); }
+          }} onSaved={async (result) => {
+            await refreshPurchases(null, true);
+            await refreshOrders(selectedOrderId);
+            setComparisonOpen(false);
+            setToast({ type: "success", quick: true, text: `تم توزيع ${result.purchase_count} مشترى على ${result.orders.length} طلب` });
+          }} />
+        </Suspense>
+      ) : null}
       {orderTransferDialog ? (
         <OrderPurchaseTransferDialog
           order={orderTransferDialog}
