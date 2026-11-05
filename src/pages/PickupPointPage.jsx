@@ -294,7 +294,7 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
     try {
       const { data, error: purchasesError } = await sb
         .from("purchases")
-        .select("id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, received_amount, remitted_amount")
+        .select("id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, picked_up_by_email, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, received_amount, remitted_amount")
         .in("order_id", orderIds)
         .eq("ready_for_pickup", true)
         .eq("collected", false)

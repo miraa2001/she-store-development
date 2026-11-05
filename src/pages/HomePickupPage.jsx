@@ -246,8 +246,6 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
         .from("orders")
         .select("id, order_name, created_at")
         .in("id", orderIds)
-        .eq("arrived", true)
-        .eq("placed_at_pickup", true)
         .order("created_at", { ascending: false });
 
       if (orderError) throw orderError;
@@ -292,7 +290,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
       let purchasesQuery = sb
         .from("purchases")
         .select(
-          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, purchase_images(storage_path), received_amount, remitted_amount"
+          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, picked_up_by_email, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, purchase_images(storage_path), received_amount, remitted_amount"
         )
         .eq("pickup_point", pickupPoint)
         .eq("ready_for_pickup", true)

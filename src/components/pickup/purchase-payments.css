@@ -28,3 +28,4 @@
 .outstanding-payments { margin-block: 16px; border-block: 1px solid #d8c7d7; padding-block: 12px; }
 .outstanding-payments h3 { margin: 0 0 10px; font-size: 16px; color: #47143f; }
 .outstanding-payment-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eee6ed; font-size: 13px; }
+.purchase-payment-actor { overflow-wrap: anywhere; }

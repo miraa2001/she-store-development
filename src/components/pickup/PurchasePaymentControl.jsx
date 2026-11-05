@@ -105,6 +105,7 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
       ariaLabel={`استلام ${purchase.customer_name}`} onChange={() => setOpen(true)} /> : null}
     <div className="purchase-payment-summary">
       <span>المدفوع {formatILS(paidAmount(purchase))} ₪ · المتبقي {formatILS(remainingAmount(purchase))} ₪</span>
+      {purchase.picked_up ? <small className="purchase-payment-actor">تم تأكيد الاستلام بواسطة: <bdi>{purchase.picked_up_by_email || "غير معروف"}</bdi></small> : null}
       {collectibleAmount(purchase) > 0 ? <small>بانتظار التحصيل {formatILS(collectibleAmount(purchase))} ₪</small> : null}
       <div className="purchase-payment-actions">
         {canPay && remainingAmount(purchase) > 0 ? <button type="button" onClick={() => setOpen(true)}><Banknote size={15} />{purchase.picked_up ? "إضافة دفعة" : "استلام ودفعة"}</button> : null}
@@ -115,6 +116,7 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
       <section ref={dialogRef} className="purchase-payment-dialog" role="dialog" aria-modal="true" aria-label={`دفعات ${purchase.customer_name}`} dir="rtl" onClick={(event) => event.stopPropagation()}>
         <header><h3>{purchase.customer_name}</h3><button type="button" disabled={busy} title="إغلاق" aria-label="إغلاق الدفعات" onClick={() => setOpen(false)}><X size={20} /></button></header>
         <p>{active.pickup_point}</p>
+        {active.picked_up ? <p>تم تأكيد الاستلام بواسطة: <bdi>{active.picked_up_by_email || "غير معروف"}</bdi></p> : null}
         <dl><div><dt>السعر المتفق عليه</dt><dd>{formatILS(agreedAmount(active))} ₪</dd></div><div><dt>المدفوع</dt><dd>{formatILS(paidAmount(active))} ₪</dd></div><div><dt>المتبقي</dt><dd>{formatILS(remainingAmount(active))} ₪</dd></div></dl>
         {error ? <div className="purchase-payment-error" role="alert">{error}</div> : null}
         {loading ? <p role="status">جاري التحميل...</p> : null}
