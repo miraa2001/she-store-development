@@ -125,7 +125,7 @@ export default function InstantPickupSection({ pickupPoint, role, title = "", se
           <OutstandingPaymentsSection rows={group.rows} role={role} instant onSaved={() => setRevision((value) => value + 1)} />
           <div className="instant-pickup-scroll" tabIndex={0} role="region" aria-label={group.label}>
             <table className={`instant-pickup-table ${isRahaf ? "has-actions" : ""}`}>
-              <thead><tr><th>الزبون</th><th>السعر (₪)</th><th>الاستلام</th><th>التاريخ</th>{isRahaf ? <th>الإجراءات</th> : null}<th>سجل الاستلام</th></tr></thead>
+              <thead><tr><th>الزبون</th><th>السعر (₪)</th><th>الاستلام</th><th>التاريخ</th>{isRahaf ? <th>الإجراءات</th> : null}<th>مؤكد عبر</th></tr></thead>
               <tbody>{group.rows.map((row) => <tr key={row.id} data-instant-pickup-id={row.id}>
                 <td>{row.customer_name}</td><td className="instant-pickup-money">{formatILS(row.price)}</td>
                 <td><div className="instant-pickup-received"><PurchasePaymentControl purchase={row} role={role} instant onSaved={() => setRevision((value) => value + 1)} />
@@ -136,7 +136,7 @@ export default function InstantPickupSection({ pickupPoint, role, title = "", se
                   <button type="button" className="instant-pickup-icon-btn" title="تحصيل" aria-label={`تحصيل ${row.customer_name}`} disabled={collectibleAmount(row) <= 0 || !!busy || loading} onClick={() => collect([row])}><Banknote size={18} /></button>
                   <button type="button" className="instant-pickup-icon-btn" title="نقل المشترى" aria-label={`نقل ${row.customer_name}`} disabled={paidAmount(row) > 0 || row.collected || !!busy || loading} onClick={() => setTransfer(row)}><ArrowRightLeft size={18} /></button>
                 </div></td> : null}
-                <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={row} /></td>
+                <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={row} showLabel={false} /></td>
               </tr>)}
               {!group.rows.length ? <tr><td colSpan={isRahaf ? 6 : 5}>{loading ? "جاري التحميل..." : "لا توجد مشتريات"}</td></tr> : null}</tbody>
             </table>

@@ -601,7 +601,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                   </span>
                 </th>
               ) : null}
-              <th>سجل الاستلام</th>
+              <th>مؤكد عبر</th>
             </tr>
           </thead>
           <tbody>
@@ -702,7 +702,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                         </button>
                       </td>
                     ) : null}
-                    <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} /></td>
+                    <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} showLabel={false} /></td>
                   </tr>
                 );
               })
@@ -1086,7 +1086,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                                 </span>
                               </th>
                             ) : null}
-                            <th>سجل الاستلام</th>
+                            <th>مؤكد عبر</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1188,7 +1188,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                                       </button>
                                     </td>
                                   ) : null}
-                                  <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} /></td>
+                                  <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} showLabel={false} /></td>
                                 </tr>
                               );
                             })

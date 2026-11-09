@@ -179,8 +179,8 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
   </div>;
 }
 
-export function PickupReceiptLog({ purchase }) {
-  return purchase.picked_up ? <small className="purchase-payment-actor">تم تأكيد الاستلام بواسطة: <bdi>{purchase.picked_up_by_email || "غير معروف"}</bdi></small> : null;
+export function PickupReceiptLog({ purchase, showLabel = true }) {
+  return purchase.picked_up ? <small className="purchase-payment-actor">{showLabel ? "تم تأكيد الاستلام بواسطة: " : null}<bdi>{purchase.picked_up_by_email || "غير معروف"}</bdi></small> : null;
 }
 
 export function OutstandingPaymentsSection({ rows, role, instant = false, onSaved }) {
