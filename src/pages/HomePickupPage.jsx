@@ -14,7 +14,7 @@ import { signOutAndRedirect } from "../lib/session";
 import { sb } from "../lib/supabaseClient";
 import SessionLoader from "../components/common/SessionLoader";
 import AppNavIcon from "../components/common/AppNavIcon";
-import PurchasePaymentControl, { OutstandingPaymentsSection } from "../components/pickup/PurchasePaymentControl";
+import PurchasePaymentControl, { OutstandingPaymentsSection, PickupReceiptLog } from "../components/pickup/PurchasePaymentControl";
 import PickupTransferDialog from "../components/pickup/PickupTransferDialog";
 import InstantPickupSection from "../components/pickup/InstantPickupSection";
 import SheStoreLogo from "../components/common/SheStoreLogo";
@@ -291,7 +291,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
       let purchasesQuery = sb
         .from("purchases")
         .select(
-          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, picked_up_by_email, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, purchase_images(storage_path), received_amount, remitted_amount"
+          "id, order_id, customer_name, price, paid_price, picked_up, picked_up_at, picked_up_by_email, pickup_point, ready_for_pickup, ready_for_pickup_at, collected, purchase_images(storage_path), received_amount, remitted_amount, purchase_payments(id)"
         )
         .eq("pickup_point", pickupPoint)
         .eq("ready_for_pickup", true)
@@ -546,6 +546,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
           ) : null}
           <small>{formatDateTime(purchase.picked_up_at)}</small>
         </footer>
+        <PickupReceiptLog purchase={purchase} />
       </article>
     );
   }
@@ -600,6 +601,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                   </span>
                 </th>
               ) : null}
+              <th>سجل الاستلام</th>
             </tr>
           </thead>
           <tbody>
@@ -700,12 +702,13 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                         </button>
                       </td>
                     ) : null}
+                    <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} /></td>
                   </tr>
                 );
               })
             ) : (
               <tr>
-                <td colSpan={isRahaf ? 7 : 5} className="homepickup-muted">
+                <td colSpan={isRahaf ? 8 : 6} className="homepickup-muted">
                   لا توجد مشتريات
                 </td>
               </tr>
@@ -1083,6 +1086,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                                 </span>
                               </th>
                             ) : null}
+                            <th>سجل الاستلام</th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1184,12 +1188,13 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                                       </button>
                                     </td>
                                   ) : null}
+                                  <td className="pickup-receipt-log-cell"><PickupReceiptLog purchase={purchase} /></td>
                                 </tr>
                               );
                             })
                           ) : (
                             <tr>
-                              <td colSpan={isRahaf ? 7 : 5} className="homepickup-muted">
+                              <td colSpan={isRahaf ? 8 : 6} className="homepickup-muted">
                                 لا توجد مشتريات
                               </td>
                             </tr>

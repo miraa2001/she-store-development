@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Banknote, History, X } from "lucide-react";
+import { Archive, Banknote, History, X } from "lucide-react";
 import { sb } from "../../lib/supabaseClient";
 import { formatILS } from "../../lib/orders";
 import { formatDateTime } from "../../lib/dateFormat";
@@ -8,11 +8,14 @@ import { agreedAmount, paidAmount, remainingAmount, collectibleAmount, canRecord
 import { buildPickupStatusMessage, notifyPickupStatus } from "../../lib/pickupNotifications";
 import { setBodyScrollLock } from "../../lib/bodyScrollLock";
 import PickupAnimatedCheckbox from "../common/PickupAnimatedCheckbox";
+import AbandonPurchasesDialog from "../orders/AbandonPurchasesDialog";
+import { canArchivePurchase } from "../../lib/abandonedPurchases";
 import "./purchase-payments.css";
 
 export default function PurchasePaymentControl({ purchase, role, instant = false, onSaved, compact = false }) {
   const [open, setOpen] = useState(false);
   const [partialPayment, setPartialPayment] = useState(false);
+  const [archiving, setArchiving] = useState(false);
   const [state, setState] = useState(null);
   const [amount, setAmount] = useState("");
   const [error, setError] = useState("");
@@ -130,7 +133,6 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
       ariaLabel={`استلام ${purchase.customer_name}`} onChange={tickPickup} /> : null}
     <div className="purchase-payment-summary">
       <span>المدفوع {formatILS(paidAmount(purchase))} ₪ · المتبقي {formatILS(remainingAmount(purchase))} ₪</span>
-      {purchase.picked_up ? <small className="purchase-payment-actor">تم تأكيد الاستلام بواسطة: <bdi>{purchase.picked_up_by_email || "غير معروف"}</bdi></small> : null}
       {collectibleAmount(purchase) > 0 ? <small>بانتظار التحصيل {formatILS(collectibleAmount(purchase))} ₪</small> : null}
       <div className="purchase-payment-actions">
         {canPay && !purchase.picked_up && remainingAmount(purchase) > 0 ? <label className="purchase-partial-toggle">
@@ -140,9 +142,11 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
         </label> : null}
         {canPay && purchase.picked_up && remainingAmount(purchase) > 0 ? <button type="button" disabled={busy} onClick={openPartialPayment}><Banknote size={15} />إضافة دفعة</button> : null}
         <button type="button" disabled={busy} title="سجل الدفعات" aria-label={`سجل دفعات ${purchase.customer_name}`} onClick={() => setOpen(true)}><History size={16} /></button>
+        {role === "rahaf" && !instant && canArchivePurchase(purchase) ? <button type="button" disabled={busy} title="نقل إلى أرشيف المتروكات" aria-label={`أرشفة ${purchase.customer_name}`} onClick={() => setArchiving(true)}><Archive size={16} /></button> : null}
       </div>
       {error && !open ? <small className="purchase-payment-inline-error" role="alert">{error}</small> : null}
     </div>
+    {archiving ? <AbandonPurchasesDialog purchases={[purchase]} onClose={() => setArchiving(false)} onSaved={() => onSaved?.()} /> : null}
     {open ? createPortal(<div className="purchase-payment-overlay" onClick={() => { if (!busy) setOpen(false); }}>
       <section ref={dialogRef} className="purchase-payment-dialog" role="dialog" aria-modal="true" aria-label={`دفعات ${purchase.customer_name}`} dir="rtl" onClick={(event) => event.stopPropagation()}>
         <header><h3>{purchase.customer_name}</h3><button type="button" disabled={busy} title="إغلاق" aria-label="إغلاق الدفعات" onClick={() => setOpen(false)}><X size={20} /></button></header>
@@ -175,11 +179,16 @@ export default function PurchasePaymentControl({ purchase, role, instant = false
   </div>;
 }
 
+export function PickupReceiptLog({ purchase }) {
+  return purchase.picked_up ? <small className="purchase-payment-actor">تم تأكيد الاستلام بواسطة: <bdi>{purchase.picked_up_by_email || "غير معروف"}</bdi></small> : null;
+}
+
 export function OutstandingPaymentsSection({ rows, role, instant = false, onSaved }) {
   const pending = rows.filter((row) => row.picked_up && (remainingAmount(row) > 0 || collectibleAmount(row) > 0));
   if (!pending.length) return null;
   return <section className="outstanding-payments" dir="rtl"><h3>متبقي عليه مبلغ</h3>
     {pending.map((purchase) => <div className="outstanding-payment-row" key={purchase.id}><strong>{purchase.customer_name}</strong>
-      <PurchasePaymentControl compact purchase={purchase} role={role} instant={instant} onSaved={onSaved} /></div>)}
+      <PurchasePaymentControl compact purchase={purchase} role={role} instant={instant} onSaved={onSaved} />
+      <PickupReceiptLog purchase={purchase} /></div>)}
   </section>;
 }
