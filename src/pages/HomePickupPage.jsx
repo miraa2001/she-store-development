@@ -6,7 +6,7 @@ import { usePurchaseCustomerSearch } from "../hooks/usePurchaseCustomerSearch";
 import { getOrdersNavItems, isNavHrefActive } from "../lib/navigation";
 import { formatILS, parsePrice } from "../lib/orders";
 import { movePurchaseToPickupLocation } from "../lib/purchases";
-import { collectibleAmount, collectPayments } from "../lib/payments";
+import { canCollectPayment, collectibleAmount, collectPayments } from "../lib/payments";
 import { buildCollectedMoneyMessage, notifyPickupStatus } from "../lib/pickupNotifications";
 import { PICKUP_DELIVERY, PICKUP_HOME } from "../lib/pickup";
 import { setBodyScrollLock } from "../lib/bodyScrollLock";
@@ -355,7 +355,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
 
   async function collectPaymentRows(items, busySetter) {
     if (!isRahaf) return;
-    const pending = items.filter((row) => collectibleAmount(row) > 0);
+    const pending = items.filter(canCollectPayment);
     if (!pending.length) return;
     const total = pending.reduce((sum, row) => sum + collectibleAmount(row), 0);
     if (!window.confirm("تأكيد تحصيل " + formatILS(total) + " ₪؟")) return;
@@ -601,7 +601,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                   </span>
                 </th>
               ) : null}
-              <th>مؤكد عبر</th>
+              <th className="pickup-receipt-log-cell">مؤكد عبر</th>
             </tr>
           </thead>
           <tbody>
@@ -920,7 +920,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                       type="button"
                       className="homepickup-btn homepickup-allorders-collect-btn"
                       onClick={collectAllHomeMoney}
-                      disabled={collectingAll || amountToCollect <= 0}
+                      disabled={collectingAll || !visiblePurchases.some(canCollectPayment)}
                     >
                       {collectingAll ? "جاري التحصيل..." : "تم استلام تحصيل الكل"}
                     </button>
@@ -1086,7 +1086,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
                                 </span>
                               </th>
                             ) : null}
-                            <th>مؤكد عبر</th>
+                            <th className="pickup-receipt-log-cell">مؤكد عبر</th>
                           </tr>
                         </thead>
                         <tbody>

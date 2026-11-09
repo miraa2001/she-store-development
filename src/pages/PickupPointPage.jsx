@@ -778,7 +778,7 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
                                     </span>
                                   </th>
                                 ) : null}
-                                <th>مؤكد عبر</th>
+                                <th className="pickup-receipt-log-cell">مؤكد عبر</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -961,7 +961,7 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
                               </span>
                             </th>
                           ) : null}
-                          <th>مؤكد عبر</th>
+                          <th className="pickup-receipt-log-cell">مؤكد عبر</th>
                         </tr>
                       </thead>
                       <tbody>

@@ -2,6 +2,7 @@ export const agreedAmount = (row) => Number(row.paid_price ?? row.price ?? 0);
 export const paidAmount = (row) => Number(row.received_amount ?? 0);
 export const remainingAmount = (row) => Math.max(0, Math.round((agreedAmount(row) - paidAmount(row)) * 100) / 100);
 export const collectibleAmount = (row) => Math.max(0, Math.round((paidAmount(row) - Number(row.remitted_amount ?? 0)) * 100) / 100);
+export const canCollectPayment = (row) => !!row.picked_up && !row.collected && (collectibleAmount(row) > 0 || agreedAmount(row) === 0);
 export const canRecordPayment = (role) => role === "rahaf" || role === "reem";
 export const canConfirmStaffPickup = (role) => role === "maryamti" || role === "nablus";
 
