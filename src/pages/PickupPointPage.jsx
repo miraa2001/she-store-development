@@ -90,7 +90,7 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
   const [search, setSearch] = useState("");
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
-  const [showAllOrdersMode, setShowAllOrdersMode] = useState(false);
+  const [showAllOrdersMode, setShowAllOrdersMode] = useState(true);
   const [transferDialog, setTransferDialog] = useState(null);
   const [transferBusy, setTransferBusy] = useState(false);
   const location = useLocation();
@@ -206,10 +206,11 @@ export default function PickupPointPage({ embedded = false, locationId = "maryam
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
+    if (profile.loading) return;
     if (!canToggleAllOrders) {
       setShowAllOrdersMode(false);
     }
-  }, [canToggleAllOrders]);
+  }, [canToggleAllOrders, profile.loading]);
 
   useEffect(() => {
     if (shouldShowAllOrders) {

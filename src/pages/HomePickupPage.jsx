@@ -76,7 +76,7 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
   const [highlightPurchaseId, setHighlightPurchaseId] = useState("");
   const [paidEditor, setPaidEditor] = useState({ id: "", value: "", saving: false });
   const [lightbox, setLightbox] = useState({ open: false, images: [], index: 0, label: "" });
-  const [showAllOrdersMode, setShowAllOrdersMode] = useState(false);
+  const [showAllOrdersMode, setShowAllOrdersMode] = useState(true);
   const [transferDialog, setTransferDialog] = useState(null);
   const [transferBusy, setTransferBusy] = useState(false);
   const location = useLocation();
@@ -215,10 +215,11 @@ export default function HomePickupPage({ embedded = false, pickupPoint = PICKUP_
   }, [location.pathname, location.search, location.hash]);
 
   useEffect(() => {
+    if (profile.loading) return;
     if (!canToggleAllOrders) {
       setShowAllOrdersMode(false);
     }
-  }, [canToggleAllOrders]);
+  }, [canToggleAllOrders, profile.loading]);
 
   const loadOrders = useCallback(async () => {
     setLoadingOrders(true);
